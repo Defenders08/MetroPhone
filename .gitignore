@@ -1,0 +1,6 @@
+.theos/
+obj/
+packages/
+.zcode/
+crashlogs/
+.DS_Store
