@@ -1,0 +1,10 @@
+Package: ru.ash.metrophone
+Name: MetroPhone
+Description: Тема Windows Phone (Metro) для iOS 6: плоские тёмные панели, квадратные плитки, типографика Segoe WP и акцентный цвет.
+Maintainer: ash
+Author: ash
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000), preferenceloader
+Architecture: iphoneos-arm
+Version: 0.5.2
+Installed-Size: 548

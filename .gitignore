@@ -1,6 +1,4 @@
-.theos/
-obj/
-packages/
+/obj/
 .zcode/
 crashlogs/
 .DS_Store

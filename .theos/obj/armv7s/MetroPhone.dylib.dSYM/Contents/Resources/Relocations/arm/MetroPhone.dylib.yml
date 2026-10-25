@@ -1,0 +1,841 @@
+---
+triple:          'armv7s-apple-darwin'
+binary-path:     "/Users/ash/Documents/Проекты/MetroPhone/.theos/obj/armv7s/MetroPhone.dylib"
+relocations:
+  - { offset: 0x1E, size: 0x4, addend: 0x0, symName: __ZL24_logosLocalCtor_fca39385iPPcS0_, symObjAddr: 0x0, symBinAddr: 0x4AC8, symSize: 0xC90 }
+  - { offset: 0x22, size: 0x4, addend: 0x0, symName: GCC_except_table0, symObjAddr: 0x67E8, symBinAddr: 0x1DBCC, symSize: 0x0 }
+  - { offset: 0x9C, size: 0x4, addend: 0x0, symName: __ZL17MPHeartbeatSource, symObjAddr: 0x1B9E8, symBinAddr: 0x28090, symSize: 0x0 }
+  - { offset: 0xC2, size: 0x4, addend: 0x0, symName: __ZL10MPLauncher, symObjAddr: 0x1B9EC, symBinAddr: 0x28094, symSize: 0x0 }
+  - { offset: 0x10C3, size: 0x4, addend: 0x0, symName: __ZL6MPFontP8NSStringf, symObjAddr: 0x3D28, symBinAddr: 0x87F0, symSize: 0x340 }
+  - { offset: 0x10C7, size: 0x4, addend: 0x0, symName: ____ZL13MPAccentHexesv_block_invoke, symObjAddr: 0x4068, symBinAddr: 0x8B30, symSize: 0x12E }
+  - { offset: 0x10E8, size: 0x4, addend: 0x0, symName: __ZZL6MPFontP8NSStringfE5cache, symObjAddr: 0x1BA74, symBinAddr: 0x2811C, symSize: 0x0 }
+  - { offset: 0x10F9, size: 0x4, addend: 0x0, symName: __ZZL6MPFontP8NSStringfE4once, symObjAddr: 0x1BA78, symBinAddr: 0x28120, symSize: 0x0 }
+  - { offset: 0x1180, size: 0x4, addend: 0x0, symName: __ZL9MPLogOnceP8NSStringS0_z, symObjAddr: 0x336C, symBinAddr: 0x7E34, symSize: 0x1E4 }
+  - { offset: 0x1184, size: 0x4, addend: 0x0, symName: ____ZL29MPConfigureAppearanceIfNeededv_block_invoke, symObjAddr: 0x3550, symBinAddr: 0x8018, symSize: 0x4FC }
+  - { offset: 0x11A1, size: 0x4, addend: 0x0, symName: __ZZL9MPLogOnceP8NSStringS0_zE4seen, symObjAddr: 0x1BA7C, symBinAddr: 0x28124, symSize: 0x0 }
+  - { offset: 0x11B2, size: 0x4, addend: 0x0, symName: __ZZL9MPLogOnceP8NSStringS0_zE4once, symObjAddr: 0x1BA80, symBinAddr: 0x28128, symSize: 0x0 }
+  - { offset: 0x1249, size: 0x4, addend: 0x0, symName: '__ZL45_logos_orig$MPUikit$UINavigationBar$drawRect$', symObjAddr: 0x1B9F0, symBinAddr: 0x28098, symSize: 0x0 }
+  - { offset: 0x1BC2, size: 0x4, addend: 0x0, symName: __ZL15MPMetroTitleKey, symObjAddr: 0x8F40, symBinAddr: 0x27F10, symSize: 0x0 }
+  - { offset: 0x1BD8, size: 0x4, addend: 0x0, symName: '__ZL50_logos_orig$MPUikit$UINavigationBar$layoutSubviews', symObjAddr: 0x1B9F4, symBinAddr: 0x2809C, symSize: 0x0 }
+  - { offset: 0x1BFF, size: 0x4, addend: 0x0, symName: '__ZL59_logos_orig$MPUikit$UINavigationBar$setTitleTextAttributes$', symObjAddr: 0x1B9F8, symBinAddr: 0x280A0, symSize: 0x0 }
+  - { offset: 0x1C2B, size: 0x4, addend: 0x0, symName: '__ZL39_logos_orig$MPUikit$UIToolbar$drawRect$', symObjAddr: 0x1B9FC, symBinAddr: 0x280A4, symSize: 0x0 }
+  - { offset: 0x1CC5, size: 0x4, addend: 0x0, symName: '__ZL38_logos_orig$MPUikit$UITabBar$drawRect$', symObjAddr: 0x1BA00, symBinAddr: 0x280A8, symSize: 0x0 }
+  - { offset: 0x1E7D, size: 0x4, addend: 0x0, symName: '__ZL63_logos_method$MPUikit$UIApplication$setStatusBarStyle$animated$P13UIApplicationP13objc_selector16UIStatusBarStylea', symObjAddr: 0x14B4, symBinAddr: 0x5F7C, symSize: 0x5C }
+  - { offset: 0x1EA0, size: 0x4, addend: 0x0, symName: '__ZZL63_logos_method$MPUikit$UIApplication$setStatusBarStyle$animated$P13UIApplicationP13objc_selector16UIStatusBarStyleaE10lastLogged', symObjAddr: 0x8F44, symBinAddr: 0x27F14, symSize: 0x0 }
+  - { offset: 0x1EF3, size: 0x4, addend: 0x0, symName: '__ZL61_logos_orig$MPUikit$UIApplication$setStatusBarStyle$animated$', symObjAddr: 0x1BA04, symBinAddr: 0x280AC, symSize: 0x0 }
+  - { offset: 0x22AC, size: 0x4, addend: 0x0, symName: __ZL14MPSBLaunchTime, symObjAddr: 0x1BA08, symBinAddr: 0x280B0, symSize: 0x0 }
+  - { offset: 0x22CB, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori', symObjAddr: 0x1510, symBinAddr: 0x5FD8, symSize: 0x840 }
+  - { offset: 0x22CF, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBFolderIcon$generateIconImage$P12SBFolderIconP13objc_selectori', symObjAddr: 0x1D50, symBinAddr: 0x6818, symSize: 0x25C }
+  - { offset: 0x22F2, size: 0x4, addend: 0x0, symName: '__ZZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectoriE9tileQueue', symObjAddr: 0x1BA84, symBinAddr: 0x2812C, symSize: 0x0 }
+  - { offset: 0x2304, size: 0x4, addend: 0x0, symName: '__ZZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectoriE9onceQueue', symObjAddr: 0x1BA88, symBinAddr: 0x28130, symSize: 0x0 }
+  - { offset: 0x24A4, size: 0x4, addend: 0x0, symName: __ZL10MPPngCachev, symObjAddr: 0x5EF0, symBinAddr: 0xA9B8, symSize: 0x38 }
+  - { offset: 0x24C9, size: 0x4, addend: 0x0, symName: __ZZL10MPPngCachevE5cache, symObjAddr: 0x1BA9C, symBinAddr: 0x28144, symSize: 0x0 }
+  - { offset: 0x24DA, size: 0x4, addend: 0x0, symName: __ZZL10MPPngCachevE4once, symObjAddr: 0x1BAA0, symBinAddr: 0x28148, symSize: 0x0 }
+  - { offset: 0x2594, size: 0x4, addend: 0x0, symName: '__ZL62_logos_orig$MPSpringBoard$SBApplicationIcon$generateIconImage$', symObjAddr: 0x1BA10, symBinAddr: 0x280B8, symSize: 0x0 }
+  - { offset: 0x25E1, size: 0x4, addend: 0x0, symName: '__ZL57_logos_orig$MPSpringBoard$SBFolderIcon$generateIconImage$', symObjAddr: 0x1BA14, symBinAddr: 0x280BC, symSize: 0x0 }
+  - { offset: 0x2622, size: 0x4, addend: 0x0, symName: '__ZL58_logos_orig$MPSpringBoard$SBIconView$createShadowImageView', symObjAddr: 0x1BA18, symBinAddr: 0x280C0, symSize: 0x0 }
+  - { offset: 0x266A, size: 0x4, addend: 0x0, symName: '__ZL50_logos_orig$MPSpringBoard$SBIconView$_updateShadow', symObjAddr: 0x1BA1C, symBinAddr: 0x280C4, symSize: 0x0 }
+  - { offset: 0x2691, size: 0x4, addend: 0x0, symName: '__ZL52_logos_orig$MPSpringBoard$SBIconView$showsReflection', symObjAddr: 0x1BA20, symBinAddr: 0x280C8, symSize: 0x0 }
+  - { offset: 0x26BC, size: 0x4, addend: 0x0, symName: '__ZL53_logos_orig$MPSpringBoard$SBIconView$updateReflection', symObjAddr: 0x1BA24, symBinAddr: 0x280CC, symSize: 0x0 }
+  - { offset: 0x26D2, size: 0x4, addend: 0x0, symName: '__ZL46_logos_orig$MPSpringBoard$SBIconView$setFrame$', symObjAddr: 0x1BA28, symBinAddr: 0x280D0, symSize: 0x0 }
+  - { offset: 0x26FE, size: 0x4, addend: 0x0, symName: '__ZL52_logos_orig$MPSpringBoard$SBIconView$didMoveToWindow', symObjAddr: 0x1BA2C, symBinAddr: 0x280D4, symSize: 0x0 }
+  - { offset: 0x2714, size: 0x4, addend: 0x0, symName: '__ZL57_logos_orig$MPSpringBoard$SBIconLabelImageParameters$font', symObjAddr: 0x1BA30, symBinAddr: 0x280D8, symSize: 0x0 }
+  - { offset: 0x28B5, size: 0x4, addend: 0x0, symName: '__ZL62_logos_orig$MPSpringBoard$SBIconLabelImageParameters$textColor', symObjAddr: 0x1BA34, symBinAddr: 0x280DC, symSize: 0x0 }
+  - { offset: 0x28E0, size: 0x4, addend: 0x0, symName: '__ZL64_logos_orig$MPSpringBoard$SBIconLabelImageParameters$shadowColor', symObjAddr: 0x1BA38, symBinAddr: 0x280E0, symSize: 0x0 }
+  - { offset: 0x28F6, size: 0x4, addend: 0x0, symName: '__ZL63_logos_orig$MPSpringBoard$SBIconLabelImageParameters$shadowBlur', symObjAddr: 0x1BA3C, symBinAddr: 0x280E4, symSize: 0x0 }
+  - { offset: 0x2921, size: 0x4, addend: 0x0, symName: '__ZL65_logos_orig$MPSpringBoard$SBIconLabelImageParameters$shadowOffset', symObjAddr: 0x1BA40, symBinAddr: 0x280E8, symSize: 0x0 }
+  - { offset: 0x294C, size: 0x4, addend: 0x0, symName: '__ZL57_logos_orig$MPSpringBoard$SBIconLabelImageParameters$text', symObjAddr: 0x1BA44, symBinAddr: 0x280EC, symSize: 0x0 }
+  - { offset: 0x2977, size: 0x4, addend: 0x0, symName: '__ZL57_logos_orig$MPSpringBoard$SBWallpaperView$didMoveToWindow', symObjAddr: 0x1BA48, symBinAddr: 0x280F0, symSize: 0x0 }
+  - { offset: 0x2B89, size: 0x4, addend: 0x0, symName: '__ZL51_logos_orig$MPSpringBoard$SBWallpaperView$setImage$', symObjAddr: 0x1BA4C, symBinAddr: 0x280F4, symSize: 0x0 }
+  - { offset: 0x2BB5, size: 0x4, addend: 0x0, symName: '__ZL70_logos_orig$MPSpringBoard$SBWallpaperView$resetCurrentImageToWallpaper', symObjAddr: 0x1BA50, symBinAddr: 0x280F8, symSize: 0x0 }
+  - { offset: 0x2BCB, size: 0x4, addend: 0x0, symName: '__ZL68_logos_orig$MPSpringBoard$SBWallpaperView$replaceWallpaperWithImage$', symObjAddr: 0x1BA54, symBinAddr: 0x280FC, symSize: 0x0 }
+  - { offset: 0x2BE1, size: 0x4, addend: 0x0, symName: '__ZL76_logos_orig$MPSpringBoard$SBWallpaperView$_setGradientImagesWithOrientation$', symObjAddr: 0x1BA58, symBinAddr: 0x28100, symSize: 0x0 }
+  - { offset: 0x2C0D, size: 0x4, addend: 0x0, symName: '__ZL80_logos_meta_orig$MPSpringBoard$SBDockIconListView$backgroundImageForOrientation$', symObjAddr: 0x1BA5C, symBinAddr: 0x28104, symSize: 0x0 }
+  - { offset: 0x2C42, size: 0x4, addend: 0x0, symName: '__ZL55_logos_orig$MPLauncherHooks$SpringBoard$menuButtonDown$', symObjAddr: 0x1BA60, symBinAddr: 0x28108, symSize: 0x0 }
+  - { offset: 0x2C8A, size: 0x4, addend: 0x0, symName: '__ZL53_logos_orig$MPLauncherHooks$SBIcon$noteBadgeDidChange', symObjAddr: 0x1BA64, symBinAddr: 0x2810C, symSize: 0x0 }
+  - { offset: 0x313C, size: 0x4, addend: 0x0, symName: __ZL24_logosLocalCtor_fca39385iPPcS0_, symObjAddr: 0x0, symBinAddr: 0x4AC8, symSize: 0xC90 }
+  - { offset: 0x3140, size: 0x4, addend: 0x0, symName: __ZL6MPFlagP8NSStringa, symObjAddr: 0xC90, symBinAddr: 0x5758, symSize: 0x62 }
+  - { offset: 0x32F8, size: 0x4, addend: 0x0, symName: __ZL6MPFlagP8NSStringa, symObjAddr: 0xC90, symBinAddr: 0x5758, symSize: 0x62 }
+  - { offset: 0x32FC, size: 0x4, addend: 0x0, symName: __ZL5MPIntP8NSStringi, symObjAddr: 0xCF2, symBinAddr: 0x57BA, symSize: 0x54 }
+  - { offset: 0x334C, size: 0x4, addend: 0x0, symName: __ZL5MPIntP8NSStringi, symObjAddr: 0xCF2, symBinAddr: 0x57BA, symSize: 0x54 }
+  - { offset: 0x3350, size: 0x4, addend: 0x0, symName: __ZL8MPStringP8NSStringS0_, symObjAddr: 0xD46, symBinAddr: 0x580E, symSize: 0x46 }
+  - { offset: 0x33A0, size: 0x4, addend: 0x0, symName: __ZL8MPStringP8NSStringS0_, symObjAddr: 0xD46, symBinAddr: 0x580E, symSize: 0x46 }
+  - { offset: 0x3499, size: 0x4, addend: 0x0, symName: '__ZL47_logos_method$MPUikit$UINavigationBar$drawRect$P15UINavigationBarP13objc_selector6CGRect', symObjAddr: 0xD8C, symBinAddr: 0x5854, symSize: 0x160 }
+  - { offset: 0x349D, size: 0x4, addend: 0x0, symName: '__ZL52_logos_method$MPUikit$UINavigationBar$layoutSubviewsP15UINavigationBarP13objc_selector', symObjAddr: 0xEEC, symBinAddr: 0x59B4, symSize: 0x28 }
+  - { offset: 0x3501, size: 0x4, addend: 0x0, symName: '__ZL52_logos_method$MPUikit$UINavigationBar$layoutSubviewsP15UINavigationBarP13objc_selector', symObjAddr: 0xEEC, symBinAddr: 0x59B4, symSize: 0x28 }
+  - { offset: 0x3538, size: 0x4, addend: 0x0, symName: '__ZL61_logos_method$MPUikit$UINavigationBar$setTitleTextAttributes$P15UINavigationBarP13objc_selectorP12NSDictionary', symObjAddr: 0xF14, symBinAddr: 0x59DC, symSize: 0x2E0 }
+  - { offset: 0x353C, size: 0x4, addend: 0x0, symName: '__ZL41_logos_method$MPUikit$UIToolbar$drawRect$P9UIToolbarP13objc_selector6CGRect', symObjAddr: 0x11F4, symBinAddr: 0x5CBC, symSize: 0x160 }
+  - { offset: 0x3587, size: 0x4, addend: 0x0, symName: '__ZL41_logos_method$MPUikit$UIToolbar$drawRect$P9UIToolbarP13objc_selector6CGRect', symObjAddr: 0x11F4, symBinAddr: 0x5CBC, symSize: 0x160 }
+  - { offset: 0x358B, size: 0x4, addend: 0x0, symName: '__ZL40_logos_method$MPUikit$UITabBar$drawRect$P8UITabBarP13objc_selector6CGRect', symObjAddr: 0x1354, symBinAddr: 0x5E1C, symSize: 0x160 }
+  - { offset: 0x35EF, size: 0x4, addend: 0x0, symName: '__ZL40_logos_method$MPUikit$UITabBar$drawRect$P8UITabBarP13objc_selector6CGRect', symObjAddr: 0x1354, symBinAddr: 0x5E1C, symSize: 0x160 }
+  - { offset: 0x35F3, size: 0x4, addend: 0x0, symName: '__ZL63_logos_method$MPUikit$UIApplication$setStatusBarStyle$animated$P13UIApplicationP13objc_selector16UIStatusBarStylea', symObjAddr: 0x14B4, symBinAddr: 0x5F7C, symSize: 0x5C }
+  - { offset: 0x36EB, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBFolderIcon$generateIconImage$P12SBFolderIconP13objc_selectori', symObjAddr: 0x1D50, symBinAddr: 0x6818, symSize: 0x25C }
+  - { offset: 0x36EF, size: 0x4, addend: 0x0, symName: '__ZL60_logos_method$MPSpringBoard$SBIconView$createShadowImageViewP10SBIconViewP13objc_selector', symObjAddr: 0x1FAC, symBinAddr: 0x6A74, symSize: 0x154 }
+  - { offset: 0x3763, size: 0x4, addend: 0x0, symName: '__ZL60_logos_method$MPSpringBoard$SBIconView$createShadowImageViewP10SBIconViewP13objc_selector', symObjAddr: 0x1FAC, symBinAddr: 0x6A74, symSize: 0x154 }
+  - { offset: 0x3767, size: 0x4, addend: 0x0, symName: '__ZL52_logos_method$MPSpringBoard$SBIconView$_updateShadowP10SBIconViewP13objc_selector', symObjAddr: 0x2100, symBinAddr: 0x6BC8, symSize: 0x2C }
+  - { offset: 0x37AE, size: 0x4, addend: 0x0, symName: '__ZL52_logos_method$MPSpringBoard$SBIconView$_updateShadowP10SBIconViewP13objc_selector', symObjAddr: 0x2100, symBinAddr: 0x6BC8, symSize: 0x2C }
+  - { offset: 0x37B2, size: 0x4, addend: 0x0, symName: '__ZL54_logos_method$MPSpringBoard$SBIconView$showsReflectionP10SBIconViewP13objc_selector', symObjAddr: 0x212C, symBinAddr: 0x6BF4, symSize: 0x28 }
+  - { offset: 0x37E5, size: 0x4, addend: 0x0, symName: '__ZL54_logos_method$MPSpringBoard$SBIconView$showsReflectionP10SBIconViewP13objc_selector', symObjAddr: 0x212C, symBinAddr: 0x6BF4, symSize: 0x28 }
+  - { offset: 0x37E9, size: 0x4, addend: 0x0, symName: '__ZL55_logos_method$MPSpringBoard$SBIconView$updateReflectionP10SBIconViewP13objc_selector', symObjAddr: 0x2154, symBinAddr: 0x6C1C, symSize: 0x28 }
+  - { offset: 0x3820, size: 0x4, addend: 0x0, symName: '__ZL55_logos_method$MPSpringBoard$SBIconView$updateReflectionP10SBIconViewP13objc_selector', symObjAddr: 0x2154, symBinAddr: 0x6C1C, symSize: 0x28 }
+  - { offset: 0x3857, size: 0x4, addend: 0x0, symName: '__ZL48_logos_method$MPSpringBoard$SBIconView$setFrame$P10SBIconViewP13objc_selector6CGRect', symObjAddr: 0x217C, symBinAddr: 0x6C44, symSize: 0x144 }
+  - { offset: 0x385B, size: 0x4, addend: 0x0, symName: '__ZL54_logos_method$MPSpringBoard$SBIconView$didMoveToWindowP10SBIconViewP13objc_selector', symObjAddr: 0x22C0, symBinAddr: 0x6D88, symSize: 0xD0 }
+  - { offset: 0x389A, size: 0x4, addend: 0x0, symName: '__ZL54_logos_method$MPSpringBoard$SBIconView$didMoveToWindowP10SBIconViewP13objc_selector', symObjAddr: 0x22C0, symBinAddr: 0x6D88, symSize: 0xD0 }
+  - { offset: 0x389E, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBIconLabelImageParameters$fontP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2390, symBinAddr: 0x6E58, symSize: 0x1C4 }
+  - { offset: 0x38D1, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBIconLabelImageParameters$fontP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2390, symBinAddr: 0x6E58, symSize: 0x1C4 }
+  - { offset: 0x38D5, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBIconLabelImageParameters$textColorP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2554, symBinAddr: 0x701C, symSize: 0x66 }
+  - { offset: 0x3928, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBIconLabelImageParameters$textColorP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2554, symBinAddr: 0x701C, symSize: 0x66 }
+  - { offset: 0x392C, size: 0x4, addend: 0x0, symName: '__ZL66_logos_method$MPSpringBoard$SBIconLabelImageParameters$shadowColorP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x25BA, symBinAddr: 0x7082, symSize: 0x4C }
+  - { offset: 0x3963, size: 0x4, addend: 0x0, symName: '__ZL66_logos_method$MPSpringBoard$SBIconLabelImageParameters$shadowColorP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x25BA, symBinAddr: 0x7082, symSize: 0x4C }
+  - { offset: 0x3967, size: 0x4, addend: 0x0, symName: '__ZL65_logos_method$MPSpringBoard$SBIconLabelImageParameters$shadowBlurP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2606, symBinAddr: 0x70CE, symSize: 0x40 }
+  - { offset: 0x399E, size: 0x4, addend: 0x0, symName: '__ZL65_logos_method$MPSpringBoard$SBIconLabelImageParameters$shadowBlurP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2606, symBinAddr: 0x70CE, symSize: 0x40 }
+  - { offset: 0x39A2, size: 0x4, addend: 0x0, symName: '__ZL67_logos_method$MPSpringBoard$SBIconLabelImageParameters$shadowOffsetP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2646, symBinAddr: 0x710E, symSize: 0x56 }
+  - { offset: 0x39D9, size: 0x4, addend: 0x0, symName: '__ZL67_logos_method$MPSpringBoard$SBIconLabelImageParameters$shadowOffsetP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x2646, symBinAddr: 0x710E, symSize: 0x56 }
+  - { offset: 0x39DD, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBIconLabelImageParameters$textP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x269C, symBinAddr: 0x7164, symSize: 0x18C }
+  - { offset: 0x3A14, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBIconLabelImageParameters$textP26SBIconLabelImageParametersP13objc_selector', symObjAddr: 0x269C, symBinAddr: 0x7164, symSize: 0x18C }
+  - { offset: 0x3A18, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBWallpaperView$didMoveToWindowP15SBWallpaperViewP13objc_selector', symObjAddr: 0x2828, symBinAddr: 0x72F0, symSize: 0xD0 }
+  - { offset: 0x3A6B, size: 0x4, addend: 0x0, symName: '__ZL59_logos_method$MPSpringBoard$SBWallpaperView$didMoveToWindowP15SBWallpaperViewP13objc_selector', symObjAddr: 0x2828, symBinAddr: 0x72F0, symSize: 0xD0 }
+  - { offset: 0x3A6F, size: 0x4, addend: 0x0, symName: '__ZL53_logos_method$MPSpringBoard$SBWallpaperView$setImage$P15SBWallpaperViewP13objc_selectorP7UIImage', symObjAddr: 0x28F8, symBinAddr: 0x73C0, symSize: 0x244 }
+  - { offset: 0x3AA2, size: 0x4, addend: 0x0, symName: '__ZL53_logos_method$MPSpringBoard$SBWallpaperView$setImage$P15SBWallpaperViewP13objc_selectorP7UIImage', symObjAddr: 0x28F8, symBinAddr: 0x73C0, symSize: 0x244 }
+  - { offset: 0x3AA6, size: 0x4, addend: 0x0, symName: '__ZL72_logos_method$MPSpringBoard$SBWallpaperView$resetCurrentImageToWallpaperP15SBWallpaperViewP13objc_selector', symObjAddr: 0x2B3C, symBinAddr: 0x7604, symSize: 0x154 }
+  - { offset: 0x3AE5, size: 0x4, addend: 0x0, symName: '__ZL72_logos_method$MPSpringBoard$SBWallpaperView$resetCurrentImageToWallpaperP15SBWallpaperViewP13objc_selector', symObjAddr: 0x2B3C, symBinAddr: 0x7604, symSize: 0x154 }
+  - { offset: 0x3AE9, size: 0x4, addend: 0x0, symName: '__ZL70_logos_method$MPSpringBoard$SBWallpaperView$replaceWallpaperWithImage$P15SBWallpaperViewP13objc_selectorP7UIImage', symObjAddr: 0x2C90, symBinAddr: 0x7758, symSize: 0x1D4 }
+  - { offset: 0x3B1C, size: 0x4, addend: 0x0, symName: '__ZL70_logos_method$MPSpringBoard$SBWallpaperView$replaceWallpaperWithImage$P15SBWallpaperViewP13objc_selectorP7UIImage', symObjAddr: 0x2C90, symBinAddr: 0x7758, symSize: 0x1D4 }
+  - { offset: 0x3B20, size: 0x4, addend: 0x0, symName: '__ZL78_logos_method$MPSpringBoard$SBWallpaperView$_setGradientImagesWithOrientation$P15SBWallpaperViewP13objc_selectori', symObjAddr: 0x2E64, symBinAddr: 0x792C, symSize: 0x44 }
+  - { offset: 0x3B5F, size: 0x4, addend: 0x0, symName: '__ZL78_logos_method$MPSpringBoard$SBWallpaperView$_setGradientImagesWithOrientation$P15SBWallpaperViewP13objc_selectori', symObjAddr: 0x2E64, symBinAddr: 0x792C, symSize: 0x44 }
+  - { offset: 0x3B63, size: 0x4, addend: 0x0, symName: '__ZL82_logos_meta_method$MPSpringBoard$SBDockIconListView$backgroundImageForOrientation$P10objc_classP13objc_selectori', symObjAddr: 0x2EA8, symBinAddr: 0x7970, symSize: 0x168 }
+  - { offset: 0x3BA6, size: 0x4, addend: 0x0, symName: '__ZL82_logos_meta_method$MPSpringBoard$SBDockIconListView$backgroundImageForOrientation$P10objc_classP13objc_selectori', symObjAddr: 0x2EA8, symBinAddr: 0x7970, symSize: 0x168 }
+  - { offset: 0x3BAA, size: 0x4, addend: 0x0, symName: ____ZL24_logosLocalCtor_fca39385iPPcS0__block_invoke, symObjAddr: 0x3010, symBinAddr: 0x7AD8, symSize: 0x1C }
+  - { offset: 0x3C01, size: 0x4, addend: 0x0, symName: ____ZL24_logosLocalCtor_fca39385iPPcS0__block_invoke, symObjAddr: 0x3010, symBinAddr: 0x7AD8, symSize: 0x1C }
+  - { offset: 0x3C05, size: 0x4, addend: 0x0, symName: '__ZL57_logos_method$MPLauncherHooks$SpringBoard$menuButtonDown$P11SpringBoardP13objc_selectorP9__GSEvent', symObjAddr: 0x302C, symBinAddr: 0x7AF4, symSize: 0x58 }
+  - { offset: 0x3C25, size: 0x4, addend: 0x0, symName: '__ZL57_logos_method$MPLauncherHooks$SpringBoard$menuButtonDown$P11SpringBoardP13objc_selectorP9__GSEvent', symObjAddr: 0x302C, symBinAddr: 0x7AF4, symSize: 0x58 }
+  - { offset: 0x3C29, size: 0x4, addend: 0x0, symName: '__ZL55_logos_method$MPLauncherHooks$SBIcon$noteBadgeDidChangeP6SBIconP13objc_selector', symObjAddr: 0x3084, symBinAddr: 0x7B4C, symSize: 0xF8 }
+  - { offset: 0x3C6C, size: 0x4, addend: 0x0, symName: '__ZL55_logos_method$MPLauncherHooks$SBIcon$noteBadgeDidChangeP6SBIconP13objc_selector', symObjAddr: 0x3084, symBinAddr: 0x7B4C, symSize: 0xF8 }
+  - { offset: 0x3C70, size: 0x4, addend: 0x0, symName: __ZL18MPLockStateChangedP22__CFNotificationCenterPvPK10__CFStringPKvPK14__CFDictionary, symObjAddr: 0x317C, symBinAddr: 0x7C44, symSize: 0x34 }
+  - { offset: 0x3CA3, size: 0x4, addend: 0x0, symName: __ZL18MPLockStateChangedP22__CFNotificationCenterPvPK10__CFStringPKvPK14__CFDictionary, symObjAddr: 0x317C, symBinAddr: 0x7C44, symSize: 0x34 }
+  - { offset: 0x3CA7, size: 0x4, addend: 0x0, symName: ____ZL24_logosLocalCtor_fca39385iPPcS0__block_invoke_2, symObjAddr: 0x31B0, symBinAddr: 0x7C78, symSize: 0x4 }
+  - { offset: 0x3CF6, size: 0x4, addend: 0x0, symName: ____ZL24_logosLocalCtor_fca39385iPPcS0__block_invoke_2, symObjAddr: 0x31B0, symBinAddr: 0x7C78, symSize: 0x4 }
+  - { offset: 0x3CFA, size: 0x4, addend: 0x0, symName: __ZL16MPEnsureLauncherv, symObjAddr: 0x31B4, symBinAddr: 0x7C7C, symSize: 0x188 }
+  - { offset: 0x3D1A, size: 0x4, addend: 0x0, symName: __ZL16MPEnsureLauncherv, symObjAddr: 0x31B4, symBinAddr: 0x7C7C, symSize: 0x188 }
+  - { offset: 0x3D1E, size: 0x4, addend: 0x0, symName: __ZL12MPFlatPanelsv, symObjAddr: 0x333C, symBinAddr: 0x7E04, symSize: 0x30 }
+  - { offset: 0x3D51, size: 0x4, addend: 0x0, symName: __ZL12MPFlatPanelsv, symObjAddr: 0x333C, symBinAddr: 0x7E04, symSize: 0x30 }
+  - { offset: 0x3D97, size: 0x4, addend: 0x0, symName: ____ZL29MPConfigureAppearanceIfNeededv_block_invoke, symObjAddr: 0x3550, symBinAddr: 0x8018, symSize: 0x4FC }
+  - { offset: 0x3D9B, size: 0x4, addend: 0x0, symName: __ZL13MPAccentColorv, symObjAddr: 0x3A4C, symBinAddr: 0x8514, symSize: 0x2DC }
+  - { offset: 0x3F86, size: 0x4, addend: 0x0, symName: __ZL13MPAccentColorv, symObjAddr: 0x3A4C, symBinAddr: 0x8514, symSize: 0x2DC }
+  - { offset: 0x3F8A, size: 0x4, addend: 0x0, symName: __ZL6MPFontP8NSStringf, symObjAddr: 0x3D28, symBinAddr: 0x87F0, symSize: 0x340 }
+  - { offset: 0x3FE4, size: 0x4, addend: 0x0, symName: ____ZL13MPAccentHexesv_block_invoke, symObjAddr: 0x4068, symBinAddr: 0x8B30, symSize: 0x12E }
+  - { offset: 0x3FE8, size: 0x4, addend: 0x0, symName: ____ZL6MPFontP8NSStringf_block_invoke, symObjAddr: 0x4196, symBinAddr: 0x8C5E, symSize: 0x4A }
+  - { offset: 0x4006, size: 0x4, addend: 0x0, symName: ____ZL6MPFontP8NSStringf_block_invoke, symObjAddr: 0x4196, symBinAddr: 0x8C5E, symSize: 0x4A }
+  - { offset: 0x4028, size: 0x4, addend: 0x0, symName: __ZL12MPSolidImageffP7UIColor, symObjAddr: 0x41E0, symBinAddr: 0x8CA8, symSize: 0x128 }
+  - { offset: 0x402C, size: 0x4, addend: 0x0, symName: ____ZL9MPLogOnceP8NSStringS0_z_block_invoke, symObjAddr: 0x4308, symBinAddr: 0x8DD0, symSize: 0x48 }
+  - { offset: 0x4077, size: 0x4, addend: 0x0, symName: ____ZL9MPLogOnceP8NSStringS0_z_block_invoke, symObjAddr: 0x4308, symBinAddr: 0x8DD0, symSize: 0x48 }
+  - { offset: 0x407B, size: 0x4, addend: 0x0, symName: __ZL17MPApplyMetroTitleP6UIView, symObjAddr: 0x4350, symBinAddr: 0x8E18, symSize: 0x4E4 }
+  - { offset: 0x40B3, size: 0x4, addend: 0x0, symName: __ZL17MPApplyMetroTitleP6UIView, symObjAddr: 0x4350, symBinAddr: 0x8E18, symSize: 0x4E4 }
+  - { offset: 0x40B7, size: 0x4, addend: 0x0, symName: __ZL9MPUpperOnv, symObjAddr: 0x4834, symBinAddr: 0x92FC, symSize: 0x2E }
+  - { offset: 0x40FD, size: 0x4, addend: 0x0, symName: __ZL9MPUpperOnv, symObjAddr: 0x4834, symBinAddr: 0x92FC, symSize: 0x2E }
+  - { offset: 0x4101, size: 0x4, addend: 0x0, symName: __ZL9MPTilesOnv, symObjAddr: 0x4862, symBinAddr: 0x932A, symSize: 0x2E }
+  - { offset: 0x4127, size: 0x4, addend: 0x0, symName: __ZL9MPTilesOnv, symObjAddr: 0x4862, symBinAddr: 0x932A, symSize: 0x2E }
+  - { offset: 0x412B, size: 0x4, addend: 0x0, symName: ___Block_byref_object_copy_, symObjAddr: 0x4890, symBinAddr: 0x9358, symSize: 0xA }
+  - { offset: 0x4151, size: 0x4, addend: 0x0, symName: ___Block_byref_object_copy_, symObjAddr: 0x4890, symBinAddr: 0x9358, symSize: 0xA }
+  - { offset: 0x4155, size: 0x4, addend: 0x0, symName: ___Block_byref_object_dispose_, symObjAddr: 0x489A, symBinAddr: 0x9362, symSize: 0x6 }
+  - { offset: 0x4174, size: 0x4, addend: 0x0, symName: ___Block_byref_object_dispose_, symObjAddr: 0x489A, symBinAddr: 0x9362, symSize: 0x6 }
+  - { offset: 0x4178, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke', symObjAddr: 0x48A0, symBinAddr: 0x9368, symSize: 0x2C }
+  - { offset: 0x418F, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke', symObjAddr: 0x48A0, symBinAddr: 0x9368, symSize: 0x2C }
+  - { offset: 0x4193, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke_2', symObjAddr: 0x48CC, symBinAddr: 0x9394, symSize: 0x318 }
+  - { offset: 0x41E5, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke_2', symObjAddr: 0x48CC, symBinAddr: 0x9394, symSize: 0x318 }
+  - { offset: 0x41E9, size: 0x4, addend: 0x0, symName: __ZL11MPTileImageP7UIImageP8NSString, symObjAddr: 0x4BE4, symBinAddr: 0x96AC, symSize: 0xFD4 }
+  - { offset: 0x43D4, size: 0x4, addend: 0x0, symName: __ZL11MPTileImageP7UIImageP8NSString, symObjAddr: 0x4BE4, symBinAddr: 0x96AC, symSize: 0xFD4 }
+  - { offset: 0x43D8, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke_3', symObjAddr: 0x5BB8, symBinAddr: 0xA680, symSize: 0x178 }
+  - { offset: 0x452F, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke_3', symObjAddr: 0x5BB8, symBinAddr: 0xA680, symSize: 0x178 }
+  - { offset: 0x4533, size: 0x4, addend: 0x0, symName: ___copy_helper_block_ea4_20r24r28r32r36r, symObjAddr: 0x5D30, symBinAddr: 0xA7F8, symSize: 0x46 }
+  - { offset: 0x4565, size: 0x4, addend: 0x0, symName: ___copy_helper_block_ea4_20r24r28r32r36r, symObjAddr: 0x5D30, symBinAddr: 0xA7F8, symSize: 0x46 }
+  - { offset: 0x4569, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_ea4_20r24r28r32r36r, symObjAddr: 0x5D76, symBinAddr: 0xA83E, symSize: 0x32 }
+  - { offset: 0x458B, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_ea4_20r24r28r32r36r, symObjAddr: 0x5D76, symBinAddr: 0xA83E, symSize: 0x32 }
+  - { offset: 0x458F, size: 0x4, addend: 0x0, symName: ____ZL15MPTileCachePathP8NSStringif_block_invoke, symObjAddr: 0x5DA8, symBinAddr: 0xA870, symSize: 0x100 }
+  - { offset: 0x45A7, size: 0x4, addend: 0x0, symName: ____ZL15MPTileCachePathP8NSStringif_block_invoke, symObjAddr: 0x5DA8, symBinAddr: 0xA870, symSize: 0x100 }
+  - { offset: 0x45AB, size: 0x4, addend: 0x0, symName: ____ZL13MPMarkPendingP8NSStringi_block_invoke, symObjAddr: 0x5EA8, symBinAddr: 0xA970, symSize: 0x48 }
+  - { offset: 0x45CB, size: 0x4, addend: 0x0, symName: ____ZL13MPMarkPendingP8NSStringi_block_invoke, symObjAddr: 0x5EA8, symBinAddr: 0xA970, symSize: 0x48 }
+  - { offset: 0x45CF, size: 0x4, addend: 0x0, symName: __ZL10MPPngCachev, symObjAddr: 0x5EF0, symBinAddr: 0xA9B8, symSize: 0x38 }
+  - { offset: 0x45EF, size: 0x4, addend: 0x0, symName: ____ZL12MPRawAppIconP8NSString_block_invoke, symObjAddr: 0x5F28, symBinAddr: 0xA9F0, symSize: 0x1C8 }
+  - { offset: 0x45F3, size: 0x4, addend: 0x0, symName: ___copy_helper_block_ea4_20s, symObjAddr: 0x60F0, symBinAddr: 0xABB8, symSize: 0x6 }
+  - { offset: 0x4635, size: 0x4, addend: 0x0, symName: ___copy_helper_block_ea4_20s, symObjAddr: 0x60F0, symBinAddr: 0xABB8, symSize: 0x6 }
+  - { offset: 0x4639, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_ea4_20s, symObjAddr: 0x60F6, symBinAddr: 0xABBE, symSize: 0x6 }
+  - { offset: 0x4659, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_ea4_20s, symObjAddr: 0x60F6, symBinAddr: 0xABBE, symSize: 0x6 }
+  - { offset: 0x465D, size: 0x4, addend: 0x0, symName: ____ZL10MPPngCachev_block_invoke, symObjAddr: 0x60FC, symBinAddr: 0xABC4, symSize: 0x48 }
+  - { offset: 0x4675, size: 0x4, addend: 0x0, symName: ____ZL10MPPngCachev_block_invoke, symObjAddr: 0x60FC, symBinAddr: 0xABC4, symSize: 0x48 }
+  - { offset: 0x4679, size: 0x4, addend: 0x0, symName: ____ZL15MPUnmarkPendingP8NSStringi_block_invoke, symObjAddr: 0x6144, symBinAddr: 0xAC0C, symSize: 0x48 }
+  - { offset: 0x4697, size: 0x4, addend: 0x0, symName: ____ZL15MPUnmarkPendingP8NSStringi_block_invoke, symObjAddr: 0x6144, symBinAddr: 0xAC0C, symSize: 0x48 }
+  - { offset: 0x469B, size: 0x4, addend: 0x0, symName: __ZL8MPWallOnv, symObjAddr: 0x618C, symBinAddr: 0xAC54, symSize: 0x2E }
+  - { offset: 0x46BB, size: 0x4, addend: 0x0, symName: __ZL8MPWallOnv, symObjAddr: 0x618C, symBinAddr: 0xAC54, symSize: 0x2E }
+  - { offset: 0x46BF, size: 0x4, addend: 0x0, symName: __ZL10MPLabelsOnv, symObjAddr: 0x61BA, symBinAddr: 0xAC82, symSize: 0x2E }
+  - { offset: 0x46E5, size: 0x4, addend: 0x0, symName: __ZL10MPLabelsOnv, symObjAddr: 0x61BA, symBinAddr: 0xAC82, symSize: 0x2E }
+  - { offset: 0x46E9, size: 0x4, addend: 0x0, symName: ____ZL18MPScheduleTileKickv_block_invoke, symObjAddr: 0x61E8, symBinAddr: 0xACB0, symSize: 0x404 }
+  - { offset: 0x470F, size: 0x4, addend: 0x0, symName: ____ZL18MPScheduleTileKickv_block_invoke, symObjAddr: 0x61E8, symBinAddr: 0xACB0, symSize: 0x404 }
+  - { offset: 0x4713, size: 0x4, addend: 0x0, symName: ____ZL18MPLockStateChangedP22__CFNotificationCenterPvPK10__CFStringPKvPK14__CFDictionary_block_invoke, symObjAddr: 0x65EC, symBinAddr: 0xB0B4, symSize: 0x110 }
+  - { offset: 0x4799, size: 0x4, addend: 0x0, symName: ____ZL18MPLockStateChangedP22__CFNotificationCenterPvPK10__CFStringPKvPK14__CFDictionary_block_invoke, symObjAddr: 0x65EC, symBinAddr: 0xB0B4, symSize: 0x110 }
+  - { offset: 0x479D, size: 0x4, addend: 0x0, symName: '__ZL47_logos_method$MPUikit$UINavigationBar$drawRect$P15UINavigationBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x66FC, symBinAddr: 0x1D5A0, symSize: 0x14 }
+  - { offset: 0x47D3, size: 0x4, addend: 0x0, symName: '__ZL47_logos_method$MPUikit$UINavigationBar$drawRect$P15UINavigationBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x66FC, symBinAddr: 0x1D5A0, symSize: 0x14 }
+  - { offset: 0x47D7, size: 0x4, addend: 0x0, symName: '__ZL41_logos_method$MPUikit$UIToolbar$drawRect$P9UIToolbarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6710, symBinAddr: 0x1D5B4, symSize: 0x14 }
+  - { offset: 0x47EA, size: 0x4, addend: 0x0, symName: '__ZL47_logos_method$MPUikit$UINavigationBar$drawRect$P15UINavigationBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x66FC, symBinAddr: 0x1D5A0, symSize: 0x14 }
+  - { offset: 0x47FB, size: 0x4, addend: 0x0, symName: '__ZL47_logos_method$MPUikit$UINavigationBar$drawRect$P15UINavigationBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x66FC, symBinAddr: 0x1D5A0, symSize: 0x14 }
+  - { offset: 0x480A, size: 0x4, addend: 0x0, symName: '__ZL41_logos_method$MPUikit$UIToolbar$drawRect$P9UIToolbarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6710, symBinAddr: 0x1D5B4, symSize: 0x14 }
+  - { offset: 0x480E, size: 0x4, addend: 0x0, symName: '__ZL40_logos_method$MPUikit$UITabBar$drawRect$P8UITabBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6724, symBinAddr: 0x1D5C8, symSize: 0x14 }
+  - { offset: 0x4821, size: 0x4, addend: 0x0, symName: '__ZL41_logos_method$MPUikit$UIToolbar$drawRect$P9UIToolbarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6710, symBinAddr: 0x1D5B4, symSize: 0x14 }
+  - { offset: 0x4832, size: 0x4, addend: 0x0, symName: '__ZL41_logos_method$MPUikit$UIToolbar$drawRect$P9UIToolbarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6710, symBinAddr: 0x1D5B4, symSize: 0x14 }
+  - { offset: 0x4841, size: 0x4, addend: 0x0, symName: '__ZL40_logos_method$MPUikit$UITabBar$drawRect$P8UITabBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6724, symBinAddr: 0x1D5C8, symSize: 0x14 }
+  - { offset: 0x4845, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.1', symObjAddr: 0x6738, symBinAddr: 0x1D5DC, symSize: 0x14 }
+  - { offset: 0x4858, size: 0x4, addend: 0x0, symName: '__ZL40_logos_method$MPUikit$UITabBar$drawRect$P8UITabBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6724, symBinAddr: 0x1D5C8, symSize: 0x14 }
+  - { offset: 0x4869, size: 0x4, addend: 0x0, symName: '__ZL40_logos_method$MPUikit$UITabBar$drawRect$P8UITabBarP13objc_selector6CGRect.cold.1', symObjAddr: 0x6724, symBinAddr: 0x1D5C8, symSize: 0x14 }
+  - { offset: 0x4878, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.1', symObjAddr: 0x6738, symBinAddr: 0x1D5DC, symSize: 0x14 }
+  - { offset: 0x487C, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.2', symObjAddr: 0x674C, symBinAddr: 0x1D5F0, symSize: 0x14 }
+  - { offset: 0x488F, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.1', symObjAddr: 0x6738, symBinAddr: 0x1D5DC, symSize: 0x14 }
+  - { offset: 0x48A0, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.1', symObjAddr: 0x6738, symBinAddr: 0x1D5DC, symSize: 0x14 }
+  - { offset: 0x48AF, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.2', symObjAddr: 0x674C, symBinAddr: 0x1D5F0, symSize: 0x14 }
+  - { offset: 0x48B3, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.3', symObjAddr: 0x6760, symBinAddr: 0x1D604, symSize: 0x1C }
+  - { offset: 0x48C6, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.2', symObjAddr: 0x674C, symBinAddr: 0x1D5F0, symSize: 0x14 }
+  - { offset: 0x48D7, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.2', symObjAddr: 0x674C, symBinAddr: 0x1D5F0, symSize: 0x14 }
+  - { offset: 0x48E6, size: 0x4, addend: 0x0, symName: '__ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori.cold.3', symObjAddr: 0x6760, symBinAddr: 0x1D604, symSize: 0x1C }
+  - { offset: 0x48EA, size: 0x4, addend: 0x0, symName: __ZL9MPLogOnceP8NSStringS0_z.cold.1, symObjAddr: 0x677C, symBinAddr: 0x1D620, symSize: 0x14 }
+  - { offset: 0x490B, size: 0x4, addend: 0x0, symName: __ZL9MPLogOnceP8NSStringS0_z.cold.1, symObjAddr: 0x677C, symBinAddr: 0x1D620, symSize: 0x14 }
+  - { offset: 0x490F, size: 0x4, addend: 0x0, symName: __ZL13MPAccentColorv.cold.1, symObjAddr: 0x6790, symBinAddr: 0x1D634, symSize: 0x14 }
+  - { offset: 0x4922, size: 0x4, addend: 0x0, symName: __ZL9MPLogOnceP8NSStringS0_z.cold.1, symObjAddr: 0x677C, symBinAddr: 0x1D620, symSize: 0x14 }
+  - { offset: 0x492F, size: 0x4, addend: 0x0, symName: __ZL13MPAccentColorv.cold.1, symObjAddr: 0x6790, symBinAddr: 0x1D634, symSize: 0x14 }
+  - { offset: 0x4933, size: 0x4, addend: 0x0, symName: __ZL6MPFontP8NSStringf.cold.1, symObjAddr: 0x67A4, symBinAddr: 0x1D648, symSize: 0x14 }
+  - { offset: 0x4946, size: 0x4, addend: 0x0, symName: __ZL13MPAccentColorv.cold.1, symObjAddr: 0x6790, symBinAddr: 0x1D634, symSize: 0x14 }
+  - { offset: 0x4956, size: 0x4, addend: 0x0, symName: __ZL13MPAccentColorv.cold.1, symObjAddr: 0x6790, symBinAddr: 0x1D634, symSize: 0x14 }
+  - { offset: 0x4964, size: 0x4, addend: 0x0, symName: __ZL6MPFontP8NSStringf.cold.1, symObjAddr: 0x67A4, symBinAddr: 0x1D648, symSize: 0x14 }
+  - { offset: 0x4968, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke_2.cold.1', symObjAddr: 0x67B8, symBinAddr: 0x1D65C, symSize: 0x1C }
+  - { offset: 0x497B, size: 0x4, addend: 0x0, symName: __ZL6MPFontP8NSStringf.cold.1, symObjAddr: 0x67A4, symBinAddr: 0x1D648, symSize: 0x14 }
+  - { offset: 0x4988, size: 0x4, addend: 0x0, symName: '____ZL64_logos_method$MPSpringBoard$SBApplicationIcon$generateIconImage$P17SBApplicationIconP13objc_selectori_block_invoke_2.cold.1', symObjAddr: 0x67B8, symBinAddr: 0x1D65C, symSize: 0x1C }
+  - { offset: 0x498C, size: 0x4, addend: 0x0, symName: __ZL10MPPngCachev.cold.1, symObjAddr: 0x67D4, symBinAddr: 0x1D678, symSize: 0x14 }
+  - { offset: 0x49BF, size: 0x4, addend: 0x0, symName: __ZL10MPPngCachev.cold.1, symObjAddr: 0x67D4, symBinAddr: 0x1D678, symSize: 0x14 }
+  - { offset: 0x49C3, size: 0x4, addend: 0x0, symName: GCC_except_table0, symObjAddr: 0x67E8, symBinAddr: 0x1DBCC, symSize: 0x0 }
+  - { offset: 0x49D6, size: 0x4, addend: 0x0, symName: __ZL10MPPngCachev.cold.1, symObjAddr: 0x67D4, symBinAddr: 0x1D678, symSize: 0x14 }
+  - { offset: 0x538F, size: 0x4, addend: 0x0, symName: '-[MPAppEntry bundleID]', symObjAddr: 0x0, symBinAddr: 0xB1C4, symSize: 0x4 }
+  - { offset: 0x5393, size: 0x4, addend: 0x0, symName: GCC_except_table9, symObjAddr: 0x1C68, symBinAddr: 0x1DF48, symSize: 0x0 }
+  - { offset: 0x53A5, size: 0x4, addend: 0x0, symName: _MPAppsChangedNotification, symObjAddr: 0x1F20, symBinAddr: 0x242F4, symSize: 0x0 }
+  - { offset: 0x541E, size: 0x4, addend: 0x0, symName: _MPDsPngCache, symObjAddr: 0x7ADC, symBinAddr: 0x28154, symSize: 0x0 }
+  - { offset: 0x54EF, size: 0x4, addend: 0x0, symName: '+[MPAppDataSource sharedDataSource]', symObjAddr: 0x36, symBinAddr: 0xB1FA, symSize: 0x36 }
+  - { offset: 0x54F3, size: 0x4, addend: 0x0, symName: '___35+[MPAppDataSource sharedDataSource]_block_invoke', symObjAddr: 0x6C, symBinAddr: 0xB230, symSize: 0x48 }
+  - { offset: 0x5515, size: 0x4, addend: 0x0, symName: _sharedDataSource.ds, symObjAddr: 0x7AE0, symBinAddr: 0x28158, symSize: 0x0 }
+  - { offset: 0x5526, size: 0x4, addend: 0x0, symName: _sharedDataSource.once, symObjAddr: 0x7AE4, symBinAddr: 0x2815C, symSize: 0x0 }
+  - { offset: 0x5580, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource iconForEntry:completion:]', symObjAddr: 0xAAC, symBinAddr: 0xBC70, symSize: 0xA0 }
+  - { offset: 0x5584, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke', symObjAddr: 0xB4C, symBinAddr: 0xBD10, symSize: 0x2C }
+  - { offset: 0x55A2, size: 0x4, addend: 0x0, symName: '_iconForEntry:completion:.MPDsIconQueue', symObjAddr: 0x7AE8, symBinAddr: 0x28160, symSize: 0x0 }
+  - { offset: 0x55B3, size: 0x4, addend: 0x0, symName: '_iconForEntry:completion:.MPDsIconOnce', symObjAddr: 0x7AEC, symBinAddr: 0x28164, symSize: 0x0 }
+  - { offset: 0x57F6, size: 0x4, addend: 0x0, symName: '-[MPAppEntry bundleID]', symObjAddr: 0x0, symBinAddr: 0xB1C4, symSize: 0x4 }
+  - { offset: 0x57FA, size: 0x4, addend: 0x0, symName: '-[MPAppEntry setBundleID:]', symObjAddr: 0x4, symBinAddr: 0xB1C8, symSize: 0x6 }
+  - { offset: 0x582A, size: 0x4, addend: 0x0, symName: '-[MPAppEntry setBundleID:]', symObjAddr: 0x4, symBinAddr: 0xB1C8, symSize: 0x6 }
+  - { offset: 0x582E, size: 0x4, addend: 0x0, symName: '-[MPAppEntry displayName]', symObjAddr: 0xA, symBinAddr: 0xB1CE, symSize: 0x4 }
+  - { offset: 0x5865, size: 0x4, addend: 0x0, symName: '-[MPAppEntry displayName]', symObjAddr: 0xA, symBinAddr: 0xB1CE, symSize: 0x4 }
+  - { offset: 0x5869, size: 0x4, addend: 0x0, symName: '-[MPAppEntry setDisplayName:]', symObjAddr: 0xE, symBinAddr: 0xB1D2, symSize: 0x6 }
+  - { offset: 0x5899, size: 0x4, addend: 0x0, symName: '-[MPAppEntry setDisplayName:]', symObjAddr: 0xE, symBinAddr: 0xB1D2, symSize: 0x6 }
+  - { offset: 0x589D, size: 0x4, addend: 0x0, symName: '-[MPAppEntry badge]', symObjAddr: 0x14, symBinAddr: 0xB1D8, symSize: 0x4 }
+  - { offset: 0x58D4, size: 0x4, addend: 0x0, symName: '-[MPAppEntry badge]', symObjAddr: 0x14, symBinAddr: 0xB1D8, symSize: 0x4 }
+  - { offset: 0x58D8, size: 0x4, addend: 0x0, symName: '-[MPAppEntry setBadge:]', symObjAddr: 0x18, symBinAddr: 0xB1DC, symSize: 0x4 }
+  - { offset: 0x5908, size: 0x4, addend: 0x0, symName: '-[MPAppEntry setBadge:]', symObjAddr: 0x18, symBinAddr: 0xB1DC, symSize: 0x4 }
+  - { offset: 0x590C, size: 0x4, addend: 0x0, symName: '-[MPAppEntry .cxx_destruct]', symObjAddr: 0x1C, symBinAddr: 0xB1E0, symSize: 0x1A }
+  - { offset: 0x5941, size: 0x4, addend: 0x0, symName: '-[MPAppEntry .cxx_destruct]', symObjAddr: 0x1C, symBinAddr: 0xB1E0, symSize: 0x1A }
+  - { offset: 0x5945, size: 0x4, addend: 0x0, symName: '+[MPAppDataSource sharedDataSource]', symObjAddr: 0x36, symBinAddr: 0xB1FA, symSize: 0x36 }
+  - { offset: 0x5A1A, size: 0x4, addend: 0x0, symName: '___35+[MPAppDataSource sharedDataSource]_block_invoke', symObjAddr: 0x6C, symBinAddr: 0xB230, symSize: 0x48 }
+  - { offset: 0x5A1E, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource allApps]', symObjAddr: 0xB4, symBinAddr: 0xB278, symSize: 0x8AC }
+  - { offset: 0x5C28, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource allApps]', symObjAddr: 0xB4, symBinAddr: 0xB278, symSize: 0x8AC }
+  - { offset: 0x5C2C, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource appWithBundleID:]', symObjAddr: 0x960, symBinAddr: 0xBB24, symSize: 0x14C }
+  - { offset: 0x5D1C, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource appWithBundleID:]', symObjAddr: 0x960, symBinAddr: 0xBB24, symSize: 0x14C }
+  - { offset: 0x5D20, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource iconForEntry:completion:]', symObjAddr: 0xAAC, symBinAddr: 0xBC70, symSize: 0xA0 }
+  - { offset: 0x5D74, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke', symObjAddr: 0xB4C, symBinAddr: 0xBD10, symSize: 0x2C }
+  - { offset: 0x5D78, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke_2', symObjAddr: 0xB78, symBinAddr: 0xBD3C, symSize: 0xBA8 }
+  - { offset: 0x663D, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke_2', symObjAddr: 0xB78, symBinAddr: 0xBD3C, symSize: 0xBA8 }
+  - { offset: 0x6641, size: 0x4, addend: 0x0, symName: _MPDsFindIcon, symObjAddr: 0x1720, symBinAddr: 0xC8E4, symSize: 0x1F8 }
+  - { offset: 0x67B7, size: 0x4, addend: 0x0, symName: _MPDsFindIcon, symObjAddr: 0x1720, symBinAddr: 0xC8E4, symSize: 0x1F8 }
+  - { offset: 0x67BB, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24b, symObjAddr: 0x1918, symBinAddr: 0xCADC, symSize: 0x1E }
+  - { offset: 0x6823, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24b, symObjAddr: 0x1918, symBinAddr: 0xCADC, symSize: 0x1E }
+  - { offset: 0x6827, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20s24s, symObjAddr: 0x1936, symBinAddr: 0xCAFA, symSize: 0x16 }
+  - { offset: 0x684B, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20s24s, symObjAddr: 0x1936, symBinAddr: 0xCAFA, symSize: 0x16 }
+  - { offset: 0x684F, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource launchAppWithBundleID:]', symObjAddr: 0x194C, symBinAddr: 0xCB10, symSize: 0x148 }
+  - { offset: 0x6868, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource launchAppWithBundleID:]', symObjAddr: 0x194C, symBinAddr: 0xCB10, symSize: 0x148 }
+  - { offset: 0x686C, size: 0x4, addend: 0x0, symName: ___MPDsCollectApps_block_invoke, symObjAddr: 0x1A94, symBinAddr: 0xCC58, symSize: 0x64 }
+  - { offset: 0x68C7, size: 0x4, addend: 0x0, symName: ___MPDsCollectApps_block_invoke, symObjAddr: 0x1A94, symBinAddr: 0xCC58, symSize: 0x64 }
+  - { offset: 0x68CB, size: 0x4, addend: 0x0, symName: ___MPDsIconForBundlePath_block_invoke, symObjAddr: 0x1AF8, symBinAddr: 0xCCBC, symSize: 0x48 }
+  - { offset: 0x690D, size: 0x4, addend: 0x0, symName: ___MPDsIconForBundlePath_block_invoke, symObjAddr: 0x1AF8, symBinAddr: 0xCCBC, symSize: 0x48 }
+  - { offset: 0x6911, size: 0x4, addend: 0x0, symName: ___MPDsIconForBundlePath_block_invoke_2, symObjAddr: 0x1B40, symBinAddr: 0xCD04, symSize: 0xE0 }
+  - { offset: 0x6931, size: 0x4, addend: 0x0, symName: ___MPDsIconForBundlePath_block_invoke_2, symObjAddr: 0x1B40, symBinAddr: 0xCD04, symSize: 0xE0 }
+  - { offset: 0x6935, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s, symObjAddr: 0x1C20, symBinAddr: 0xCDE4, symSize: 0x6 }
+  - { offset: 0x697E, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s, symObjAddr: 0x1C20, symBinAddr: 0xCDE4, symSize: 0x6 }
+  - { offset: 0x69A4, size: 0x4, addend: 0x0, symName: '+[MPAppDataSource sharedDataSource].cold.1', symObjAddr: 0x1C2C, symBinAddr: 0x1D68C, symSize: 0x14 }
+  - { offset: 0x69A8, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource iconForEntry:completion:].cold.1', symObjAddr: 0x1C40, symBinAddr: 0x1D6A0, symSize: 0x14 }
+  - { offset: 0x69BC, size: 0x4, addend: 0x0, symName: '+[MPAppDataSource sharedDataSource].cold.1', symObjAddr: 0x1C2C, symBinAddr: 0x1D68C, symSize: 0x14 }
+  - { offset: 0x69C9, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource iconForEntry:completion:].cold.1', symObjAddr: 0x1C40, symBinAddr: 0x1D6A0, symSize: 0x14 }
+  - { offset: 0x69CD, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke_2.cold.1', symObjAddr: 0x1C54, symBinAddr: 0x1D6B4, symSize: 0x14 }
+  - { offset: 0x69E1, size: 0x4, addend: 0x0, symName: '-[MPAppDataSource iconForEntry:completion:].cold.1', symObjAddr: 0x1C40, symBinAddr: 0x1D6A0, symSize: 0x14 }
+  - { offset: 0x69EE, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke_2.cold.1', symObjAddr: 0x1C54, symBinAddr: 0x1D6B4, symSize: 0x14 }
+  - { offset: 0x69F2, size: 0x4, addend: 0x0, symName: GCC_except_table9, symObjAddr: 0x1C68, symBinAddr: 0x1DF48, symSize: 0x0 }
+  - { offset: 0x6A06, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke_2.cold.1', symObjAddr: 0x1C54, symBinAddr: 0x1D6B4, symSize: 0x14 }
+  - { offset: 0x6A17, size: 0x4, addend: 0x0, symName: '___43-[MPAppDataSource iconForEntry:completion:]_block_invoke_2.cold.1', symObjAddr: 0x1C54, symBinAddr: 0x1D6B4, symSize: 0x14 }
+  - { offset: 0x6D89, size: 0x4, addend: 0x0, symName: '-[MPHomeController init]', symObjAddr: 0x0, symBinAddr: 0xCDEC, symSize: 0xA0 }
+  - { offset: 0x6D8D, size: 0x4, addend: 0x0, symName: GCC_except_table2, symObjAddr: 0x16A4, symBinAddr: 0x1E028, symSize: 0x0 }
+  - { offset: 0x9403, size: 0x4, addend: 0x0, symName: '-[MPHomeController init]', symObjAddr: 0x0, symBinAddr: 0xCDEC, symSize: 0xA0 }
+  - { offset: 0x9407, size: 0x4, addend: 0x0, symName: '-[MPHomeController dealloc]', symObjAddr: 0xA0, symBinAddr: 0xCE8C, symSize: 0x88 }
+  - { offset: 0x9436, size: 0x4, addend: 0x0, symName: '-[MPHomeController dealloc]', symObjAddr: 0xA0, symBinAddr: 0xCE8C, symSize: 0x88 }
+  - { offset: 0x943A, size: 0x4, addend: 0x0, symName: '-[MPHomeController loadView]', symObjAddr: 0x128, symBinAddr: 0xCF14, symSize: 0x4C4 }
+  - { offset: 0x9465, size: 0x4, addend: 0x0, symName: '-[MPHomeController loadView]', symObjAddr: 0x128, symBinAddr: 0xCF14, symSize: 0x4C4 }
+  - { offset: 0x9469, size: 0x4, addend: 0x0, symName: '___28-[MPHomeController loadView]_block_invoke', symObjAddr: 0x5EC, symBinAddr: 0xD3D8, symSize: 0x3E }
+  - { offset: 0x94EC, size: 0x4, addend: 0x0, symName: '___28-[MPHomeController loadView]_block_invoke', symObjAddr: 0x5EC, symBinAddr: 0xD3D8, symSize: 0x3E }
+  - { offset: 0x94F0, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20w, symObjAddr: 0x62A, symBinAddr: 0xD416, symSize: 0x8 }
+  - { offset: 0x9535, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20w, symObjAddr: 0x62A, symBinAddr: 0xD416, symSize: 0x8 }
+  - { offset: 0x9539, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20w, symObjAddr: 0x632, symBinAddr: 0xD41E, symSize: 0x6 }
+  - { offset: 0x955D, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20w, symObjAddr: 0x632, symBinAddr: 0xD41E, symSize: 0x6 }
+  - { offset: 0x9561, size: 0x4, addend: 0x0, symName: '-[MPHomeController installLauncherView]', symObjAddr: 0x638, symBinAddr: 0xD424, symSize: 0x428 }
+  - { offset: 0x9763, size: 0x4, addend: 0x0, symName: '-[MPHomeController installLauncherView]', symObjAddr: 0x638, symBinAddr: 0xD424, symSize: 0x428 }
+  - { offset: 0x9767, size: 0x4, addend: 0x0, symName: '-[MPHomeController addMetroToggleButtonToView:]', symObjAddr: 0xA60, symBinAddr: 0xD84C, symSize: 0x24C }
+  - { offset: 0x9808, size: 0x4, addend: 0x0, symName: '-[MPHomeController addMetroToggleButtonToView:]', symObjAddr: 0xA60, symBinAddr: 0xD84C, symSize: 0x24C }
+  - { offset: 0x980C, size: 0x4, addend: 0x0, symName: '-[MPHomeController isMetroVisible]', symObjAddr: 0xCAC, symBinAddr: 0xDA98, symSize: 0x10 }
+  - { offset: 0x9856, size: 0x4, addend: 0x0, symName: '-[MPHomeController isMetroVisible]', symObjAddr: 0xCAC, symBinAddr: 0xDA98, symSize: 0x10 }
+  - { offset: 0x985A, size: 0x4, addend: 0x0, symName: '-[MPHomeController showMetroAnimated:]', symObjAddr: 0xCBC, symBinAddr: 0xDAA8, symSize: 0x23C }
+  - { offset: 0x9889, size: 0x4, addend: 0x0, symName: '-[MPHomeController showMetroAnimated:]', symObjAddr: 0xCBC, symBinAddr: 0xDAA8, symSize: 0x23C }
+  - { offset: 0x988D, size: 0x4, addend: 0x0, symName: '___38-[MPHomeController showMetroAnimated:]_block_invoke', symObjAddr: 0xEF8, symBinAddr: 0xDCE4, symSize: 0x16 }
+  - { offset: 0x98D7, size: 0x4, addend: 0x0, symName: '___38-[MPHomeController showMetroAnimated:]_block_invoke', symObjAddr: 0xEF8, symBinAddr: 0xDCE4, symSize: 0x16 }
+  - { offset: 0x98FB, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20s, symObjAddr: 0xF14, symBinAddr: 0xDCFC, symSize: 0x6 }
+  - { offset: 0x98FF, size: 0x4, addend: 0x0, symName: '-[MPHomeController hideMetroAnimated:]', symObjAddr: 0xF1A, symBinAddr: 0xDD02, symSize: 0x292 }
+  - { offset: 0x9918, size: 0x4, addend: 0x0, symName: '-[MPHomeController hideMetroAnimated:]', symObjAddr: 0xF1A, symBinAddr: 0xDD02, symSize: 0x292 }
+  - { offset: 0x991C, size: 0x4, addend: 0x0, symName: '___38-[MPHomeController hideMetroAnimated:]_block_invoke', symObjAddr: 0x11AC, symBinAddr: 0xDF94, symSize: 0x14 }
+  - { offset: 0x9966, size: 0x4, addend: 0x0, symName: '___38-[MPHomeController hideMetroAnimated:]_block_invoke', symObjAddr: 0x11AC, symBinAddr: 0xDF94, symSize: 0x14 }
+  - { offset: 0x996A, size: 0x4, addend: 0x0, symName: '___38-[MPHomeController hideMetroAnimated:]_block_invoke_2', symObjAddr: 0x11C0, symBinAddr: 0xDFA8, symSize: 0x28 }
+  - { offset: 0x998A, size: 0x4, addend: 0x0, symName: '___38-[MPHomeController hideMetroAnimated:]_block_invoke_2', symObjAddr: 0x11C0, symBinAddr: 0xDFA8, symSize: 0x28 }
+  - { offset: 0x998E, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24s, symObjAddr: 0x11E8, symBinAddr: 0xDFD0, symSize: 0x16 }
+  - { offset: 0x99B9, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24s, symObjAddr: 0x11E8, symBinAddr: 0xDFD0, symSize: 0x16 }
+  - { offset: 0x99E1, size: 0x4, addend: 0x0, symName: '-[MPHomeController metroButtonTapped]', symObjAddr: 0x1214, symBinAddr: 0xDFE8, symSize: 0x12 }
+  - { offset: 0x99E5, size: 0x4, addend: 0x0, symName: '-[MPHomeController homeButtonPressed]', symObjAddr: 0x1226, symBinAddr: 0xDFFA, symSize: 0x1E }
+  - { offset: 0x9A0E, size: 0x4, addend: 0x0, symName: '-[MPHomeController homeButtonPressed]', symObjAddr: 0x1226, symBinAddr: 0xDFFA, symSize: 0x1E }
+  - { offset: 0x9A12, size: 0x4, addend: 0x0, symName: '-[MPHomeController iosButtonTapped]', symObjAddr: 0x1244, symBinAddr: 0xE018, symSize: 0x12 }
+  - { offset: 0x9A3D, size: 0x4, addend: 0x0, symName: '-[MPHomeController iosButtonTapped]', symObjAddr: 0x1244, symBinAddr: 0xE018, symSize: 0x12 }
+  - { offset: 0x9A41, size: 0x4, addend: 0x0, symName: '-[MPHomeController scheduleContentLoad]', symObjAddr: 0x1256, symBinAddr: 0xE02A, symSize: 0x62 }
+  - { offset: 0x9A6A, size: 0x4, addend: 0x0, symName: '-[MPHomeController scheduleContentLoad]', symObjAddr: 0x1256, symBinAddr: 0xE02A, symSize: 0x62 }
+  - { offset: 0x9A6E, size: 0x4, addend: 0x0, symName: '-[MPHomeController loadContent]', symObjAddr: 0x12B8, symBinAddr: 0xE08C, symSize: 0x1A4 }
+  - { offset: 0x9A99, size: 0x4, addend: 0x0, symName: '-[MPHomeController loadContent]', symObjAddr: 0x12B8, symBinAddr: 0xE08C, symSize: 0x1A4 }
+  - { offset: 0x9A9D, size: 0x4, addend: 0x0, symName: '-[MPHomeController applyStyleToPages]', symObjAddr: 0x145C, symBinAddr: 0xE230, symSize: 0x3E }
+  - { offset: 0x9AD8, size: 0x4, addend: 0x0, symName: '-[MPHomeController applyStyleToPages]', symObjAddr: 0x145C, symBinAddr: 0xE230, symSize: 0x3E }
+  - { offset: 0x9ADC, size: 0x4, addend: 0x0, symName: '-[MPHomeController appsChanged:]', symObjAddr: 0x149A, symBinAddr: 0xE26E, symSize: 0xF6 }
+  - { offset: 0x9B07, size: 0x4, addend: 0x0, symName: '-[MPHomeController appsChanged:]', symObjAddr: 0x149A, symBinAddr: 0xE26E, symSize: 0xF6 }
+  - { offset: 0x9B0B, size: 0x4, addend: 0x0, symName: '___32-[MPHomeController appsChanged:]_block_invoke', symObjAddr: 0x1590, symBinAddr: 0xE364, symSize: 0x16 }
+  - { offset: 0x9B45, size: 0x4, addend: 0x0, symName: '___32-[MPHomeController appsChanged:]_block_invoke', symObjAddr: 0x1590, symBinAddr: 0xE364, symSize: 0x16 }
+  - { offset: 0x9B49, size: 0x4, addend: 0x0, symName: '-[MPHomeController reloadAppsNow]', symObjAddr: 0x15A6, symBinAddr: 0xE37A, symSize: 0xA4 }
+  - { offset: 0x9B69, size: 0x4, addend: 0x0, symName: '-[MPHomeController reloadAppsNow]', symObjAddr: 0x15A6, symBinAddr: 0xE37A, symSize: 0xA4 }
+  - { offset: 0x9B6D, size: 0x4, addend: 0x0, symName: '-[MPHomeController .cxx_destruct]', symObjAddr: 0x164A, symBinAddr: 0xE41E, symSize: 0x5A }
+  - { offset: 0x9BA8, size: 0x4, addend: 0x0, symName: '-[MPHomeController .cxx_destruct]', symObjAddr: 0x164A, symBinAddr: 0xE41E, symSize: 0x5A }
+  - { offset: 0x9BAC, size: 0x4, addend: 0x0, symName: GCC_except_table2, symObjAddr: 0x16A4, symBinAddr: 0x1E028, symSize: 0x0 }
+  - { offset: 0x9ED7, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesBegan:withEvent:]', symObjAddr: 0x0, symBinAddr: 0xE478, symSize: 0x7E }
+  - { offset: 0xB3B2, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesBegan:withEvent:]', symObjAddr: 0x0, symBinAddr: 0xE478, symSize: 0x7E }
+  - { offset: 0xB3B6, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesMoved:withEvent:]', symObjAddr: 0x7E, symBinAddr: 0xE4F6, symSize: 0x7E }
+  - { offset: 0xB3FF, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesMoved:withEvent:]', symObjAddr: 0x7E, symBinAddr: 0xE4F6, symSize: 0x7E }
+  - { offset: 0xB403, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesEnded:withEvent:]', symObjAddr: 0xFC, symBinAddr: 0xE574, symSize: 0x7E }
+  - { offset: 0xB44C, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesEnded:withEvent:]', symObjAddr: 0xFC, symBinAddr: 0xE574, symSize: 0x7E }
+  - { offset: 0xB450, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesCancelled:withEvent:]', symObjAddr: 0x17A, symBinAddr: 0xE5F2, symSize: 0x7E }
+  - { offset: 0xB499, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchesCancelled:withEvent:]', symObjAddr: 0x17A, symBinAddr: 0xE5F2, symSize: 0x7E }
+  - { offset: 0xB49D, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchDelegate]', symObjAddr: 0x1F8, symBinAddr: 0xE670, symSize: 0x1E }
+  - { offset: 0xB4E6, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView touchDelegate]', symObjAddr: 0x1F8, symBinAddr: 0xE670, symSize: 0x1E }
+  - { offset: 0xB4EA, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView setTouchDelegate:]', symObjAddr: 0x216, symBinAddr: 0xE68E, symSize: 0x14 }
+  - { offset: 0xB51A, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView setTouchDelegate:]', symObjAddr: 0x216, symBinAddr: 0xE68E, symSize: 0x14 }
+  - { offset: 0xB51E, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView .cxx_destruct]', symObjAddr: 0x22A, symBinAddr: 0xE6A2, symSize: 0x12 }
+  - { offset: 0xB558, size: 0x4, addend: 0x0, symName: '-[MPTilesScrollView .cxx_destruct]', symObjAddr: 0x22A, symBinAddr: 0xE6A2, symSize: 0x12 }
+  - { offset: 0xB55C, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView initWithFrame:]', symObjAddr: 0x23C, symBinAddr: 0xE6B4, symSize: 0x28C }
+  - { offset: 0xB588, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView initWithFrame:]', symObjAddr: 0x23C, symBinAddr: 0xE6B4, symSize: 0x28C }
+  - { offset: 0xB58C, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView dealloc]', symObjAddr: 0x4C8, symBinAddr: 0xE940, symSize: 0x4C }
+  - { offset: 0xB5C6, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView dealloc]', symObjAddr: 0x4C8, symBinAddr: 0xE940, symSize: 0x4C }
+  - { offset: 0xB5CA, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView setTopInset:]', symObjAddr: 0x514, symBinAddr: 0xE98C, symSize: 0x1E }
+  - { offset: 0xB5F5, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView setTopInset:]', symObjAddr: 0x514, symBinAddr: 0xE98C, symSize: 0x1E }
+  - { offset: 0xB5F9, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView layoutSubviews]', symObjAddr: 0x532, symBinAddr: 0xE9AA, symSize: 0x9C }
+  - { offset: 0xB630, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView layoutSubviews]', symObjAddr: 0x532, symBinAddr: 0xE9AA, symSize: 0x9C }
+  - { offset: 0xB634, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView isLoaded]', symObjAddr: 0x5CE, symBinAddr: 0xEA46, symSize: 0x10 }
+  - { offset: 0xB68B, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView isLoaded]', symObjAddr: 0x5CE, symBinAddr: 0xEA46, symSize: 0x10 }
+  - { offset: 0xB68F, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView isEditing]', symObjAddr: 0x5DE, symBinAddr: 0xEA56, symSize: 0x1E }
+  - { offset: 0xB6BE, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView isEditing]', symObjAddr: 0x5DE, symBinAddr: 0xEA56, symSize: 0x1E }
+  - { offset: 0xB6C2, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView frameForItem:]', symObjAddr: 0x5FC, symBinAddr: 0xEA74, symSize: 0x10A }
+  - { offset: 0xB742, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView frameForItem:]', symObjAddr: 0x5FC, symBinAddr: 0xEA74, symSize: 0x10A }
+  - { offset: 0xB746, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView updateContentSize]', symObjAddr: 0x706, symBinAddr: 0xEB7E, symSize: 0xF6 }
+  - { offset: 0xB7F0, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView updateContentSize]', symObjAddr: 0x706, symBinAddr: 0xEB7E, symSize: 0xF6 }
+  - { offset: 0xB7F4, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView relayoutAnimated:]', symObjAddr: 0x7FC, symBinAddr: 0xEC74, symSize: 0x138 }
+  - { offset: 0xB872, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView relayoutAnimated:]', symObjAddr: 0x7FC, symBinAddr: 0xEC74, symSize: 0x138 }
+  - { offset: 0xB876, size: 0x4, addend: 0x0, symName: '___36-[MPTilesPageView relayoutAnimated:]_block_invoke', symObjAddr: 0x934, symBinAddr: 0xEDAC, symSize: 0x10A }
+  - { offset: 0xB8E0, size: 0x4, addend: 0x0, symName: '___36-[MPTilesPageView relayoutAnimated:]_block_invoke', symObjAddr: 0x934, symBinAddr: 0xEDAC, symSize: 0x10A }
+  - { offset: 0xB8E4, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24s28s, symObjAddr: 0xA3E, symBinAddr: 0xEEB6, symSize: 0x1C }
+  - { offset: 0xB97C, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24s28s, symObjAddr: 0xA3E, symBinAddr: 0xEEB6, symSize: 0x1C }
+  - { offset: 0xB980, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20s24s28s, symObjAddr: 0xA5A, symBinAddr: 0xEED2, symSize: 0x1C }
+  - { offset: 0xB9A4, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20s24s28s, symObjAddr: 0xA5A, symBinAddr: 0xEED2, symSize: 0x1C }
+  - { offset: 0xB9A8, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView ensureLoadedWithApps:]', symObjAddr: 0xA76, symBinAddr: 0xEEEE, symSize: 0xE0 }
+  - { offset: 0xB9C1, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView ensureLoadedWithApps:]', symObjAddr: 0xA76, symBinAddr: 0xEEEE, symSize: 0xE0 }
+  - { offset: 0xB9C5, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView updateEntries:]', symObjAddr: 0xB56, symBinAddr: 0xEFCE, symSize: 0x15C }
+  - { offset: 0xB9FF, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView updateEntries:]', symObjAddr: 0xB56, symBinAddr: 0xEFCE, symSize: 0x15C }
+  - { offset: 0xBA03, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView makeTileForItem:]', symObjAddr: 0xCB2, symBinAddr: 0xF12A, symSize: 0x10C }
+  - { offset: 0xBA67, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView makeTileForItem:]', symObjAddr: 0xCB2, symBinAddr: 0xF12A, symSize: 0x10C }
+  - { offset: 0xBA6B, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView buildTilesFromIndex:]', symObjAddr: 0xDBE, symBinAddr: 0xF236, symSize: 0x1E4 }
+  - { offset: 0xBAC9, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView buildTilesFromIndex:]', symObjAddr: 0xDBE, symBinAddr: 0xF236, symSize: 0x1E4 }
+  - { offset: 0xBACD, size: 0x4, addend: 0x0, symName: '___39-[MPTilesPageView buildTilesFromIndex:]_block_invoke', symObjAddr: 0xFA2, symBinAddr: 0xF41A, symSize: 0x16 }
+  - { offset: 0xBB9B, size: 0x4, addend: 0x0, symName: '___39-[MPTilesPageView buildTilesFromIndex:]_block_invoke', symObjAddr: 0xFA2, symBinAddr: 0xF41A, symSize: 0x16 }
+  - { offset: 0xBBBF, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView syncWithApps:]', symObjAddr: 0xFC4, symBinAddr: 0xF430, symSize: 0xF4 }
+  - { offset: 0xBBC3, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView refreshTiles]', symObjAddr: 0x10B8, symBinAddr: 0xF524, symSize: 0x146 }
+  - { offset: 0xBC0D, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView refreshTiles]', symObjAddr: 0x10B8, symBinAddr: 0xF524, symSize: 0x146 }
+  - { offset: 0xBC11, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView rebuildTilesToMatchModel]', symObjAddr: 0x11FE, symBinAddr: 0xF66A, symSize: 0x3D8 }
+  - { offset: 0xBC68, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView rebuildTilesToMatchModel]', symObjAddr: 0x11FE, symBinAddr: 0xF66A, symSize: 0x3D8 }
+  - { offset: 0xBC6C, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView applyStyle]', symObjAddr: 0x15D6, symBinAddr: 0xFA42, symSize: 0xE0 }
+  - { offset: 0xBD13, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView applyStyle]', symObjAddr: 0x15D6, symBinAddr: 0xFA42, symSize: 0xE0 }
+  - { offset: 0xBD17, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView exitEditingIfNeeded]', symObjAddr: 0x16B6, symBinAddr: 0xFB22, symSize: 0x84 }
+  - { offset: 0xBD5A, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView exitEditingIfNeeded]', symObjAddr: 0x16B6, symBinAddr: 0xFB22, symSize: 0x84 }
+  - { offset: 0xBD5E, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView indexOfTileAtPoint:excluding:]', symObjAddr: 0x173A, symBinAddr: 0xFBA6, symSize: 0xDA }
+  - { offset: 0xBD8B, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView indexOfTileAtPoint:excluding:]', symObjAddr: 0x173A, symBinAddr: 0xFBA6, symSize: 0xDA }
+  - { offset: 0xBD8F, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView cancelPress]', symObjAddr: 0x1814, symBinAddr: 0xFC80, symSize: 0x4C }
+  - { offset: 0xBDF4, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView cancelPress]', symObjAddr: 0x1814, symBinAddr: 0xFC80, symSize: 0x4C }
+  - { offset: 0xBDF8, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesBegan:]', symObjAddr: 0x1860, symBinAddr: 0xFCCC, symSize: 0x13C }
+  - { offset: 0xBE25, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesBegan:]', symObjAddr: 0x1860, symBinAddr: 0xFCCC, symSize: 0x13C }
+  - { offset: 0xBE29, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesMoved:]', symObjAddr: 0x199C, symBinAddr: 0xFE08, symSize: 0x136 }
+  - { offset: 0xBE77, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesMoved:]', symObjAddr: 0x199C, symBinAddr: 0xFE08, symSize: 0x136 }
+  - { offset: 0xBE7B, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesEnded:]', symObjAddr: 0x1AD2, symBinAddr: 0xFF3E, symSize: 0x186 }
+  - { offset: 0xBEC9, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesEnded:]', symObjAddr: 0x1AD2, symBinAddr: 0xFF3E, symSize: 0x186 }
+  - { offset: 0xBECD, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesCancelled:]', symObjAddr: 0x1C58, symBinAddr: 0x100C4, symSize: 0x4A }
+  - { offset: 0xBF47, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView tilesScrollTouchesCancelled:]', symObjAddr: 0x1C58, symBinAddr: 0x100C4, symSize: 0x4A }
+  - { offset: 0xBF4B, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView longPressFired]', symObjAddr: 0x1CA2, symBinAddr: 0x1010E, symSize: 0x7C }
+  - { offset: 0xBF85, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView longPressFired]', symObjAddr: 0x1CA2, symBinAddr: 0x1010E, symSize: 0x7C }
+  - { offset: 0xBF89, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorTileCount]', symObjAddr: 0x1D1E, symBinAddr: 0x1018A, symSize: 0x1E }
+  - { offset: 0xBFC7, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorTileCount]', symObjAddr: 0x1D1E, symBinAddr: 0x1018A, symSize: 0x1E }
+  - { offset: 0xBFCB, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorTileViewAtIndex:]', symObjAddr: 0x1D3C, symBinAddr: 0x101A8, symSize: 0x56 }
+  - { offset: 0xBFFC, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorTileViewAtIndex:]', symObjAddr: 0x1D3C, symBinAddr: 0x101A8, symSize: 0x56 }
+  - { offset: 0xC000, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorIndexOfTileAtPoint:excluding:]', symObjAddr: 0x1D92, symBinAddr: 0x101FE, symSize: 0x18 }
+  - { offset: 0xC042, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorIndexOfTileAtPoint:excluding:]', symObjAddr: 0x1D92, symBinAddr: 0x101FE, symSize: 0x18 }
+  - { offset: 0xC046, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorFrameForTileAtIndex:]', symObjAddr: 0x1DAA, symBinAddr: 0x10216, symSize: 0xCE }
+  - { offset: 0xC092, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorFrameForTileAtIndex:]', symObjAddr: 0x1DAA, symBinAddr: 0x10216, symSize: 0xCE }
+  - { offset: 0xC096, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorMoveTileFromIndex:toIndex:]', symObjAddr: 0x1E78, symBinAddr: 0x102E4, symSize: 0xEE }
+  - { offset: 0xC0D8, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorMoveTileFromIndex:toIndex:]', symObjAddr: 0x1E78, symBinAddr: 0x102E4, symSize: 0xEE }
+  - { offset: 0xC0DC, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorCycleSizeAtIndex:]', symObjAddr: 0x1F66, symBinAddr: 0x103D2, symSize: 0x5C }
+  - { offset: 0xC14D, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorCycleSizeAtIndex:]', symObjAddr: 0x1F66, symBinAddr: 0x103D2, symSize: 0x5C }
+  - { offset: 0xC151, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorRemoveTileAtIndex:]', symObjAddr: 0x1FC2, symBinAddr: 0x1042E, symSize: 0xD8 }
+  - { offset: 0xC1A0, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorRemoveTileAtIndex:]', symObjAddr: 0x1FC2, symBinAddr: 0x1042E, symSize: 0xD8 }
+  - { offset: 0xC1A4, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorTilesContainer]', symObjAddr: 0x209A, symBinAddr: 0x10506, symSize: 0x22 }
+  - { offset: 0xC204, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorTilesContainer]', symObjAddr: 0x209A, symBinAddr: 0x10506, symSize: 0x22 }
+  - { offset: 0xC208, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorSetScrollLocked:]', symObjAddr: 0x20BC, symBinAddr: 0x10528, symSize: 0x24 }
+  - { offset: 0xC239, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorSetScrollLocked:]', symObjAddr: 0x20BC, symBinAddr: 0x10528, symSize: 0x24 }
+  - { offset: 0xC23D, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorScrollView]', symObjAddr: 0x20E0, symBinAddr: 0x1054C, symSize: 0x22 }
+  - { offset: 0xC27B, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorScrollView]', symObjAddr: 0x20E0, symBinAddr: 0x1054C, symSize: 0x22 }
+  - { offset: 0xC27F, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorSave]', symObjAddr: 0x2102, symBinAddr: 0x1056E, symSize: 0x1E }
+  - { offset: 0xC2B0, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorSave]', symObjAddr: 0x2102, symBinAddr: 0x1056E, symSize: 0x1E }
+  - { offset: 0xC2B4, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorDidChangeEditing:]', symObjAddr: 0x2120, symBinAddr: 0x1058C, symSize: 0x98 }
+  - { offset: 0xC2E1, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editorDidChangeEditing:]', symObjAddr: 0x2120, symBinAddr: 0x1058C, symSize: 0x98 }
+  - { offset: 0xC2E5, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView topInset]', symObjAddr: 0x21B8, symBinAddr: 0x10624, symSize: 0x10 }
+  - { offset: 0xC325, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView topInset]', symObjAddr: 0x21B8, symBinAddr: 0x10624, symSize: 0x10 }
+  - { offset: 0xC33D, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView topInset]', symObjAddr: 0x21B8, symBinAddr: 0x10624, symSize: 0x10 }
+  - { offset: 0xC341, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editingChangedBlock]', symObjAddr: 0x21C8, symBinAddr: 0x10634, symSize: 0x10 }
+  - { offset: 0xC371, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView editingChangedBlock]', symObjAddr: 0x21C8, symBinAddr: 0x10634, symSize: 0x10 }
+  - { offset: 0xC375, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView setEditingChangedBlock:]', symObjAddr: 0x21D8, symBinAddr: 0x10644, symSize: 0x10 }
+  - { offset: 0xC3A5, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView setEditingChangedBlock:]', symObjAddr: 0x21D8, symBinAddr: 0x10644, symSize: 0x10 }
+  - { offset: 0xC3A9, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView .cxx_destruct]', symObjAddr: 0x21E8, symBinAddr: 0x10654, symSize: 0x96 }
+  - { offset: 0xC3E0, size: 0x4, addend: 0x0, symName: '-[MPTilesPageView .cxx_destruct]', symObjAddr: 0x21E8, symBinAddr: 0x10654, symSize: 0x96 }
+  - { offset: 0xC730, size: 0x4, addend: 0x0, symName: '+[MPIconLoader setupIfNeeded]', symObjAddr: 0x0, symBinAddr: 0x106EC, symSize: 0xEA }
+  - { offset: 0xC745, size: 0x4, addend: 0x0, symName: _MPIconMem, symObjAddr: 0x99D8, symBinAddr: 0x2816C, symSize: 0x0 }
+  - { offset: 0xC885, size: 0x4, addend: 0x0, symName: _MPIconMisses, symObjAddr: 0x99DC, symBinAddr: 0x28170, symSize: 0x0 }
+  - { offset: 0xC8CC, size: 0x4, addend: 0x0, symName: _MPIconQueue, symObjAddr: 0x99E0, symBinAddr: 0x28174, symSize: 0x0 }
+  - { offset: 0xC913, size: 0x4, addend: 0x0, symName: _MPIconWaiters, symObjAddr: 0x99E4, symBinAddr: 0x28178, symSize: 0x0 }
+  - { offset: 0xC95A, size: 0x4, addend: 0x0, symName: _MPIconBusy, symObjAddr: 0x99E8, symBinAddr: 0x2817C, symSize: 0x0 }
+  - { offset: 0xE23F, size: 0x4, addend: 0x0, symName: '+[MPIconLoader setupIfNeeded]', symObjAddr: 0x0, symBinAddr: 0x106EC, symSize: 0xEA }
+  - { offset: 0xE243, size: 0x4, addend: 0x0, symName: '+[MPIconLoader loadIconForEntry:completion:]', symObjAddr: 0xEA, symBinAddr: 0x107D6, symSize: 0x272 }
+  - { offset: 0xE26A, size: 0x4, addend: 0x0, symName: '+[MPIconLoader loadIconForEntry:completion:]', symObjAddr: 0xEA, symBinAddr: 0x107D6, symSize: 0x272 }
+  - { offset: 0xE26E, size: 0x4, addend: 0x0, symName: '___44+[MPIconLoader loadIconForEntry:completion:]_block_invoke', symObjAddr: 0x35C, symBinAddr: 0x10A48, symSize: 0x24 }
+  - { offset: 0xE2E7, size: 0x4, addend: 0x0, symName: '___44+[MPIconLoader loadIconForEntry:completion:]_block_invoke', symObjAddr: 0x35C, symBinAddr: 0x10A48, symSize: 0x24 }
+  - { offset: 0xE30B, size: 0x4, addend: 0x0, symName: '+[MPIconLoader pump]', symObjAddr: 0x3B4, symBinAddr: 0x10A6C, symSize: 0x116 }
+  - { offset: 0xE30F, size: 0x4, addend: 0x0, symName: '___20+[MPIconLoader pump]_block_invoke', symObjAddr: 0x4CA, symBinAddr: 0x10B82, symSize: 0x7A }
+  - { offset: 0xE356, size: 0x4, addend: 0x0, symName: '___20+[MPIconLoader pump]_block_invoke', symObjAddr: 0x4CA, symBinAddr: 0x10B82, symSize: 0x7A }
+  - { offset: 0xE35A, size: 0x4, addend: 0x0, symName: '___20+[MPIconLoader pump]_block_invoke_2', symObjAddr: 0x544, symBinAddr: 0x10BFC, symSize: 0x172 }
+  - { offset: 0xE389, size: 0x4, addend: 0x0, symName: '___20+[MPIconLoader pump]_block_invoke_2', symObjAddr: 0x544, symBinAddr: 0x10BFC, symSize: 0x172 }
+  - { offset: 0xE3E1, size: 0x4, addend: 0x0, symName: '-[MPBadgeView initWithFrame:]', symObjAddr: 0x6D8, symBinAddr: 0x10D70, symSize: 0x208 }
+  - { offset: 0xE3E5, size: 0x4, addend: 0x0, symName: '-[MPBadgeView sizeThatFits:]', symObjAddr: 0x8E0, symBinAddr: 0x10F78, symSize: 0xD0 }
+  - { offset: 0xE456, size: 0x4, addend: 0x0, symName: '-[MPBadgeView sizeThatFits:]', symObjAddr: 0x8E0, symBinAddr: 0x10F78, symSize: 0xD0 }
+  - { offset: 0xE45A, size: 0x4, addend: 0x0, symName: '-[MPBadgeView setCount:]', symObjAddr: 0x9B0, symBinAddr: 0x11048, symSize: 0xBC }
+  - { offset: 0xE4EC, size: 0x4, addend: 0x0, symName: '-[MPBadgeView setCount:]', symObjAddr: 0x9B0, symBinAddr: 0x11048, symSize: 0xBC }
+  - { offset: 0xE4F0, size: 0x4, addend: 0x0, symName: '-[MPBadgeView layoutSubviews]', symObjAddr: 0xA6C, symBinAddr: 0x11104, symSize: 0x6C }
+  - { offset: 0xE52A, size: 0x4, addend: 0x0, symName: '-[MPBadgeView layoutSubviews]', symObjAddr: 0xA6C, symBinAddr: 0x11104, symSize: 0x6C }
+  - { offset: 0xE52E, size: 0x4, addend: 0x0, symName: '-[MPBadgeView .cxx_destruct]', symObjAddr: 0xAD8, symBinAddr: 0x11170, symSize: 0x14 }
+  - { offset: 0xE559, size: 0x4, addend: 0x0, symName: '-[MPBadgeView .cxx_destruct]', symObjAddr: 0xAD8, symBinAddr: 0x11170, symSize: 0x14 }
+  - { offset: 0xE55D, size: 0x4, addend: 0x0, symName: '-[MPTileView initWithFrame:]', symObjAddr: 0xAEC, symBinAddr: 0x11184, symSize: 0x388 }
+  - { offset: 0xE589, size: 0x4, addend: 0x0, symName: '-[MPTileView initWithFrame:]', symObjAddr: 0xAEC, symBinAddr: 0x11184, symSize: 0x388 }
+  - { offset: 0xE58D, size: 0x4, addend: 0x0, symName: '-[MPTileView configureWithEntry:]', symObjAddr: 0xE74, symBinAddr: 0x1150C, symSize: 0x25C }
+  - { offset: 0xE5C7, size: 0x4, addend: 0x0, symName: '-[MPTileView configureWithEntry:]', symObjAddr: 0xE74, symBinAddr: 0x1150C, symSize: 0x25C }
+  - { offset: 0xE5CB, size: 0x4, addend: 0x0, symName: '___33-[MPTileView configureWithEntry:]_block_invoke', symObjAddr: 0x10D0, symBinAddr: 0x11768, symSize: 0x84 }
+  - { offset: 0xE624, size: 0x4, addend: 0x0, symName: '___33-[MPTileView configureWithEntry:]_block_invoke', symObjAddr: 0x10D0, symBinAddr: 0x11768, symSize: 0x84 }
+  - { offset: 0xE628, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24w, symObjAddr: 0x1154, symBinAddr: 0x117EC, symSize: 0x1E }
+  - { offset: 0xE671, size: 0x4, addend: 0x0, symName: ___copy_helper_block_e4_20s24w, symObjAddr: 0x1154, symBinAddr: 0x117EC, symSize: 0x1E }
+  - { offset: 0xE699, size: 0x4, addend: 0x0, symName: '-[MPTileView setIcon:]', symObjAddr: 0x1188, symBinAddr: 0x1180C, symSize: 0x84 }
+  - { offset: 0xE69D, size: 0x4, addend: 0x0, symName: '-[MPTileView updateWithEntry:]', symObjAddr: 0x120C, symBinAddr: 0x11890, symSize: 0x176 }
+  - { offset: 0xE72F, size: 0x4, addend: 0x0, symName: '-[MPTileView updateWithEntry:]', symObjAddr: 0x120C, symBinAddr: 0x11890, symSize: 0x176 }
+  - { offset: 0xE733, size: 0x4, addend: 0x0, symName: '-[MPTileView applyStyle]', symObjAddr: 0x1382, symBinAddr: 0x11A06, symSize: 0x46 }
+  - { offset: 0xE790, size: 0x4, addend: 0x0, symName: '-[MPTileView applyStyle]', symObjAddr: 0x1382, symBinAddr: 0x11A06, symSize: 0x46 }
+  - { offset: 0xE794, size: 0x4, addend: 0x0, symName: '-[MPTileView layoutSubviews]', symObjAddr: 0x13C8, symBinAddr: 0x11A4C, symSize: 0x260 }
+  - { offset: 0xE7BF, size: 0x4, addend: 0x0, symName: '-[MPTileView layoutSubviews]', symObjAddr: 0x13C8, symBinAddr: 0x11A4C, symSize: 0x260 }
+  - { offset: 0xE7C3, size: 0x4, addend: 0x0, symName: '-[MPTileView startShaking]', symObjAddr: 0x1628, symBinAddr: 0x11CAC, symSize: 0x1C8 }
+  - { offset: 0xE855, size: 0x4, addend: 0x0, symName: '-[MPTileView startShaking]', symObjAddr: 0x1628, symBinAddr: 0x11CAC, symSize: 0x1C8 }
+  - { offset: 0xE859, size: 0x4, addend: 0x0, symName: '-[MPTileView stopShaking]', symObjAddr: 0x17F0, symBinAddr: 0x11E74, symSize: 0x40 }
+  - { offset: 0xE8A4, size: 0x4, addend: 0x0, symName: '-[MPTileView stopShaking]', symObjAddr: 0x17F0, symBinAddr: 0x11E74, symSize: 0x40 }
+  - { offset: 0xE8A8, size: 0x4, addend: 0x0, symName: '-[MPTileView bundleID]', symObjAddr: 0x1830, symBinAddr: 0x11EB4, symSize: 0x10 }
+  - { offset: 0xE8D3, size: 0x4, addend: 0x0, symName: '-[MPTileView bundleID]', symObjAddr: 0x1830, symBinAddr: 0x11EB4, symSize: 0x10 }
+  - { offset: 0xE8D7, size: 0x4, addend: 0x0, symName: '-[MPTileView setBundleID:]', symObjAddr: 0x1840, symBinAddr: 0x11EC4, symSize: 0x10 }
+  - { offset: 0xE907, size: 0x4, addend: 0x0, symName: '-[MPTileView setBundleID:]', symObjAddr: 0x1840, symBinAddr: 0x11EC4, symSize: 0x10 }
+  - { offset: 0xE90B, size: 0x4, addend: 0x0, symName: '-[MPTileView .cxx_destruct]', symObjAddr: 0x1850, symBinAddr: 0x11ED4, symSize: 0x6E }
+  - { offset: 0xE942, size: 0x4, addend: 0x0, symName: '-[MPTileView .cxx_destruct]', symObjAddr: 0x1850, symBinAddr: 0x11ED4, symSize: 0x6E }
+  - { offset: 0xED80, size: 0x4, addend: 0x0, symName: '-[MPTileItem bundleID]', symObjAddr: 0x0, symBinAddr: 0x11F44, symSize: 0x4 }
+  - { offset: 0xEDEC, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel sharedModel]', symObjAddr: 0xF4, symBinAddr: 0x12038, symSize: 0x36 }
+  - { offset: 0xEDF0, size: 0x4, addend: 0x0, symName: '___28+[MPLayoutModel sharedModel]_block_invoke', symObjAddr: 0x12A, symBinAddr: 0x1206E, symSize: 0x48 }
+  - { offset: 0xEE12, size: 0x4, addend: 0x0, symName: _sharedModel.shared, symObjAddr: 0x4E7C, symBinAddr: 0x28180, symSize: 0x0 }
+  - { offset: 0xEE23, size: 0x4, addend: 0x0, symName: _sharedModel.once, symObjAddr: 0x4E80, symBinAddr: 0x28184, symSize: 0x0 }
+  - { offset: 0xEFCE, size: 0x4, addend: 0x0, symName: '-[MPTileItem bundleID]', symObjAddr: 0x0, symBinAddr: 0x11F44, symSize: 0x4 }
+  - { offset: 0xEFD2, size: 0x4, addend: 0x0, symName: '-[MPTileItem setBundleID:]', symObjAddr: 0x4, symBinAddr: 0x11F48, symSize: 0x6 }
+  - { offset: 0xF002, size: 0x4, addend: 0x0, symName: '-[MPTileItem setBundleID:]', symObjAddr: 0x4, symBinAddr: 0x11F48, symSize: 0x6 }
+  - { offset: 0xF006, size: 0x4, addend: 0x0, symName: '-[MPTileItem tileSize]', symObjAddr: 0xA, symBinAddr: 0x11F4E, symSize: 0x4 }
+  - { offset: 0xF03D, size: 0x4, addend: 0x0, symName: '-[MPTileItem tileSize]', symObjAddr: 0xA, symBinAddr: 0x11F4E, symSize: 0x4 }
+  - { offset: 0xF041, size: 0x4, addend: 0x0, symName: '-[MPTileItem setTileSize:]', symObjAddr: 0xE, symBinAddr: 0x11F52, symSize: 0x4 }
+  - { offset: 0xF071, size: 0x4, addend: 0x0, symName: '-[MPTileItem setTileSize:]', symObjAddr: 0xE, symBinAddr: 0x11F52, symSize: 0x4 }
+  - { offset: 0xF075, size: 0x4, addend: 0x0, symName: '-[MPTileItem col]', symObjAddr: 0x12, symBinAddr: 0x11F56, symSize: 0x4 }
+  - { offset: 0xF0AA, size: 0x4, addend: 0x0, symName: '-[MPTileItem col]', symObjAddr: 0x12, symBinAddr: 0x11F56, symSize: 0x4 }
+  - { offset: 0xF0AE, size: 0x4, addend: 0x0, symName: '-[MPTileItem setCol:]', symObjAddr: 0x16, symBinAddr: 0x11F5A, symSize: 0x4 }
+  - { offset: 0xF0DE, size: 0x4, addend: 0x0, symName: '-[MPTileItem setCol:]', symObjAddr: 0x16, symBinAddr: 0x11F5A, symSize: 0x4 }
+  - { offset: 0xF0E2, size: 0x4, addend: 0x0, symName: '-[MPTileItem row]', symObjAddr: 0x1A, symBinAddr: 0x11F5E, symSize: 0x4 }
+  - { offset: 0xF117, size: 0x4, addend: 0x0, symName: '-[MPTileItem row]', symObjAddr: 0x1A, symBinAddr: 0x11F5E, symSize: 0x4 }
+  - { offset: 0xF11B, size: 0x4, addend: 0x0, symName: '-[MPTileItem setRow:]', symObjAddr: 0x1E, symBinAddr: 0x11F62, symSize: 0x4 }
+  - { offset: 0xF14B, size: 0x4, addend: 0x0, symName: '-[MPTileItem setRow:]', symObjAddr: 0x1E, symBinAddr: 0x11F62, symSize: 0x4 }
+  - { offset: 0xF14F, size: 0x4, addend: 0x0, symName: '-[MPTileItem .cxx_destruct]', symObjAddr: 0x22, symBinAddr: 0x11F66, symSize: 0x8 }
+  - { offset: 0xF184, size: 0x4, addend: 0x0, symName: '-[MPTileItem .cxx_destruct]', symObjAddr: 0x22, symBinAddr: 0x11F66, symSize: 0x8 }
+  - { offset: 0xF188, size: 0x4, addend: 0x0, symName: _MPTileSpanX, symObjAddr: 0x2A, symBinAddr: 0x11F6E, symSize: 0x14 }
+  - { offset: 0xF1B5, size: 0x4, addend: 0x0, symName: _MPTileSpanX, symObjAddr: 0x2A, symBinAddr: 0x11F6E, symSize: 0x14 }
+  - { offset: 0xF1B9, size: 0x4, addend: 0x0, symName: _MPTileSpanY, symObjAddr: 0x3E, symBinAddr: 0x11F82, symSize: 0xC }
+  - { offset: 0xF1CF, size: 0x4, addend: 0x0, symName: _MPTileSpanY, symObjAddr: 0x3E, symBinAddr: 0x11F82, symSize: 0xC }
+  - { offset: 0xF1D3, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel init]', symObjAddr: 0x4A, symBinAddr: 0x11F8E, symSize: 0x84 }
+  - { offset: 0xF1E8, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel init]', symObjAddr: 0x4A, symBinAddr: 0x11F8E, symSize: 0x84 }
+  - { offset: 0xF1EC, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel items]', symObjAddr: 0xCE, symBinAddr: 0x12012, symSize: 0x16 }
+  - { offset: 0xF21B, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel items]', symObjAddr: 0xCE, symBinAddr: 0x12012, symSize: 0x16 }
+  - { offset: 0xF21F, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel rowCount]', symObjAddr: 0xE4, symBinAddr: 0x12028, symSize: 0x4 }
+  - { offset: 0xF24E, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel rowCount]', symObjAddr: 0xE4, symBinAddr: 0x12028, symSize: 0x4 }
+  - { offset: 0xF252, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel layoutPath]', symObjAddr: 0xE8, symBinAddr: 0x1202C, symSize: 0xC }
+  - { offset: 0xF281, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel layoutPath]', symObjAddr: 0xE8, symBinAddr: 0x1202C, symSize: 0xC }
+  - { offset: 0xF285, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel sharedModel]', symObjAddr: 0xF4, symBinAddr: 0x12038, symSize: 0x36 }
+  - { offset: 0xF352, size: 0x4, addend: 0x0, symName: '___28+[MPLayoutModel sharedModel]_block_invoke', symObjAddr: 0x12A, symBinAddr: 0x1206E, symSize: 0x48 }
+  - { offset: 0xF356, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel load]', symObjAddr: 0x172, symBinAddr: 0x120B6, symSize: 0x50E }
+  - { offset: 0xF376, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel load]', symObjAddr: 0x172, symBinAddr: 0x120B6, symSize: 0x50E }
+  - { offset: 0xF37A, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel save]', symObjAddr: 0x680, symBinAddr: 0x125C4, symSize: 0x2C6 }
+  - { offset: 0xF44B, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel save]', symObjAddr: 0x680, symBinAddr: 0x125C4, symSize: 0x2C6 }
+  - { offset: 0xF44F, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel syncWithApps:]', symObjAddr: 0x946, symBinAddr: 0x1288A, symSize: 0x476 }
+  - { offset: 0xF4DE, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel syncWithApps:]', symObjAddr: 0x946, symBinAddr: 0x1288A, symSize: 0x476 }
+  - { offset: 0xF4E2, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel packWithColumns:]', symObjAddr: 0xDBC, symBinAddr: 0x12D00, symSize: 0x338 }
+  - { offset: 0xF71F, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel packWithColumns:]', symObjAddr: 0xDBC, symBinAddr: 0x12D00, symSize: 0x338 }
+  - { offset: 0xF723, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel moveItemFromIndex:toIndex:]', symObjAddr: 0x10F4, symBinAddr: 0x13038, symSize: 0xA0 }
+  - { offset: 0xF911, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel moveItemFromIndex:toIndex:]', symObjAddr: 0x10F4, symBinAddr: 0x13038, symSize: 0xA0 }
+  - { offset: 0xF915, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel excludeBundleID:]', symObjAddr: 0x1194, symBinAddr: 0x130D8, symSize: 0x19A }
+  - { offset: 0xF97E, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel excludeBundleID:]', symObjAddr: 0x1194, symBinAddr: 0x130D8, symSize: 0x19A }
+  - { offset: 0xF982, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel pinBundleID:]', symObjAddr: 0x132E, symBinAddr: 0x13272, symSize: 0x1E6 }
+  - { offset: 0xF9D6, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel pinBundleID:]', symObjAddr: 0x132E, symBinAddr: 0x13272, symSize: 0x1E6 }
+  - { offset: 0xF9DA, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel isBundleIDExcluded:]', symObjAddr: 0x1514, symBinAddr: 0x13458, symSize: 0x12 }
+  - { offset: 0xFA58, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel isBundleIDExcluded:]', symObjAddr: 0x1514, symBinAddr: 0x13458, symSize: 0x12 }
+  - { offset: 0xFA5C, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel cycleSizeAtIndex:]', symObjAddr: 0x1526, symBinAddr: 0x1346A, symSize: 0xA0 }
+  - { offset: 0xFA99, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel cycleSizeAtIndex:]', symObjAddr: 0x1526, symBinAddr: 0x1346A, symSize: 0xA0 }
+  - { offset: 0xFA9D, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel .cxx_destruct]', symObjAddr: 0x15C6, symBinAddr: 0x1350A, symSize: 0x1A }
+  - { offset: 0xFAEB, size: 0x4, addend: 0x0, symName: '-[MPLayoutModel .cxx_destruct]', symObjAddr: 0x15C6, symBinAddr: 0x1350A, symSize: 0x1A }
+  - { offset: 0xFAEF, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel sharedModel].cold.1', symObjAddr: 0x15E0, symBinAddr: 0x1D6C8, symSize: 0x14 }
+  - { offset: 0xFB1B, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel sharedModel].cold.1', symObjAddr: 0x15E0, symBinAddr: 0x1D6C8, symSize: 0x14 }
+  - { offset: 0xFB33, size: 0x4, addend: 0x0, symName: '+[MPLayoutModel sharedModel].cold.1', symObjAddr: 0x15E0, symBinAddr: 0x1D6C8, symSize: 0x14 }
+  - { offset: 0xFCCA, size: 0x4, addend: 0x0, symName: '-[MPTileEditor init]', symObjAddr: 0x0, symBinAddr: 0x13524, symSize: 0x38 }
+  - { offset: 0x11BCF, size: 0x4, addend: 0x0, symName: '-[MPTileEditor init]', symObjAddr: 0x0, symBinAddr: 0x13524, symSize: 0x38 }
+  - { offset: 0x11BD3, size: 0x4, addend: 0x0, symName: '-[MPTileEditor dealloc]', symObjAddr: 0x38, symBinAddr: 0x1355C, symSize: 0x40 }
+  - { offset: 0x11C02, size: 0x4, addend: 0x0, symName: '-[MPTileEditor dealloc]', symObjAddr: 0x38, symBinAddr: 0x1355C, symSize: 0x40 }
+  - { offset: 0x11C06, size: 0x4, addend: 0x0, symName: '-[MPTileEditor editing]', symObjAddr: 0x78, symBinAddr: 0x1359C, symSize: 0x6 }
+  - { offset: 0x11C31, size: 0x4, addend: 0x0, symName: '-[MPTileEditor editing]', symObjAddr: 0x78, symBinAddr: 0x1359C, symSize: 0x6 }
+  - { offset: 0x11C35, size: 0x4, addend: 0x0, symName: '-[MPTileEditor draggingView]', symObjAddr: 0x7E, symBinAddr: 0x135A2, symSize: 0x16 }
+  - { offset: 0x11C64, size: 0x4, addend: 0x0, symName: '-[MPTileEditor draggingView]', symObjAddr: 0x7E, symBinAddr: 0x135A2, symSize: 0x16 }
+  - { offset: 0x11C68, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_markerWithGlyph:action:]', symObjAddr: 0x94, symBinAddr: 0x135B8, symSize: 0x2B4 }
+  - { offset: 0x11C97, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_markerWithGlyph:action:]', symObjAddr: 0x94, symBinAddr: 0x135B8, symSize: 0x2B4 }
+  - { offset: 0x11C9B, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_ensureMarkers]', symObjAddr: 0x348, symBinAddr: 0x1386C, symSize: 0xCC }
+  - { offset: 0x11CF8, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_ensureMarkers]', symObjAddr: 0x348, symBinAddr: 0x1386C, symSize: 0xCC }
+  - { offset: 0x11CFC, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_placeMarkersAnimated:forFrame:]', symObjAddr: 0x414, symBinAddr: 0x13938, symSize: 0x1A8 }
+  - { offset: 0x11D37, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_placeMarkersAnimated:forFrame:]', symObjAddr: 0x414, symBinAddr: 0x13938, symSize: 0x1A8 }
+  - { offset: 0x11D3B, size: 0x4, addend: 0x0, symName: '___49-[MPTileEditor mp_placeMarkersAnimated:forFrame:]_block_invoke', symObjAddr: 0x5BC, symBinAddr: 0x13AE0, symSize: 0x46 }
+  - { offset: 0x11DC4, size: 0x4, addend: 0x0, symName: '___49-[MPTileEditor mp_placeMarkersAnimated:forFrame:]_block_invoke', symObjAddr: 0x5BC, symBinAddr: 0x13AE0, symSize: 0x46 }
+  - { offset: 0x11DE8, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_showMarkers:]', symObjAddr: 0x60E, symBinAddr: 0x13B26, symSize: 0x30 }
+  - { offset: 0x11DEC, size: 0x4, addend: 0x0, symName: '-[MPTileEditor resizeTapped]', symObjAddr: 0x63E, symBinAddr: 0x13B56, symSize: 0xF2 }
+  - { offset: 0x11E26, size: 0x4, addend: 0x0, symName: '-[MPTileEditor resizeTapped]', symObjAddr: 0x63E, symBinAddr: 0x13B56, symSize: 0xF2 }
+  - { offset: 0x11E84, size: 0x4, addend: 0x0, symName: '-[MPTileEditor unpinTapped]', symObjAddr: 0x730, symBinAddr: 0x13C48, symSize: 0x188 }
+  - { offset: 0x11E88, size: 0x4, addend: 0x0, symName: '___27-[MPTileEditor unpinTapped]_block_invoke', symObjAddr: 0x8B8, symBinAddr: 0x13DD0, symSize: 0x64 }
+  - { offset: 0x11ED3, size: 0x4, addend: 0x0, symName: '___27-[MPTileEditor unpinTapped]_block_invoke', symObjAddr: 0x8B8, symBinAddr: 0x13DD0, symSize: 0x64 }
+  - { offset: 0x11ED7, size: 0x4, addend: 0x0, symName: '___27-[MPTileEditor unpinTapped]_block_invoke.91', symObjAddr: 0x91C, symBinAddr: 0x13E34, symSize: 0x6C }
+  - { offset: 0x11EF7, size: 0x4, addend: 0x0, symName: '___27-[MPTileEditor unpinTapped]_block_invoke.91', symObjAddr: 0x91C, symBinAddr: 0x13E34, symSize: 0x6C }
+  - { offset: 0x11EFB, size: 0x4, addend: 0x0, symName: _MPSetLiftShadow, symObjAddr: 0x988, symBinAddr: 0x13EA0, symSize: 0x1CC }
+  - { offset: 0x11F27, size: 0x4, addend: 0x0, symName: _MPSetLiftShadow, symObjAddr: 0x988, symBinAddr: 0x13EA0, symSize: 0x1CC }
+  - { offset: 0x11F67, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_selectTileAtIndex:animated:]', symObjAddr: 0xB54, symBinAddr: 0x1406C, symSize: 0x240 }
+  - { offset: 0x11F6B, size: 0x4, addend: 0x0, symName: '___46-[MPTileEditor mp_selectTileAtIndex:animated:]_block_invoke', symObjAddr: 0xD94, symBinAddr: 0x142AC, symSize: 0x50 }
+  - { offset: 0x11FDE, size: 0x4, addend: 0x0, symName: '___46-[MPTileEditor mp_selectTileAtIndex:animated:]_block_invoke', symObjAddr: 0xD94, symBinAddr: 0x142AC, symSize: 0x50 }
+  - { offset: 0x11FE2, size: 0x4, addend: 0x0, symName: _MPSelectedTransform, symObjAddr: 0xDE4, symBinAddr: 0x142FC, symSize: 0x40 }
+  - { offset: 0x12003, size: 0x4, addend: 0x0, symName: _MPSelectedTransform, symObjAddr: 0xDE4, symBinAddr: 0x142FC, symSize: 0x40 }
+  - { offset: 0x12007, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_deselectCurrentTile:]', symObjAddr: 0xE24, symBinAddr: 0x1433C, symSize: 0x114 }
+  - { offset: 0x12019, size: 0x4, addend: 0x0, symName: '-[MPTileEditor mp_deselectCurrentTile:]', symObjAddr: 0xE24, symBinAddr: 0x1433C, symSize: 0x114 }
+  - { offset: 0x1201D, size: 0x4, addend: 0x0, symName: '___39-[MPTileEditor mp_deselectCurrentTile:]_block_invoke', symObjAddr: 0xF38, symBinAddr: 0x14450, symSize: 0x56 }
+  - { offset: 0x12081, size: 0x4, addend: 0x0, symName: '___39-[MPTileEditor mp_deselectCurrentTile:]_block_invoke', symObjAddr: 0xF38, symBinAddr: 0x14450, symSize: 0x56 }
+  - { offset: 0x12085, size: 0x4, addend: 0x0, symName: '-[MPTileEditor beginEditingSelectingTileAtIndex:point:]', symObjAddr: 0xF8E, symBinAddr: 0x144A6, symSize: 0xA4 }
+  - { offset: 0x120A5, size: 0x4, addend: 0x0, symName: '-[MPTileEditor beginEditingSelectingTileAtIndex:point:]', symObjAddr: 0xF8E, symBinAddr: 0x144A6, symSize: 0xA4 }
+  - { offset: 0x120A9, size: 0x4, addend: 0x0, symName: '-[MPTileEditor endEditingAndSave]', symObjAddr: 0x1032, symBinAddr: 0x1454A, symSize: 0xB6 }
+  - { offset: 0x120F2, size: 0x4, addend: 0x0, symName: '-[MPTileEditor endEditingAndSave]', symObjAddr: 0x1032, symBinAddr: 0x1454A, symSize: 0xB6 }
+  - { offset: 0x12121, size: 0x4, addend: 0x0, symName: '-[MPTileEditor hostDidLayoutTiles]', symObjAddr: 0x10E8, symBinAddr: 0x14600, symSize: 0xF4 }
+  - { offset: 0x12125, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchBeganAtPoint:]', symObjAddr: 0x11DC, symBinAddr: 0x146F4, symSize: 0xAC }
+  - { offset: 0x12160, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchBeganAtPoint:]', symObjAddr: 0x11DC, symBinAddr: 0x146F4, symSize: 0xAC }
+  - { offset: 0x1219E, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchMovedToPoint:]', symObjAddr: 0x1288, symBinAddr: 0x147A0, symSize: 0x98 }
+  - { offset: 0x121A2, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchEndedAtPoint:]', symObjAddr: 0x1320, symBinAddr: 0x14838, symSize: 0x70 }
+  - { offset: 0x121FD, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchEndedAtPoint:]', symObjAddr: 0x1320, symBinAddr: 0x14838, symSize: 0x70 }
+  - { offset: 0x12201, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchCancelled]', symObjAddr: 0x1390, symBinAddr: 0x148A8, symSize: 0x48 }
+  - { offset: 0x1223B, size: 0x4, addend: 0x0, symName: '-[MPTileEditor touchCancelled]', symObjAddr: 0x1390, symBinAddr: 0x148A8, symSize: 0x48 }
+  - { offset: 0x1223F, size: 0x4, addend: 0x0, symName: '-[MPTileEditor startDragAtIndex:anchor:current:]', symObjAddr: 0x13D8, symBinAddr: 0x148F0, symSize: 0x1E0 }
+  - { offset: 0x1226C, size: 0x4, addend: 0x0, symName: '-[MPTileEditor startDragAtIndex:anchor:current:]', symObjAddr: 0x13D8, symBinAddr: 0x148F0, symSize: 0x1E0 }
+  - { offset: 0x12270, size: 0x4, addend: 0x0, symName: '___48-[MPTileEditor startDragAtIndex:anchor:current:]_block_invoke', symObjAddr: 0x15B8, symBinAddr: 0x14AD0, symSize: 0x84 }
+  - { offset: 0x122EB, size: 0x4, addend: 0x0, symName: '___48-[MPTileEditor startDragAtIndex:anchor:current:]_block_invoke', symObjAddr: 0x15B8, symBinAddr: 0x14AD0, symSize: 0x84 }
+  - { offset: 0x122EF, size: 0x4, addend: 0x0, symName: '-[MPTileEditor updateDragAtPoint:]', symObjAddr: 0x163C, symBinAddr: 0x14B54, symSize: 0x13C }
+  - { offset: 0x12324, size: 0x4, addend: 0x0, symName: '-[MPTileEditor updateDragAtPoint:]', symObjAddr: 0x163C, symBinAddr: 0x14B54, symSize: 0x13C }
+  - { offset: 0x12328, size: 0x4, addend: 0x0, symName: '-[MPTileEditor finishDrag]', symObjAddr: 0x1778, symBinAddr: 0x14C90, symSize: 0x198 }
+  - { offset: 0x12395, size: 0x4, addend: 0x0, symName: '-[MPTileEditor finishDrag]', symObjAddr: 0x1778, symBinAddr: 0x14C90, symSize: 0x198 }
+  - { offset: 0x12399, size: 0x4, addend: 0x0, symName: '___26-[MPTileEditor finishDrag]_block_invoke', symObjAddr: 0x1910, symBinAddr: 0x14E28, symSize: 0x70 }
+  - { offset: 0x123F8, size: 0x4, addend: 0x0, symName: '___26-[MPTileEditor finishDrag]_block_invoke', symObjAddr: 0x1910, symBinAddr: 0x14E28, symSize: 0x70 }
+  - { offset: 0x123FC, size: 0x4, addend: 0x0, symName: '-[MPTileEditor startAutoscroll]', symObjAddr: 0x1980, symBinAddr: 0x14E98, symSize: 0xB4 }
+  - { offset: 0x1241F, size: 0x4, addend: 0x0, symName: '-[MPTileEditor startAutoscroll]', symObjAddr: 0x1980, symBinAddr: 0x14E98, symSize: 0xB4 }
+  - { offset: 0x12423, size: 0x4, addend: 0x0, symName: '-[MPTileEditor stopAutoscroll]', symObjAddr: 0x1A34, symBinAddr: 0x14F4C, symSize: 0x28 }
+  - { offset: 0x12450, size: 0x4, addend: 0x0, symName: '-[MPTileEditor stopAutoscroll]', symObjAddr: 0x1A34, symBinAddr: 0x14F4C, symSize: 0x28 }
+  - { offset: 0x12481, size: 0x4, addend: 0x0, symName: '-[MPTileEditor autoscrollTick]', symObjAddr: 0x1A5C, symBinAddr: 0x14F74, symSize: 0x234 }
+  - { offset: 0x12485, size: 0x4, addend: 0x0, symName: '-[MPTileEditor host]', symObjAddr: 0x1C90, symBinAddr: 0x151A8, symSize: 0x12 }
+  - { offset: 0x12607, size: 0x4, addend: 0x0, symName: '-[MPTileEditor host]', symObjAddr: 0x1C90, symBinAddr: 0x151A8, symSize: 0x12 }
+  - { offset: 0x1260B, size: 0x4, addend: 0x0, symName: '-[MPTileEditor setHost:]', symObjAddr: 0x1CA2, symBinAddr: 0x151BA, symSize: 0x8 }
+  - { offset: 0x1263B, size: 0x4, addend: 0x0, symName: '-[MPTileEditor setHost:]', symObjAddr: 0x1CA2, symBinAddr: 0x151BA, symSize: 0x8 }
+  - { offset: 0x1263F, size: 0x4, addend: 0x0, symName: '-[MPTileEditor .cxx_destruct]', symObjAddr: 0x1CAA, symBinAddr: 0x151C2, symSize: 0x38 }
+  - { offset: 0x12679, size: 0x4, addend: 0x0, symName: '-[MPTileEditor .cxx_destruct]', symObjAddr: 0x1CAA, symBinAddr: 0x151C2, symSize: 0x38 }
+  - { offset: 0x12E2F, size: 0x4, addend: 0x0, symName: '-[MPAppListCell initWithStyle:reuseIdentifier:]', symObjAddr: 0x0, symBinAddr: 0x151FC, symSize: 0x460 }
+  - { offset: 0x12E33, size: 0x4, addend: 0x0, symName: GCC_except_table1, symObjAddr: 0x229C, symBinAddr: 0x1E044, symSize: 0x0 }
+  - { offset: 0x12E61, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:cellForRowAtIndexPath:]', symObjAddr: 0x1AE0, symBinAddr: 0x16CB4, symSize: 0x136 }
+  - { offset: 0x12E65, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:heightForRowAtIndexPath:]', symObjAddr: 0x1C16, symBinAddr: 0x16DEA, symSize: 0x8 }
+  - { offset: 0x1568A, size: 0x4, addend: 0x0, symName: '-[MPAppListCell initWithStyle:reuseIdentifier:]', symObjAddr: 0x0, symBinAddr: 0x151FC, symSize: 0x460 }
+  - { offset: 0x156F5, size: 0x4, addend: 0x0, symName: '-[MPAppListCell configureWithEntry:]', symObjAddr: 0x460, symBinAddr: 0x1565C, symSize: 0x2D4 }
+  - { offset: 0x156F9, size: 0x4, addend: 0x0, symName: _MPFirstLetterOf, symObjAddr: 0x734, symBinAddr: 0x15930, symSize: 0x9A }
+  - { offset: 0x15753, size: 0x4, addend: 0x0, symName: _MPFirstLetterOf, symObjAddr: 0x734, symBinAddr: 0x15930, symSize: 0x9A }
+  - { offset: 0x15757, size: 0x4, addend: 0x0, symName: '___36-[MPAppListCell configureWithEntry:]_block_invoke', symObjAddr: 0x7CE, symBinAddr: 0x159CA, symSize: 0x84 }
+  - { offset: 0x15788, size: 0x4, addend: 0x0, symName: '___36-[MPAppListCell configureWithEntry:]_block_invoke', symObjAddr: 0x7CE, symBinAddr: 0x159CA, symSize: 0x84 }
+  - { offset: 0x157D5, size: 0x4, addend: 0x0, symName: ___destroy_helper_block_e4_20s24w, symObjAddr: 0x870, symBinAddr: 0x15A50, symSize: 0x16 }
+  - { offset: 0x157D9, size: 0x4, addend: 0x0, symName: '-[MPAppListCell setIcon:]', symObjAddr: 0x886, symBinAddr: 0x15A66, symSize: 0x86 }
+  - { offset: 0x157F2, size: 0x4, addend: 0x0, symName: '-[MPAppListCell setIcon:]', symObjAddr: 0x886, symBinAddr: 0x15A66, symSize: 0x86 }
+  - { offset: 0x15830, size: 0x4, addend: 0x0, symName: '-[MPAppListCell layoutSubviews]', symObjAddr: 0x90C, symBinAddr: 0x15AEC, symSize: 0x290 }
+  - { offset: 0x15834, size: 0x4, addend: 0x0, symName: '-[MPAppListCell bundleID]', symObjAddr: 0xB9C, symBinAddr: 0x15D7C, symSize: 0x10 }
+  - { offset: 0x158C1, size: 0x4, addend: 0x0, symName: '-[MPAppListCell bundleID]', symObjAddr: 0xB9C, symBinAddr: 0x15D7C, symSize: 0x10 }
+  - { offset: 0x158C5, size: 0x4, addend: 0x0, symName: '-[MPAppListCell setBundleID:]', symObjAddr: 0xBAC, symBinAddr: 0x15D8C, symSize: 0x10 }
+  - { offset: 0x158F5, size: 0x4, addend: 0x0, symName: '-[MPAppListCell setBundleID:]', symObjAddr: 0xBAC, symBinAddr: 0x15D8C, symSize: 0x10 }
+  - { offset: 0x158F9, size: 0x4, addend: 0x0, symName: '-[MPAppListCell .cxx_destruct]', symObjAddr: 0xBBC, symBinAddr: 0x15D9C, symSize: 0x70 }
+  - { offset: 0x15930, size: 0x4, addend: 0x0, symName: '-[MPAppListCell .cxx_destruct]', symObjAddr: 0xBBC, symBinAddr: 0x15D9C, symSize: 0x70 }
+  - { offset: 0x15960, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView initWithFrame:]', symObjAddr: 0xC2C, symBinAddr: 0x15E0C, symSize: 0x588 }
+  - { offset: 0x15964, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView iOSButton]', symObjAddr: 0x11B4, symBinAddr: 0x16394, symSize: 0x22 }
+  - { offset: 0x159B8, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView iOSButton]', symObjAddr: 0x11B4, symBinAddr: 0x16394, symSize: 0x22 }
+  - { offset: 0x159BC, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView setTopInset:]', symObjAddr: 0x11D6, symBinAddr: 0x163B6, symSize: 0x1E }
+  - { offset: 0x159EB, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView setTopInset:]', symObjAddr: 0x11D6, symBinAddr: 0x163B6, symSize: 0x1E }
+  - { offset: 0x159EF, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView layoutSubviews]', symObjAddr: 0x11F4, symBinAddr: 0x163D4, symSize: 0x150 }
+  - { offset: 0x15A26, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView layoutSubviews]', symObjAddr: 0x11F4, symBinAddr: 0x163D4, symSize: 0x150 }
+  - { offset: 0x15A2A, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView reloadApps:]', symObjAddr: 0x1344, symBinAddr: 0x16524, symSize: 0xA4 }
+  - { offset: 0x15AC5, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView reloadApps:]', symObjAddr: 0x1344, symBinAddr: 0x16524, symSize: 0xA4 }
+  - { offset: 0x15AC9, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView applyStyle]', symObjAddr: 0x13E8, symBinAddr: 0x165C8, symSize: 0x70 }
+  - { offset: 0x15B03, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView applyStyle]', symObjAddr: 0x13E8, symBinAddr: 0x165C8, symSize: 0x70 }
+  - { offset: 0x15B07, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView dismissKeyboard]', symObjAddr: 0x1458, symBinAddr: 0x16638, symSize: 0x1E }
+  - { offset: 0x15B32, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView dismissKeyboard]', symObjAddr: 0x1458, symBinAddr: 0x16638, symSize: 0x1E }
+  - { offset: 0x15B36, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView rebuildSections]', symObjAddr: 0x1476, symBinAddr: 0x16656, symSize: 0x4A4 }
+  - { offset: 0x15B61, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView rebuildSections]', symObjAddr: 0x1476, symBinAddr: 0x16656, symSize: 0x4A4 }
+  - { offset: 0x15B65, size: 0x4, addend: 0x0, symName: '___36-[MPAppListPageView rebuildSections]_block_invoke', symObjAddr: 0x191A, symBinAddr: 0x16AFA, symSize: 0x78 }
+  - { offset: 0x15C57, size: 0x4, addend: 0x0, symName: '___36-[MPAppListPageView rebuildSections]_block_invoke', symObjAddr: 0x191A, symBinAddr: 0x16AFA, symSize: 0x78 }
+  - { offset: 0x15C5B, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView searchChanged]', symObjAddr: 0x1992, symBinAddr: 0x16B72, symSize: 0x38 }
+  - { offset: 0x15C9D, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView searchChanged]', symObjAddr: 0x1992, symBinAddr: 0x16B72, symSize: 0x38 }
+  - { offset: 0x15CA1, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView textFieldShouldReturn:]', symObjAddr: 0x19CA, symBinAddr: 0x16BAA, symSize: 0x1A }
+  - { offset: 0x15CCC, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView textFieldShouldReturn:]', symObjAddr: 0x19CA, symBinAddr: 0x16BAA, symSize: 0x1A }
+  - { offset: 0x15CD0, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView textFieldShouldClear:]', symObjAddr: 0x19E4, symBinAddr: 0x16BC4, symSize: 0x50 }
+  - { offset: 0x15D0A, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView textFieldShouldClear:]', symObjAddr: 0x19E4, symBinAddr: 0x16BC4, symSize: 0x50 }
+  - { offset: 0x15D0E, size: 0x4, addend: 0x0, symName: '___42-[MPAppListPageView textFieldShouldClear:]_block_invoke', symObjAddr: 0x1A34, symBinAddr: 0x16C14, symSize: 0x12 }
+  - { offset: 0x15D48, size: 0x4, addend: 0x0, symName: '___42-[MPAppListPageView textFieldShouldClear:]_block_invoke', symObjAddr: 0x1A34, symBinAddr: 0x16C14, symSize: 0x12 }
+  - { offset: 0x15D6C, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView numberOfSectionsInTableView:]', symObjAddr: 0x1A52, symBinAddr: 0x16C26, symSize: 0x1E }
+  - { offset: 0x15D70, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:numberOfRowsInSection:]', symObjAddr: 0x1A70, symBinAddr: 0x16C44, symSize: 0x70 }
+  - { offset: 0x15DAA, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:numberOfRowsInSection:]', symObjAddr: 0x1A70, symBinAddr: 0x16C44, symSize: 0x70 }
+  - { offset: 0x15DAE, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:cellForRowAtIndexPath:]', symObjAddr: 0x1AE0, symBinAddr: 0x16CB4, symSize: 0x136 }
+  - { offset: 0x15DF8, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:heightForRowAtIndexPath:]', symObjAddr: 0x1C16, symBinAddr: 0x16DEA, symSize: 0x8 }
+  - { offset: 0x15DFC, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:heightForHeaderInSection:]', symObjAddr: 0x1C1E, symBinAddr: 0x16DF2, symSize: 0x8 }
+  - { offset: 0x15E43, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:heightForHeaderInSection:]', symObjAddr: 0x1C1E, symBinAddr: 0x16DF2, symSize: 0x8 }
+  - { offset: 0x15E47, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:viewForHeaderInSection:]', symObjAddr: 0x1C26, symBinAddr: 0x16DFA, symSize: 0x27C }
+  - { offset: 0x15E8E, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:viewForHeaderInSection:]', symObjAddr: 0x1C26, symBinAddr: 0x16DFA, symSize: 0x27C }
+  - { offset: 0x15E92, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:didSelectRowAtIndexPath:]', symObjAddr: 0x1EA2, symBinAddr: 0x17076, symSize: 0x17C }
+  - { offset: 0x15F07, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView tableView:didSelectRowAtIndexPath:]', symObjAddr: 0x1EA2, symBinAddr: 0x17076, symSize: 0x17C }
+  - { offset: 0x15F0B, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView scrollViewWillBeginDragging:]', symObjAddr: 0x201E, symBinAddr: 0x171F2, symSize: 0x1E }
+  - { offset: 0x15F6B, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView scrollViewWillBeginDragging:]', symObjAddr: 0x201E, symBinAddr: 0x171F2, symSize: 0x1E }
+  - { offset: 0x15F6F, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView rowLongPressed:]', symObjAddr: 0x203C, symBinAddr: 0x17210, symSize: 0x1E2 }
+  - { offset: 0x15FA9, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView rowLongPressed:]', symObjAddr: 0x203C, symBinAddr: 0x17210, symSize: 0x1E2 }
+  - { offset: 0x15FAD, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView topInset]', symObjAddr: 0x221E, symBinAddr: 0x173F2, symSize: 0x10 }
+  - { offset: 0x1600C, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView topInset]', symObjAddr: 0x221E, symBinAddr: 0x173F2, symSize: 0x10 }
+  - { offset: 0x16010, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView .cxx_destruct]', symObjAddr: 0x222E, symBinAddr: 0x17402, symSize: 0x6E }
+  - { offset: 0x16040, size: 0x4, addend: 0x0, symName: '-[MPAppListPageView .cxx_destruct]', symObjAddr: 0x222E, symBinAddr: 0x17402, symSize: 0x6E }
+  - { offset: 0x16044, size: 0x4, addend: 0x0, symName: GCC_except_table1, symObjAddr: 0x229C, symBinAddr: 0x1E044, symSize: 0x0 }
+  - { offset: 0x164BA, size: 0x4, addend: 0x0, symName: _MPLog, symObjAddr: 0x0, symBinAddr: 0x17470, symSize: 0x12C }
+  - { offset: 0x164BE, size: 0x4, addend: 0x0, symName: GCC_except_table11, symObjAddr: 0xE38, symBinAddr: 0x1E04C, symSize: 0x0 }
+  - { offset: 0x164DD, size: 0x4, addend: 0x0, symName: _MPHostWindow, symObjAddr: 0x78F4, symBinAddr: 0x28188, symSize: 0x0 }
+  - { offset: 0x177EF, size: 0x4, addend: 0x0, symName: _MPStyleAccent, symObjAddr: 0x78F8, symBinAddr: 0x2818C, symSize: 0x0 }
+  - { offset: 0x179C5, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle fontWithNames:size:]', symObjAddr: 0x720, symBinAddr: 0x17B90, symSize: 0x304 }
+  - { offset: 0x179C9, size: 0x4, addend: 0x0, symName: '___35+[MPMetroStyle fontWithNames:size:]_block_invoke', symObjAddr: 0xA24, symBinAddr: 0x17E94, symSize: 0x3C }
+  - { offset: 0x179EB, size: 0x4, addend: 0x0, symName: '_fontWithNames:size:.cache', symObjAddr: 0x7904, symBinAddr: 0x28198, symSize: 0x0 }
+  - { offset: 0x179FC, size: 0x4, addend: 0x0, symName: '_fontWithNames:size:.once', symObjAddr: 0x7908, symBinAddr: 0x2819C, symSize: 0x0 }
+  - { offset: 0x17AAE, size: 0x4, addend: 0x0, symName: _MPStyleEnabled, symObjAddr: 0x140A, symBinAddr: 0x28084, symSize: 0x0 }
+  - { offset: 0x17ABF, size: 0x4, addend: 0x0, symName: _MPStyleTileStyle, symObjAddr: 0x78FC, symBinAddr: 0x28190, symSize: 0x0 }
+  - { offset: 0x17AD0, size: 0x4, addend: 0x0, symName: _MPStyleLoaded, symObjAddr: 0x7900, symBinAddr: 0x28194, symSize: 0x0 }
+  - { offset: 0x17BEB, size: 0x4, addend: 0x0, symName: _MPLog, symObjAddr: 0x0, symBinAddr: 0x17470, symSize: 0x12C }
+  - { offset: 0x17BEF, size: 0x4, addend: 0x0, symName: _MPSetHostWindow, symObjAddr: 0x12C, symBinAddr: 0x1759C, symSize: 0x64 }
+  - { offset: 0x17C6C, size: 0x4, addend: 0x0, symName: _MPSetHostWindow, symObjAddr: 0x12C, symBinAddr: 0x1759C, symSize: 0x64 }
+  - { offset: 0x17C70, size: 0x4, addend: 0x0, symName: _MPSharedHostWindow, symObjAddr: 0x190, symBinAddr: 0x17600, symSize: 0x20 }
+  - { offset: 0x17C90, size: 0x4, addend: 0x0, symName: _MPSharedHostWindow, symObjAddr: 0x190, symBinAddr: 0x17600, symSize: 0x20 }
+  - { offset: 0x17C94, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle reloadPreferences]', symObjAddr: 0x1B0, symBinAddr: 0x17620, symSize: 0x400 }
+  - { offset: 0x17CE7, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle reloadPreferences]', symObjAddr: 0x1B0, symBinAddr: 0x17620, symSize: 0x400 }
+  - { offset: 0x17CEB, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle ensureLoaded]', symObjAddr: 0x5B0, symBinAddr: 0x17A20, symSize: 0x20 }
+  - { offset: 0x17DA1, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle ensureLoaded]', symObjAddr: 0x5B0, symBinAddr: 0x17A20, symSize: 0x20 }
+  - { offset: 0x17DA5, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle isEnabled]', symObjAddr: 0x5D0, symBinAddr: 0x17A40, symSize: 0x24 }
+  - { offset: 0x17DCE, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle isEnabled]', symObjAddr: 0x5D0, symBinAddr: 0x17A40, symSize: 0x24 }
+  - { offset: 0x17DD2, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle tileStyle]', symObjAddr: 0x5F4, symBinAddr: 0x17A64, symSize: 0x22 }
+  - { offset: 0x17E01, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle tileStyle]', symObjAddr: 0x5F4, symBinAddr: 0x17A64, symSize: 0x22 }
+  - { offset: 0x17E05, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle accentColor]', symObjAddr: 0x616, symBinAddr: 0x17A86, symSize: 0x30 }
+  - { offset: 0x17E34, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle accentColor]', symObjAddr: 0x616, symBinAddr: 0x17A86, symSize: 0x30 }
+  - { offset: 0x17E38, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle tileColor]', symObjAddr: 0x646, symBinAddr: 0x17AB6, symSize: 0x70 }
+  - { offset: 0x17E67, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle tileColor]', symObjAddr: 0x646, symBinAddr: 0x17AB6, symSize: 0x70 }
+  - { offset: 0x17E6B, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle badgeColor]', symObjAddr: 0x6B6, symBinAddr: 0x17B26, symSize: 0x40 }
+  - { offset: 0x17E9A, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle badgeColor]', symObjAddr: 0x6B6, symBinAddr: 0x17B26, symSize: 0x40 }
+  - { offset: 0x17E9E, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle placeholderColor]', symObjAddr: 0x6F6, symBinAddr: 0x17B66, symSize: 0x2A }
+  - { offset: 0x17EE5, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle placeholderColor]', symObjAddr: 0x6F6, symBinAddr: 0x17B66, symSize: 0x2A }
+  - { offset: 0x17FB6, size: 0x4, addend: 0x0, symName: '___35+[MPMetroStyle fontWithNames:size:]_block_invoke', symObjAddr: 0xA24, symBinAddr: 0x17E94, symSize: 0x3C }
+  - { offset: 0x17FBA, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle thinFont:]', symObjAddr: 0xA60, symBinAddr: 0x17ED0, symSize: 0x9E }
+  - { offset: 0x17FDA, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle thinFont:]', symObjAddr: 0xA60, symBinAddr: 0x17ED0, symSize: 0x9E }
+  - { offset: 0x17FDE, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle lightFont:]', symObjAddr: 0xAFE, symBinAddr: 0x17F6E, symSize: 0x6A }
+  - { offset: 0x1801C, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle lightFont:]', symObjAddr: 0xAFE, symBinAddr: 0x17F6E, symSize: 0x6A }
+  - { offset: 0x18020, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle regularFont:]', symObjAddr: 0xB68, symBinAddr: 0x17FD8, symSize: 0x6A }
+  - { offset: 0x1805E, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle regularFont:]', symObjAddr: 0xB68, symBinAddr: 0x17FD8, symSize: 0x6A }
+  - { offset: 0x18062, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle mediumFont:]', symObjAddr: 0xBD2, symBinAddr: 0x18042, symSize: 0x6A }
+  - { offset: 0x180A0, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle mediumFont:]', symObjAddr: 0xBD2, symBinAddr: 0x18042, symSize: 0x6A }
+  - { offset: 0x180A4, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle unitSize]', symObjAddr: 0xC3C, symBinAddr: 0x180AC, symSize: 0xA0 }
+  - { offset: 0x180E2, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle unitSize]', symObjAddr: 0xC3C, symBinAddr: 0x180AC, symSize: 0xA0 }
+  - { offset: 0x180E6, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle cellForContainerWidth:]', symObjAddr: 0xCDC, symBinAddr: 0x1814C, symSize: 0x1E }
+  - { offset: 0x18131, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle cellForContainerWidth:]', symObjAddr: 0xCDC, symBinAddr: 0x1814C, symSize: 0x1E }
+  - { offset: 0x18135, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle tilePixelSize:containerWidth:]', symObjAddr: 0xCFA, symBinAddr: 0x1816A, symSize: 0x8A }
+  - { offset: 0x181A5, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle tilePixelSize:containerWidth:]', symObjAddr: 0xCFA, symBinAddr: 0x1816A, symSize: 0x8A }
+  - { offset: 0x181A9, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle statusBarInset]', symObjAddr: 0xD84, symBinAddr: 0x181F4, symSize: 0xA0 }
+  - { offset: 0x1825F, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle statusBarInset]', symObjAddr: 0xD84, symBinAddr: 0x181F4, symSize: 0xA0 }
+  - { offset: 0x18263, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle fontWithNames:size:].cold.1', symObjAddr: 0xE24, symBinAddr: 0x1D6DC, symSize: 0x14 }
+  - { offset: 0x1829E, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle fontWithNames:size:].cold.1', symObjAddr: 0xE24, symBinAddr: 0x1D6DC, symSize: 0x14 }
+  - { offset: 0x182A2, size: 0x4, addend: 0x0, symName: GCC_except_table11, symObjAddr: 0xE38, symBinAddr: 0x1E04C, symSize: 0x0 }
+  - { offset: 0x182B6, size: 0x4, addend: 0x0, symName: '+[MPMetroStyle fontWithNames:size:].cold.1', symObjAddr: 0xE24, symBinAddr: 0x1D6DC, symSize: 0x14 }
+  - { offset: 0x18842, size: 0x4, addend: 0x0, symName: __Z22MPSettingsInitIfNeededv, symObjAddr: 0x0, symBinAddr: 0x18294, symSize: 0x484 }
+  - { offset: 0x18846, size: 0x4, addend: 0x0, symName: GCC_except_table0, symObjAddr: 0x29C4, symBinAddr: 0x1E054, symSize: 0x0 }
+  - { offset: 0x1889E, size: 0x4, addend: 0x0, symName: '__ZL51_logos_orig$MPSettings$PSListController$viewDidLoad', symObjAddr: 0xF9A8, symBinAddr: 0x281A4, symSize: 0x0 }
+  - { offset: 0x1896B, size: 0x4, addend: 0x0, symName: __ZL21MPSettingsDisplayNamev, symObjAddr: 0x2768, symBinAddr: 0x1A9F0, symSize: 0x38 }
+  - { offset: 0x18990, size: 0x4, addend: 0x0, symName: __ZZL21MPSettingsDisplayNamevE4name, symObjAddr: 0xF9E0, symBinAddr: 0x281DC, symSize: 0x0 }
+  - { offset: 0x189A1, size: 0x4, addend: 0x0, symName: __ZZL21MPSettingsDisplayNamevE4once, symObjAddr: 0xF9E4, symBinAddr: 0x281E0, symSize: 0x0 }
+  - { offset: 0x189C9, size: 0x4, addend: 0x0, symName: '__ZL55_logos_orig$MPSettings$PSListController$viewWillAppear$', symObjAddr: 0xF9AC, symBinAddr: 0x281A8, symSize: 0x0 }
+  - { offset: 0x189F4, size: 0x4, addend: 0x0, symName: '__ZL58_logos_orig$MPSettings$PSListController$viewWillDisappear$', symObjAddr: 0xF9B0, symBinAddr: 0x281AC, symSize: 0x0 }
+  - { offset: 0x18A09, size: 0x4, addend: 0x0, symName: '__ZL72_logos_orig$MPSettings$PSListController$tableView$cellForRowAtIndexPath$', symObjAddr: 0xF9B4, symBinAddr: 0x281B0, symSize: 0x0 }
+  - { offset: 0x18A3D, size: 0x4, addend: 0x0, symName: '__ZL74_logos_orig$MPSettings$PSListController$tableView$heightForRowAtIndexPath$', symObjAddr: 0xF9B8, symBinAddr: 0x281B4, symSize: 0x0 }
+  - { offset: 0x18A71, size: 0x4, addend: 0x0, symName: '__ZL73_logos_orig$MPSettings$PSListController$tableView$viewForHeaderInSection$', symObjAddr: 0xF9BC, symBinAddr: 0x281B8, symSize: 0x0 }
+  - { offset: 0x18AA5, size: 0x4, addend: 0x0, symName: '__ZL75_logos_orig$MPSettings$PSListController$tableView$heightForHeaderInSection$', symObjAddr: 0xF9C0, symBinAddr: 0x281BC, symSize: 0x0 }
+  - { offset: 0x18AD9, size: 0x4, addend: 0x0, symName: '__ZL73_logos_orig$MPSettings$PSListController$tableView$viewForFooterInSection$', symObjAddr: 0xF9C4, symBinAddr: 0x281C0, symSize: 0x0 }
+  - { offset: 0x18AEE, size: 0x4, addend: 0x0, symName: '__ZL75_logos_orig$MPSettings$PSTableCell$initWithStyle$reuseIdentifier$specifier$', symObjAddr: 0xF9C8, symBinAddr: 0x281C4, symSize: 0x0 }
+  - { offset: 0x18D64, size: 0x4, addend: 0x0, symName: '__ZL68_logos_orig$MPSettings$PSTableCell$refreshCellContentsWithSpecifier$', symObjAddr: 0xF9CC, symBinAddr: 0x281C8, symSize: 0x0 }
+  - { offset: 0x18D94, size: 0x4, addend: 0x0, symName: '__ZL49_logos_orig$MPSettings$PSTableCell$layoutSubviews', symObjAddr: 0xF9D0, symBinAddr: 0x281CC, symSize: 0x0 }
+  - { offset: 0x18DBA, size: 0x4, addend: 0x0, symName: '__ZL44_logos_orig$MPSettings$PSTableCell$setFrame$', symObjAddr: 0xF9D4, symBinAddr: 0x281D0, symSize: 0x0 }
+  - { offset: 0x18DE5, size: 0x4, addend: 0x0, symName: '__ZL53_logos_orig$MPSettings$UITableViewCell$layoutSubviews', symObjAddr: 0xF9D8, symBinAddr: 0x281D4, symSize: 0x0 }
+  - { offset: 0x18E09, size: 0x4, addend: 0x0, symName: '__ZL51_logos_method$MPSettings$UITextField$layoutSubviewsP11UITextFieldP13objc_selector', symObjAddr: 0x2478, symBinAddr: 0x1A70C, symSize: 0x160 }
+  - { offset: 0x18E0D, size: 0x4, addend: 0x0, symName: __ZL12MPStyleTableP11UITableView, symObjAddr: 0x25D8, symBinAddr: 0x1A86C, symSize: 0x15C }
+  - { offset: 0x18E2C, size: 0x4, addend: 0x0, symName: '__ZZL51_logos_method$MPSettings$UITextField$layoutSubviewsP11UITextFieldP13objc_selectorE16MPFieldStyledKey', symObjAddr: 0x3530, symBinAddr: 0x28088, symSize: 0x0 }
+  - { offset: 0x18E5E, size: 0x4, addend: 0x0, symName: '__ZL49_logos_orig$MPSettings$UITextField$layoutSubviews', symObjAddr: 0xF9DC, symBinAddr: 0x281D8, symSize: 0x0 }
+  - { offset: 0x1922D, size: 0x4, addend: 0x0, symName: __Z22MPSettingsInitIfNeededv, symObjAddr: 0x0, symBinAddr: 0x18294, symSize: 0x484 }
+  - { offset: 0x19231, size: 0x4, addend: 0x0, symName: '__ZL53_logos_method$MPSettings$PSListController$viewDidLoadP16PSListControllerP13objc_selector', symObjAddr: 0x484, symBinAddr: 0x18718, symSize: 0x218 }
+  - { offset: 0x192B7, size: 0x4, addend: 0x0, symName: '__ZL53_logos_method$MPSettings$PSListController$viewDidLoadP16PSListControllerP13objc_selector', symObjAddr: 0x484, symBinAddr: 0x18718, symSize: 0x218 }
+  - { offset: 0x192BB, size: 0x4, addend: 0x0, symName: '__ZL57_logos_method$MPSettings$PSListController$viewWillAppear$P16PSListControllerP13objc_selectora', symObjAddr: 0x69C, symBinAddr: 0x18930, symSize: 0x8D0 }
+  - { offset: 0x199A9, size: 0x4, addend: 0x0, symName: '__ZL57_logos_method$MPSettings$PSListController$viewWillAppear$P16PSListControllerP13objc_selectora', symObjAddr: 0x69C, symBinAddr: 0x18930, symSize: 0x8D0 }
+  - { offset: 0x199AD, size: 0x4, addend: 0x0, symName: '__ZL60_logos_method$MPSettings$PSListController$viewWillDisappear$P16PSListControllerP13objc_selectora', symObjAddr: 0xF6C, symBinAddr: 0x19200, symSize: 0x3DC }
+  - { offset: 0x19A70, size: 0x4, addend: 0x0, symName: '__ZL60_logos_method$MPSettings$PSListController$viewWillDisappear$P16PSListControllerP13objc_selectora', symObjAddr: 0xF6C, symBinAddr: 0x19200, symSize: 0x3DC }
+  - { offset: 0x19A74, size: 0x4, addend: 0x0, symName: '__ZL74_logos_method$MPSettings$PSListController$tableView$cellForRowAtIndexPath$P16PSListControllerP13objc_selectorP11objc_objectS4_', symObjAddr: 0x1348, symBinAddr: 0x195DC, symSize: 0x1B8 }
+  - { offset: 0x19AD1, size: 0x4, addend: 0x0, symName: '__ZL74_logos_method$MPSettings$PSListController$tableView$cellForRowAtIndexPath$P16PSListControllerP13objc_selectorP11objc_objectS4_', symObjAddr: 0x1348, symBinAddr: 0x195DC, symSize: 0x1B8 }
+  - { offset: 0x19AD5, size: 0x4, addend: 0x0, symName: '__ZL76_logos_method$MPSettings$PSListController$tableView$heightForRowAtIndexPath$P16PSListControllerP13objc_selectorP11objc_objectS4_', symObjAddr: 0x1500, symBinAddr: 0x19794, symSize: 0x130 }
+  - { offset: 0x19B36, size: 0x4, addend: 0x0, symName: '__ZL76_logos_method$MPSettings$PSListController$tableView$heightForRowAtIndexPath$P16PSListControllerP13objc_selectorP11objc_objectS4_', symObjAddr: 0x1500, symBinAddr: 0x19794, symSize: 0x130 }
+  - { offset: 0x19B3A, size: 0x4, addend: 0x0, symName: '__ZL75_logos_method$MPSettings$PSListController$tableView$viewForHeaderInSection$P16PSListControllerP13objc_selectorP11objc_objecti', symObjAddr: 0x1630, symBinAddr: 0x198C4, symSize: 0x3AC }
+  - { offset: 0x19B93, size: 0x4, addend: 0x0, symName: '__ZL75_logos_method$MPSettings$PSListController$tableView$viewForHeaderInSection$P16PSListControllerP13objc_selectorP11objc_objecti', symObjAddr: 0x1630, symBinAddr: 0x198C4, symSize: 0x3AC }
+  - { offset: 0x19B97, size: 0x4, addend: 0x0, symName: '__ZL77_logos_method$MPSettings$PSListController$tableView$heightForHeaderInSection$P16PSListControllerP13objc_selectorP11objc_objecti', symObjAddr: 0x19DC, symBinAddr: 0x19C70, symSize: 0x118 }
+  - { offset: 0x19C12, size: 0x4, addend: 0x0, symName: '__ZL77_logos_method$MPSettings$PSListController$tableView$heightForHeaderInSection$P16PSListControllerP13objc_selectorP11objc_objecti', symObjAddr: 0x19DC, symBinAddr: 0x19C70, symSize: 0x118 }
+  - { offset: 0x19C16, size: 0x4, addend: 0x0, symName: '__ZL75_logos_method$MPSettings$PSListController$tableView$viewForFooterInSection$P16PSListControllerP13objc_selectorP11objc_objecti', symObjAddr: 0x1AF4, symBinAddr: 0x19D88, symSize: 0x3B4 }
+  - { offset: 0x19C73, size: 0x4, addend: 0x0, symName: '__ZL75_logos_method$MPSettings$PSListController$tableView$viewForFooterInSection$P16PSListControllerP13objc_selectorP11objc_objecti', symObjAddr: 0x1AF4, symBinAddr: 0x19D88, symSize: 0x3B4 }
+  - { offset: 0x19C77, size: 0x4, addend: 0x0, symName: '__ZL77_logos_method$MPSettings$PSTableCell$initWithStyle$reuseIdentifier$specifier$P11PSTableCellP13objc_selectoriP11objc_objectS4_', symObjAddr: 0x1EA8, symBinAddr: 0x1A13C, symSize: 0xF4 }
+  - { offset: 0x19CF2, size: 0x4, addend: 0x0, symName: '__ZL77_logos_method$MPSettings$PSTableCell$initWithStyle$reuseIdentifier$specifier$P11PSTableCellP13objc_selectoriP11objc_objectS4_', symObjAddr: 0x1EA8, symBinAddr: 0x1A13C, symSize: 0xF4 }
+  - { offset: 0x19CF6, size: 0x4, addend: 0x0, symName: '__ZL70_logos_method$MPSettings$PSTableCell$refreshCellContentsWithSpecifier$P11PSTableCellP13objc_selectorP11objc_object', symObjAddr: 0x1F9C, symBinAddr: 0x1A230, symSize: 0x108 }
+  - { offset: 0x19D66, size: 0x4, addend: 0x0, symName: '__ZL70_logos_method$MPSettings$PSTableCell$refreshCellContentsWithSpecifier$P11PSTableCellP13objc_selectorP11objc_object', symObjAddr: 0x1F9C, symBinAddr: 0x1A230, symSize: 0x108 }
+  - { offset: 0x19D6A, size: 0x4, addend: 0x0, symName: '__ZL51_logos_method$MPSettings$PSTableCell$layoutSubviewsP11PSTableCellP13objc_selector', symObjAddr: 0x20A4, symBinAddr: 0x1A338, symSize: 0x58 }
+  - { offset: 0x19DA5, size: 0x4, addend: 0x0, symName: '__ZL51_logos_method$MPSettings$PSTableCell$layoutSubviewsP11PSTableCellP13objc_selector', symObjAddr: 0x20A4, symBinAddr: 0x1A338, symSize: 0x58 }
+  - { offset: 0x19DD9, size: 0x4, addend: 0x0, symName: '__ZL46_logos_method$MPSettings$PSTableCell$setFrame$P11PSTableCellP13objc_selector6CGRect', symObjAddr: 0x20FC, symBinAddr: 0x1A390, symSize: 0x2F4 }
+  - { offset: 0x19DDD, size: 0x4, addend: 0x0, symName: '__ZL55_logos_method$MPSettings$UITableViewCell$layoutSubviewsP15UITableViewCellP13objc_selector', symObjAddr: 0x23F0, symBinAddr: 0x1A684, symSize: 0x88 }
+  - { offset: 0x19E49, size: 0x4, addend: 0x0, symName: '__ZL55_logos_method$MPSettings$UITableViewCell$layoutSubviewsP15UITableViewCellP13objc_selector', symObjAddr: 0x23F0, symBinAddr: 0x1A684, symSize: 0x88 }
+  - { offset: 0x19E4D, size: 0x4, addend: 0x0, symName: '__ZL51_logos_method$MPSettings$UITextField$layoutSubviewsP11UITextFieldP13objc_selector', symObjAddr: 0x2478, symBinAddr: 0x1A70C, symSize: 0x160 }
+  - { offset: 0x19E80, size: 0x4, addend: 0x0, symName: __ZL12MPStyleTableP11UITableView, symObjAddr: 0x25D8, symBinAddr: 0x1A86C, symSize: 0x15C }
+  - { offset: 0x19E84, size: 0x4, addend: 0x0, symName: '____ZL57_logos_method$MPSettings$PSListController$viewWillAppear$P16PSListControllerP13objc_selectora_block_invoke', symObjAddr: 0x2734, symBinAddr: 0x1A9C8, symSize: 0x28 }
+  - { offset: 0x19EA1, size: 0x4, addend: 0x0, symName: '____ZL57_logos_method$MPSettings$PSListController$viewWillAppear$P16PSListControllerP13objc_selectora_block_invoke', symObjAddr: 0x2734, symBinAddr: 0x1A9C8, symSize: 0x28 }
+  - { offset: 0x19EEB, size: 0x4, addend: 0x0, symName: ____ZL21MPSettingsDisplayNamev_block_invoke, symObjAddr: 0x27A0, symBinAddr: 0x1AA28, symSize: 0x210 }
+  - { offset: 0x19EEF, size: 0x4, addend: 0x0, symName: __ZL21MPSettingsDisplayNamev.cold.1, symObjAddr: 0x29B0, symBinAddr: 0x1D6F0, symSize: 0x14 }
+  - { offset: 0x19F29, size: 0x4, addend: 0x0, symName: __ZL21MPSettingsDisplayNamev.cold.1, symObjAddr: 0x29B0, symBinAddr: 0x1D6F0, symSize: 0x14 }
+  - { offset: 0x19F2D, size: 0x4, addend: 0x0, symName: GCC_except_table0, symObjAddr: 0x29C4, symBinAddr: 0x1E054, symSize: 0x0 }
+  - { offset: 0x19F40, size: 0x4, addend: 0x0, symName: __ZL21MPSettingsDisplayNamev.cold.1, symObjAddr: 0x29B0, symBinAddr: 0x1D6F0, symSize: 0x14 }
+  - { offset: 0x1A209, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme mp_blackPixelImage]', symObjAddr: 0x0, symBinAddr: 0x1AC38, symSize: 0xBC }
+  - { offset: 0x1A20D, size: 0x4, addend: 0x0, symName: GCC_except_table7, symObjAddr: 0xAA0, symBinAddr: 0x1E210, symSize: 0x0 }
+  - { offset: 0x1A21E, size: 0x4, addend: 0x0, symName: _MPSettingsBlackPixel, symObjAddr: 0x6498, symBinAddr: 0x281E4, symSize: 0x0 }
+  - { offset: 0x1AB86, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme setupAppearanceOnce]', symObjAddr: 0x298, symBinAddr: 0x1AED0, symSize: 0x64 }
+  - { offset: 0x1ABA8, size: 0x4, addend: 0x0, symName: _setupAppearanceOnce.once, symObjAddr: 0x649C, symBinAddr: 0x281E8, symSize: 0x0 }
+  - { offset: 0x1AD40, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme mp_blackPixelImage]', symObjAddr: 0x0, symBinAddr: 0x1AC38, symSize: 0xBC }
+  - { offset: 0x1AD44, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme restyleEnabled]', symObjAddr: 0xBC, symBinAddr: 0x1ACF4, symSize: 0x10 }
+  - { offset: 0x1AD6F, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme restyleEnabled]', symObjAddr: 0xBC, symBinAddr: 0x1ACF4, symSize: 0x10 }
+  - { offset: 0x1AD73, size: 0x4, addend: 0x0, symName: _MPSettingsPrefsBool, symObjAddr: 0xCC, symBinAddr: 0x1AD04, symSize: 0x5C }
+  - { offset: 0x1AD9F, size: 0x4, addend: 0x0, symName: _MPSettingsPrefsBool, symObjAddr: 0xCC, symBinAddr: 0x1AD04, symSize: 0x5C }
+  - { offset: 0x1ADA3, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme debugEnabled]', symObjAddr: 0x128, symBinAddr: 0x1AD60, symSize: 0x10 }
+  - { offset: 0x1ADF4, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme debugEnabled]', symObjAddr: 0x128, symBinAddr: 0x1AD60, symSize: 0x10 }
+  - { offset: 0x1ADF8, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme excludedControllerClasses]', symObjAddr: 0x138, symBinAddr: 0x1AD70, symSize: 0x38 }
+  - { offset: 0x1AE23, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme excludedControllerClasses]', symObjAddr: 0x138, symBinAddr: 0x1AD70, symSize: 0x38 }
+  - { offset: 0x1AE27, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme isControllerExcluded:]', symObjAddr: 0x170, symBinAddr: 0x1ADA8, symSize: 0x128 }
+  - { offset: 0x1AE52, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme isControllerExcluded:]', symObjAddr: 0x170, symBinAddr: 0x1ADA8, symSize: 0x128 }
+  - { offset: 0x1AE56, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme setupAppearanceOnce]', symObjAddr: 0x298, symBinAddr: 0x1AED0, symSize: 0x64 }
+  - { offset: 0x1AF5C, size: 0x4, addend: 0x0, symName: '___38+[MPSettingsTheme setupAppearanceOnce]_block_invoke', symObjAddr: 0x2FC, symBinAddr: 0x1AF34, symSize: 0x704 }
+  - { offset: 0x1AF60, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme flatSelectionBackground]', symObjAddr: 0xA00, symBinAddr: 0x1B638, symSize: 0xA0 }
+  - { offset: 0x1AFA8, size: 0x4, addend: 0x0, symName: '+[MPSettingsTheme flatSelectionBackground]', symObjAddr: 0xA00, symBinAddr: 0x1B638, symSize: 0xA0 }
+  - { offset: 0x1AFAC, size: 0x4, addend: 0x0, symName: GCC_except_table7, symObjAddr: 0xAA0, symBinAddr: 0x1E210, symSize: 0x0 }
+  - { offset: 0x1BC87, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView initWithFrame:]', symObjAddr: 0x0, symBinAddr: 0x1B6D8, symSize: 0x432 }
+  - { offset: 0x1CD17, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView initWithFrame:]', symObjAddr: 0x0, symBinAddr: 0x1B6D8, symSize: 0x432 }
+  - { offset: 0x1CD1B, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView headerTapped]', symObjAddr: 0x432, symBinAddr: 0x1BB0A, symSize: 0x46 }
+  - { offset: 0x1CD6F, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView headerTapped]', symObjAddr: 0x432, symBinAddr: 0x1BB0A, symSize: 0x46 }
+  - { offset: 0x1CD73, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setSmallTitle:]', symObjAddr: 0x478, symBinAddr: 0x1BB50, symSize: 0xA4 }
+  - { offset: 0x1CD9E, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setSmallTitle:]', symObjAddr: 0x478, symBinAddr: 0x1BB50, symSize: 0xA4 }
+  - { offset: 0x1CDA2, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setPageTitle:]', symObjAddr: 0x51C, symBinAddr: 0x1BBF4, symSize: 0xB6 }
+  - { offset: 0x1CDDC, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setPageTitle:]', symObjAddr: 0x51C, symBinAddr: 0x1BBF4, symSize: 0xB6 }
+  - { offset: 0x1CDE0, size: 0x4, addend: 0x0, symName: '+[MPSettingsHeaderView heightForWidth:]', symObjAddr: 0x5D2, symBinAddr: 0x1BCAA, symSize: 0xA }
+  - { offset: 0x1CE1A, size: 0x4, addend: 0x0, symName: '+[MPSettingsHeaderView heightForWidth:]', symObjAddr: 0x5D2, symBinAddr: 0x1BCAA, symSize: 0xA }
+  - { offset: 0x1CE54, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView layoutSubviews]', symObjAddr: 0x5DC, symBinAddr: 0x1BCB4, symSize: 0x1E8 }
+  - { offset: 0x1CE58, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView smallTitle]', symObjAddr: 0x7C4, symBinAddr: 0x1BE9C, symSize: 0x10 }
+  - { offset: 0x1CEB3, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView smallTitle]', symObjAddr: 0x7C4, symBinAddr: 0x1BE9C, symSize: 0x10 }
+  - { offset: 0x1CEB7, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView pageTitle]', symObjAddr: 0x7D4, symBinAddr: 0x1BEAC, symSize: 0x10 }
+  - { offset: 0x1CEE7, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView pageTitle]', symObjAddr: 0x7D4, symBinAddr: 0x1BEAC, symSize: 0x10 }
+  - { offset: 0x1CEEB, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView showsBackChevron]', symObjAddr: 0x7E4, symBinAddr: 0x1BEBC, symSize: 0x10 }
+  - { offset: 0x1CF1B, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView showsBackChevron]', symObjAddr: 0x7E4, symBinAddr: 0x1BEBC, symSize: 0x10 }
+  - { offset: 0x1CF1F, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setShowsBackChevron:]', symObjAddr: 0x7F4, symBinAddr: 0x1BECC, symSize: 0x10 }
+  - { offset: 0x1CF4F, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setShowsBackChevron:]', symObjAddr: 0x7F4, symBinAddr: 0x1BECC, symSize: 0x10 }
+  - { offset: 0x1CF53, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView backTapped]', symObjAddr: 0x804, symBinAddr: 0x1BEDC, symSize: 0x10 }
+  - { offset: 0x1CF88, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView backTapped]', symObjAddr: 0x804, symBinAddr: 0x1BEDC, symSize: 0x10 }
+  - { offset: 0x1CF8C, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setBackTapped:]', symObjAddr: 0x814, symBinAddr: 0x1BEEC, symSize: 0x10 }
+  - { offset: 0x1CFBC, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView setBackTapped:]', symObjAddr: 0x814, symBinAddr: 0x1BEEC, symSize: 0x10 }
+  - { offset: 0x1CFC0, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView .cxx_destruct]', symObjAddr: 0x824, symBinAddr: 0x1BEFC, symSize: 0x82 }
+  - { offset: 0x1CFF7, size: 0x4, addend: 0x0, symName: '-[MPSettingsHeaderView .cxx_destruct]', symObjAddr: 0x824, symBinAddr: 0x1BEFC, symSize: 0x82 }
+  - { offset: 0x1D14B, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler stylePSTableCell:]', symObjAddr: 0x0, symBinAddr: 0x1BF80, symSize: 0x628 }
+  - { offset: 0x1D14F, size: 0x4, addend: 0x0, symName: GCC_except_table0, symObjAddr: 0x1620, symBinAddr: 0x1E268, symSize: 0x0 }
+  - { offset: 0x1E3C4, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler stylePSTableCell:]', symObjAddr: 0x0, symBinAddr: 0x1BF80, symSize: 0x628 }
+  - { offset: 0x1E3C8, size: 0x4, addend: 0x0, symName: _MPCGColorIsRed, symObjAddr: 0x628, symBinAddr: 0x1C5A8, symSize: 0x70 }
+  - { offset: 0x1E433, size: 0x4, addend: 0x0, symName: _MPCGColorIsRed, symObjAddr: 0x628, symBinAddr: 0x1C5A8, symSize: 0x70 }
+  - { offset: 0x1E437, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler layoutPSTableCell:]', symObjAddr: 0x698, symBinAddr: 0x1C618, symSize: 0x7D0 }
+  - { offset: 0x1E495, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler layoutPSTableCell:]', symObjAddr: 0x698, symBinAddr: 0x1C618, symSize: 0x7D0 }
+  - { offset: 0x1E499, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler styleGenericCell:]', symObjAddr: 0xE68, symBinAddr: 0x1CDE8, symSize: 0x488 }
+  - { offset: 0x1E595, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler styleGenericCell:]', symObjAddr: 0xE68, symBinAddr: 0x1CDE8, symSize: 0x488 }
+  - { offset: 0x1E599, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler styleTextField:]', symObjAddr: 0x12F0, symBinAddr: 0x1D270, symSize: 0x330 }
+  - { offset: 0x1E5DD, size: 0x4, addend: 0x0, symName: '+[MPSettingsCellStyler styleTextField:]', symObjAddr: 0x12F0, symBinAddr: 0x1D270, symSize: 0x330 }
+  - { offset: 0x1E5E1, size: 0x4, addend: 0x0, symName: GCC_except_table0, symObjAddr: 0x1620, symBinAddr: 0x1E268, symSize: 0x0 }
+...
