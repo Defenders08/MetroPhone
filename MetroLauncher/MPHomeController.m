@@ -16,6 +16,9 @@ static UIView *MPHCFindHostView(void) {
     return [UIApplication sharedApplication].keyWindow;
 }
 
+@interface MPHomeController () <UIScrollViewDelegate>
+@end
+
 @implementation MPHomeController {
     UIScrollView     *_pager;
     MPTilesPageView  *_tilesPage;
@@ -62,6 +65,7 @@ static UIView *MPHCFindHostView(void) {
     _pager = [[UIScrollView alloc] initWithFrame:bounds];
     _pager.backgroundColor = [UIColor blackColor];
     _pager.pagingEnabled = YES;
+    _pager.delegate = self;                     // чтобы прятать клавиатуру при свайпе к плиткам
     _pager.showsHorizontalScrollIndicator = NO;
     _pager.showsVerticalScrollIndicator = NO;
     _pager.directionalLockEnabled = YES;
@@ -80,7 +84,6 @@ static UIView *MPHCFindHostView(void) {
 
     _listPage = [[MPAppListPageView alloc] initWithFrame:CGRectMake(w, 0, w, h)];
     _listPage.topInset = top;
-    [_listPage.iOSButton addTarget:self action:@selector(iosButtonTapped) forControlEvents:UIControlEventTouchUpInside];
     [_pager addSubview:_listPage];
 }
 
@@ -184,11 +187,19 @@ static UIView *MPHCFindHostView(void) {
 
 - (void)metroButtonTapped { [self showMetroAnimated:YES]; }
 
+// Свайп к плиткам = уход со страницы списка: клавиатура прячется
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    if (scrollView == _pager) [_listPage dismissKeyboard];
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    if (scrollView == _pager) [_listPage dismissKeyboard];
+}
+
 - (void)homeButtonPressed {
     // как «назад» в WP8: Home завершает правку стартового экрана
     [_tilesPage exitEditingIfNeeded];
 }
-- (void)iosButtonTapped   { [self hideMetroAnimated:YES]; }
 
 #pragma mark - Ленивая загрузка содержимого
 

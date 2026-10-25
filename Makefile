@@ -10,7 +10,7 @@ include $(THEOS)/makefiles/common.mk
 MODULESFLAGS :=
 
 TWEAK_NAME = MetroPhone
-MetroPhone_FILES = Tweak.xm MetroLauncher/MPAppDataSource.m MetroLauncher/MPHomeController.m MetroLauncher/MPTilesPageView.m MetroLauncher/MPTileView.m MetroLauncher/MPLayoutModel.m MetroLauncher/MPTileEditor.m MetroLauncher/MPAppListPageView.m MetroLauncher/MPMetroStyle.m MetroSettings/MPSettingsHooks.xm MetroSettings/MPSettingsTheme.m MetroSettings/MPSettingsHeaderView.m MetroSettings/MPSettingsCellStyler.m
+MetroPhone_FILES = Tweak.xm MetroLauncher/MPAppDataSource.m MetroLauncher/MPHomeController.m MetroLauncher/MPTilesPageView.m MetroLauncher/MPTileView.m MetroLauncher/MPLayoutModel.m MetroLauncher/MPTileEditor.m MetroLauncher/MPAppListPageView.m MetroLauncher/MPMetroStyle.m MetroLauncher/MPMultitaskView.m MetroSettings/MPSettingsHooks.xm MetroSettings/MPSettingsTheme.m MetroSettings/MPSettingsHeaderView.m MetroSettings/MPSettingsCellStyler.m MetroSettings/MPSettingsToggle.m
 MetroPhone_FRAMEWORKS = UIKit CoreGraphics QuartzCore
 # libSystem в SDK больше не переэкспортирует libgcc_s (SjLj-unwind для armv7) — линкуем явно
 MetroPhone_LDFLAGS = -lgcc_s.1

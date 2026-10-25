@@ -1,6 +1,5 @@
 #import "MPSettingsHeaderView.h"
 
-static const CGFloat MPSetHInset = 16.0f;
 
 @implementation MPSettingsHeaderView {
     UILabel *_small;
@@ -13,21 +12,11 @@ static const CGFloat MPSetHInset = 16.0f;
     if (self) {
         self.backgroundColor = [UIColor blackColor];
 
-        _small = [[UILabel alloc] initWithFrame:CGRectZero];
-        _small.font = [MPMetroStyle mediumFont:13.0f];
-        _small.textColor = [UIColor whiteColor];
-        _small.backgroundColor = [UIColor clearColor];
-        _small.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-        [self addSubview:_small];
-
         _big = [[UILabel alloc] initWithFrame:CGRectZero];
         _big.font = [MPMetroStyle lightFont:52.0f];
         _big.textColor = [UIColor whiteColor];
         _big.backgroundColor = [UIColor clearColor];
         _big.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-        // длинные названия ужимаются до 30 pt, дальше обрезаются правым краем (как в WP)
-        _big.adjustsFontSizeToFitWidth = YES;
-        _big.minimumFontSize = 30.0f;
         _big.lineBreakMode = NSLineBreakByClipping;
         [self addSubview:_big];
 
@@ -51,38 +40,58 @@ static const CGFloat MPSetHInset = 16.0f;
     if (self.backTapped != nil) self.backTapped();
 }
 
-- (void)setSmallTitle:(NSString *)smallTitle {
-    _smallTitle = [smallTitle uppercaseStringWithLocale:[NSLocale currentLocale]];
-    _small.text = _smallTitle;
-}
-
 - (void)setPageTitle:(NSString *)pageTitle {
     _pageTitle = [pageTitle lowercaseStringWithLocale:[NSLocale currentLocale]];
     _big.text = _pageTitle;
     [self setNeedsLayout];
+    [self shrinkTitleFont];
+}
+
+// ручной подбор размера: adjustsFontSizeToFitWidth на iOS 6 ненадёжен для
+// динамически меняющегося текста — ужимаем от 52 до 30 pt по фактической ширине
+- (void)shrinkTitleFont {
+    CGFloat w = self.bounds.size.width;
+    if (w < 10.0f) w = 320.0f;                 // до первого layoutSubviews
+    w -= [self bigLeftOffset] + 10.0f;
+    CGFloat size = 52.0f;
+    while (size > 30.0f) {
+        CGSize fit = [_pageTitle sizeWithFont:[MPMetroStyle lightFont:size]
+                            constrainedToSize:CGSizeMake(w, 10000.0f)
+                                lineBreakMode:NSLineBreakByClipping];
+        if (fit.width <= w + 1.0f) break;
+        size -= 2.0f;
+    }
+    UIFont *f = [MPMetroStyle lightFont:size];
+    if (![_big.font isEqual:f]) {
+        _big.font = f;
+        [_big setNeedsDisplay];
+    }
+}
+
+- (CGFloat)bigLeftOffset {
+    return _chevron.hidden ? 14.0f : 38.0f;
 }
 
 + (CGFloat)heightForWidth:(CGFloat)width {
-    return 100.0f;   // малый 13 + огромный 52 + отступы — по референсу WP 8.1
+    return 76.0f;    // только огромный заголовок + отступы
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width;
 
-    _small.frame = CGRectMake(MPSetHInset, 8.0f, w - MPSetHInset - 8.0f, 18.0f);
-
-    CGFloat bigTop = CGRectGetMaxY(_small.frame) + 4.0f;
+    CGFloat bigTop = 4.0f;
     CGFloat bigH = [MPSettingsHeaderView heightForWidth:w] - bigTop - 6.0f;
 
     if (self.showsBackChevron) {
         _chevron.hidden = NO;
-        _chevron.frame = CGRectMake(6.0f, bigTop + 2.0f, 26.0f, bigH);
-        _big.frame = CGRectMake(34.0f, bigTop, w - 36.0f, bigH);
+        _chevron.frame = CGRectMake(4.0f, bigTop + 2.0f, 28.0f, bigH);
+        _big.frame = CGRectMake([self bigLeftOffset], bigTop, w - [self bigLeftOffset], bigH);
     } else {
         _chevron.hidden = YES;
-        _big.frame = CGRectMake(MPSetHInset - 2.0f, bigTop, w - MPSetHInset - 4.0f, bigH);
+        _big.frame = CGRectMake([self bigLeftOffset], bigTop, w - [self bigLeftOffset], bigH);
     }
+    [self shrinkTitleFont];
 }
 
 @end

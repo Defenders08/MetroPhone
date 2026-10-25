@@ -64,4 +64,17 @@ if [ "$1" = "--push" ]; then
     exit $?
 fi
 
+# ./iphone-ssh.sh --pull /путь/на/телефоне локальный_файл — забрать файл по scp
+if [ "$1" = "--pull" ]; then
+    expect -c "
+        set timeout 120
+        spawn scp ${SSH_OPTS/-p $PORT/-P $PORT} root@127.0.0.1:$2 $3
+        expect {
+            -nocase {password:} { send \"alpine\r\"; exp_continue }
+            eof
+        }
+    "
+    exit $?
+fi
+
 run_ssh "$@"

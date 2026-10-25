@@ -108,7 +108,6 @@ static NSString *MPFirstLetterOf(NSString *name) {
 
 @implementation MPAppListPageView {
     UITextField *_searchField;
-    UIButton    *_iosButton;
     UITableView *_table;
     NSArray     *_allEntries;     // все приложения (отсортированы)
     NSArray     *_sections;       // NSArray<NSDictionary{title, items}>
@@ -138,13 +137,6 @@ static NSString *MPFirstLetterOf(NSString *name) {
         [_searchField addTarget:self action:@selector(searchChanged) forControlEvents:UIControlEventEditingChanged];
         [self addSubview:_searchField];
 
-        _iosButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_iosButton setTitle:@"iOS" forState:UIControlStateNormal];
-        [_iosButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        _iosButton.titleLabel.font = [MPMetroStyle mediumFont:14.0f];
-        _iosButton.backgroundColor = [MPMetroStyle accentColor];
-        [self addSubview:_iosButton];
-
         _table = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
         _table.backgroundColor = [UIColor blackColor];
         _table.separatorStyle = UITableViewCellSeparatorStyleNone;
@@ -161,8 +153,6 @@ static NSString *MPFirstLetterOf(NSString *name) {
     return self;
 }
 
-- (UIButton *)iOSButton { return _iosButton; }
-
 - (void)setTopInset:(CGFloat)topInset {
     _topInset = topInset;
     [self setNeedsLayout];
@@ -172,10 +162,9 @@ static NSString *MPFirstLetterOf(NSString *name) {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width, h = self.bounds.size.height;
     CGFloat g = 6.0f;
-    CGFloat btnW = 48.0f, rowH = 36.0f;
+    CGFloat rowH = 36.0f;
     CGFloat y = _topInset + g;
-    _iosButton.frame = CGRectMake(w - g - btnW, y, btnW, rowH);
-    _searchField.frame = CGRectMake(g, y, w - g * 3.0f - btnW, rowH);
+    _searchField.frame = CGRectMake(g, y, w - g * 2.0f, rowH);   // поле поиска на всю ширину
     CGFloat ty = y + rowH + g;
     _table.frame = CGRectMake(0.0f, ty, w, h - ty);
 }
@@ -189,7 +178,6 @@ static NSString *MPFirstLetterOf(NSString *name) {
 }
 
 - (void)applyStyle {
-    _iosButton.backgroundColor = [MPMetroStyle accentColor];
     [_table reloadData];
 }
 

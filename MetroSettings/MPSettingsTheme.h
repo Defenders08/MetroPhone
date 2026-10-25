@@ -23,4 +23,14 @@
 // Плоская подсветка нажатия (белый α 0.12)
 + (UIView *)flatSelectionBackground;
 
+// Прямой стайлинг ЕДИНИЦЫ навбара (appearance не доезжает до созданных баров):
+// чёрный фон, скрытый заголовок
++ (void)styleNavigationBar:(UINavigationBar *)bar;
+
+// Фон всех окон процесса — чёрный (убирает белую полосу под статус-баром)
++ (void)styleWindows;
+
+// Ползунок в WP-стиле (тонкий трек + плоский белый бегунок)
++ (void)styleSlider:(UISlider *)slider;
+
 @end

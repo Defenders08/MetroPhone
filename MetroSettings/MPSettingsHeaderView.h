@@ -7,8 +7,7 @@
 
 @interface MPSettingsHeaderView : UIView
 
-@property (nonatomic, copy) NSString *smallTitle;   // «НАСТРОЙКИ», Medium 13
-@property (nonatomic, copy) NSString *pageTitle;    // «основные», Light 52 (autoshrink до 30)
+@property (nonatomic, copy) NSString *pageTitle;    // «основные», Light 52 → 30 (ручной подбор)
 
 // WP 8.1: на подстраницах слева от большого заголовка — акцентная «‹»,
 // тап по всей шапке работает как «Назад»

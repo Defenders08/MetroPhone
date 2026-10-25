@@ -6,6 +6,12 @@
 
 @class PSTableCell;
 
+// PSControlTableCell (свитч/слайдер лежат прямо в ячейке) отдаёт контрол
+// через свойство control — объявляем протоколом, класс не трогаем
+@protocol MPHasControl <NSObject>
+- (UIControl *)control;
+@end
+
 @interface MPSettingsCellStyler : NSObject
 
 // Полное оформление PS-ячейки (цвета/шрифты/фон/подсветка/аксессуары)

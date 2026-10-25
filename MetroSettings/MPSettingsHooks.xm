@@ -14,6 +14,7 @@
 #import "../MetroLauncher/MPMetroStyle.h"
 #import "MPSettingsTheme.h"
 #import "MPSettingsHeaderView.h"
+#import "MPSettingsToggle.h"
 #import "MPSettingsCellStyler.h"
 
 static NSString * const MPSettingsHeaderKey = @"mp_settings_header";
@@ -21,6 +22,11 @@ static NSString * const MPSettingsHeaderKey = @"mp_settings_header";
 // Приватные классы (объявления для ARC, реализации — системные)
 @interface PSListController : UIViewController
 - (id)table;
+@end
+
+// iOS 5+: UINavigationItem умеет красить свой заголовок (категория — метода нет в SDK 10.3)
+@interface UINavigationItem (MPSettingsTitle)
+- (void)setTitleTextAttributes:(NSDictionary *)attributes;
 @end
 
 @interface PSTableCell : UITableViewCell
@@ -50,6 +56,8 @@ static NSString *MPSettingsDisplayName(void) {
     return name;
 }
 
+static void *MPLastTitleKey = &MPLastTitleKey;
+
 // Привязать/обновить шапку на таблице контроллера
 static void MPInstallOrUpdateHeader(UIViewController *controller, UITableView *table) {
     if (table == nil) return;
@@ -63,10 +71,21 @@ static void MPInstallOrUpdateHeader(UIViewController *controller, UITableView *t
             CGRectMake(0.0f, 0.0f, table.bounds.size.width, [MPSettingsHeaderView heightForWidth:table.bounds.size.width])];
         table.tableHeaderView = header;
     }
-    // WP: заголовок подстраницы — «wi-fi», «основные»… Берём navigationItem.title
-    // (то, что раньше рисовал навбар), затем controller.title, затем имя приложения
-    NSString *page = controller.navigationItem.title ?: controller.title ?: MPSettingsDisplayName();
-    header.smallTitle = MPSettingsDisplayName();
+    // WP: заголовок подстраницы — «wi-fi», «основные»… Источник: navigationItem.title
+    // (то, что раньше рисовал навбар) → controller.title → имя приложения.
+    // Мы ГАСИМ navigationItem.title (чтобы навбар не дублировал), но помним
+    // оригинал в associated object — иначе шапка остаётся пустой.
+    NSString *page = controller.navigationItem.title;
+    if (page.length == 0) page = controller.title;
+    if (page.length == 0) page = objc_getAssociatedObject(controller, MPLastTitleKey);
+    if (page.length == 0) page = MPSettingsDisplayName();
+    if (page.length > 0 && ![page isEqualToString:MPSettingsDisplayName()]) {
+        objc_setAssociatedObject(controller, MPLastTitleKey, page, OBJC_ASSOCIATION_RETAIN);
+    }
+    // гасим дублирующий заголовок навбара (текстовая модель — видимость чистая)
+    if (controller.navigationItem.title.length > 0) {
+        controller.navigationItem.title = @"";
+    }
     header.pageTitle = page;
     [header setNeedsLayout];
 }
@@ -81,6 +100,53 @@ static void MPStyleTable(UITableView *table) {
 }
 
 //──────────────────────────────────────────────────────────────────────────────
+// Полный стайлинг страницы (таблица, шапка, навбар, кнопка «Назад»).
+// Вызывается из viewDidLoad/viewWillAppear/viewDidAppear/reloadSpecifiers/reload:
+// PSListController создаёт таблицу ЛЕНИВО (после дозагрузки спецификаторов),
+// поэтому одного viewDidLoad мало — часть разделов оставалась штатной.
+static void MPApplyPageStyle(UIViewController *controller, UITableView *table) {
+    if (![MPSettingsTheme restyleEnabled]) return;
+    if ([MPSettingsTheme isControllerExcluded:controller]) return;
+
+    @try {
+        MPStyleTable(table);
+        MPInstallOrUpdateHeader(controller, table);
+
+        UINavigationController *nav = controller.navigationController;
+        [MPSettingsTheme styleNavigationBar:controller.navigationController.navigationBar];
+        [MPSettingsTheme styleWindows];
+
+        // WP 8.1: верхнего бара нет — контент под статус-баром. С кнопками бар остаётся.
+        BOOL hasBarButtons = (nav != nil && nav.topViewController == controller &&
+                              nav.visibleViewController.navigationItem.rightBarButtonItems.count > 0);
+        if (nav != nil) {
+            nav.navigationBar.hidden = !hasBarButtons;
+            CGFloat top = hasBarButtons ? 44.0f : 20.0f;
+            if (table.superview != nil) {
+                table.frame = CGRectMake(0.0f, top, table.superview.bounds.size.width,
+                                         table.superview.bounds.size.height - top);
+            } else {
+                table.frame = CGRectMake(0.0f, top, table.bounds.size.width, table.bounds.size.height);
+            }
+        }
+
+        BOOL hasHeader = [table.tableHeaderView isKindOfClass:[MPSettingsHeaderView class]];
+        controller.navigationItem.hidesBackButton = hasHeader;
+        if (hasHeader) {
+            MPSettingsHeaderView *header = (MPSettingsHeaderView *)table.tableHeaderView;
+            BOOL isSubpage = (nav != nil && nav.viewControllers.count > 1 &&
+                              [nav.viewControllers firstObject] != controller);
+            header.showsBackChevron = isSubpage;
+            header.backTapped = ^{
+                [nav popViewControllerAnimated:YES];
+            };
+        }
+    } @catch (NSException *e) {
+        NSLog(@"[MetroPhone][Settings] стиль страницы: %@ (%@)", e.name, e.reason);
+    }
+}
+
+//──────────────────────────────────────────────────────────────────────────────
 %group MPSettings
 
 %hook PSListController
@@ -88,42 +154,28 @@ static void MPStyleTable(UITableView *table) {
 - (void)viewDidLoad {
     %orig;
     [MPSettingsTheme setupAppearanceOnce];      // лениво, один раз, после запуска приложения
-    if (![MPSettingsTheme restyleEnabled]) return;
-    if ([MPSettingsTheme isControllerExcluded:self]) return;
-
-    @try {
-        MPStyleTable([self table]);
-    } @catch (NSException *e) {
-        NSLog(@"[MetroPhone][Settings] viewDidLoad: %@ (%@)", e.name, e.reason);
-    }
+    MPApplyPageStyle(self, [self table]);
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     %orig;
-    if (![MPSettingsTheme restyleEnabled]) return;
-    if ([MPSettingsTheme isControllerExcluded:self]) return;
+    MPApplyPageStyle(self, [self table]);
+}
 
-    @try {
-        UITableView *table = [self table];
-        MPStyleTable(table);
-        MPInstallOrUpdateHeader(self, table);
+- (void)viewDidAppear:(BOOL)animated {
+    %orig;
+    // к этому моменту таблица точно создана (ленивая сборка спецификаторов завершена)
+    MPApplyPageStyle(self, [self table]);
+}
 
-        // WP 8.1: шапка заменяет и заголовок, и кнопку «Назад»
-        BOOL hasHeader = [table.tableHeaderView isKindOfClass:[MPSettingsHeaderView class]];
-        self.navigationItem.hidesBackButton = hasHeader;
-        if (hasHeader) {
-            MPSettingsHeaderView *header = (MPSettingsHeaderView *)table.tableHeaderView;
-            UINavigationController *nav = self.navigationController;
-            BOOL isSubpage = (nav != nil && nav.viewControllers.count > 1 &&
-                              [nav.viewControllers firstObject] != self);
-            header.showsBackChevron = isSubpage;
-            header.backTapped = ^{
-                [nav popViewControllerAnimated:YES];
-            };
-        }
-    } @catch (NSException *e) {
-        NSLog(@"[MetroPhone][Settings] viewWillAppear: %@ (%@)", e.name, e.reason);
-    }
+- (void)reloadSpecifiers {
+    %orig;
+    MPApplyPageStyle(self, [self table]);
+}
+
+- (void)reload {
+    %orig;
+    MPApplyPageStyle(self, [self table]);
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -164,39 +216,148 @@ static void MPStyleTable(UITableView *table) {
     return (h > 1.0f) ? 56.0f : h;
 }
 
+static void MPStyleHeaderLabelDeep(UIView *v) {
+    // iOS 6: секционные заголовки могут быть UITableViewHeaderFooterView
+    if ([v isKindOfClass:[UITableViewHeaderFooterView class]]) {
+        UILabel *l = ((UITableViewHeaderFooterView *)v).textLabel;
+        if (l != nil) {
+            l.font = [MPMetroStyle lightFont:17.0f];
+            l.textColor = [UIColor colorWithWhite:1.0f alpha:0.6f];
+            l.backgroundColor = [UIColor clearColor];
+            l.shadowColor = nil;
+            l.shadowOffset = CGSizeZero;
+        }
+    }
+    if ([v isKindOfClass:[UILabel class]]) {
+        UILabel *l = (UILabel *)v;
+        l.font = [MPMetroStyle lightFont:17.0f];
+        l.textColor = [UIColor colorWithWhite:1.0f alpha:0.6f];   // серые, поменьше
+        l.backgroundColor = [UIColor clearColor];
+        l.shadowColor = nil;
+        l.shadowOffset = CGSizeZero;
+    }
+    for (UIView *sub in v.subviews) MPStyleHeaderLabelDeep(sub);
+}
+
 - (id)tableView:(id)tableView viewForHeaderInSection:(NSInteger)section {
     UIView *v = %orig;
     if (![MPSettingsTheme restyleEnabled]) return v;
     @try {
-        if ([v isKindOfClass:[UILabel class]]) {
-            UILabel *l = (UILabel *)v;
-            l.font = [MPMetroStyle lightFont:20.0f];
-            l.textColor = [MPMetroStyle accentColor];     // заголовки групп — акцентные
-            l.backgroundColor = [UIColor clearColor];
-            l.shadowColor = nil;
+        // PSListController для текстовых заголовков отдаёт nil — iOS рисует
+        // штатную тень; создаём свою плоскую акцентную метку
+        if (v == nil) {
+            NSString *t = nil;
+            if ([self respondsToSelector:@selector(tableView:titleForHeaderInSection:)]) {
+                t = [(id)self tableView:tableView titleForHeaderInSection:section];
+            }
+            if (t.length > 0) {
+                CGFloat tw = ((UITableView *)tableView).bounds.size.width;
+                UIView *wrap = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tw, 34.0f)];
+                wrap.backgroundColor = [UIColor blackColor];
+                wrap.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                UILabel *l = [[UILabel alloc] initWithFrame:
+                              CGRectMake(16.0f, 0.0f, tw - 32.0f, 28.0f)];
+                l.text = t;
+                l.font = [MPMetroStyle lightFont:17.0f];
+                l.textColor = [UIColor colorWithWhite:1.0f alpha:0.6f];
+                l.backgroundColor = [UIColor blackColor];
+                l.shadowColor = nil;
+                l.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                [wrap addSubview:l];
+                return wrap;
+            }
+            return v;
         }
+        MPStyleHeaderLabelDeep(v);
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] header: %@ (%@)", e.name, e.reason);
     }
     return v;
 }
 
+- (float)tableView:(id)tableView heightForFooterInSection:(NSInteger)section {
+    CGFloat h = %orig;
+    if (![MPSettingsTheme restyleEnabled]) return h;
+    // текстовый футер с нашей плоской меткой: даём высоту по строкам
+    NSString *t = nil;
+    @try {
+        if ([self respondsToSelector:@selector(tableView:titleForFooterInSection:)]) {
+            t = [(id)self tableView:tableView titleForFooterInSection:section];
+        }
+    } @catch (NSException *e) { t = nil; }
+    if (t.length > 0) {
+        CGFloat lines = 1.0f + (CGFloat)(t.length / 55);
+        return 8.0f + lines * 16.0f;
+    }
+    return h;
+}
+
 - (float)tableView:(id)tableView heightForHeaderInSection:(NSInteger)section {
     CGFloat h = %orig;
     if (![MPSettingsTheme restyleEnabled]) return h;
-    return (h > 0.5f) ? 34.0f : h;                          // отступы групп 14 pt сверху
+    // растягиваем только секции с настоящим заголовком; пустые (отступы групп) — как были
+    NSString *title = nil;
+    @try {
+        if ([self respondsToSelector:@selector(tableView:titleForHeaderInSection:)]) {
+            title = [(id)self tableView:tableView titleForHeaderInSection:section];
+        }
+    } @catch (NSException *e) { title = nil; }
+    BOOL hasTitle = (title != nil && title.length > 0);
+    return hasTitle ? 34.0f : h;
+}
+
+static void MPStyleFooterLabelDeep(UIView *v) {
+    if ([v isKindOfClass:[UITableViewHeaderFooterView class]]) {
+        UILabel *l = ((UITableViewHeaderFooterView *)v).textLabel;
+        if (l != nil) {
+            l.font = [MPMetroStyle regularFont:12.0f];
+            l.textColor = [UIColor colorWithWhite:1.0f alpha:0.5f];
+            l.backgroundColor = [UIColor clearColor];
+            l.shadowColor = nil;
+            l.shadowOffset = CGSizeZero;
+        }
+    }
+    if ([v isKindOfClass:[UILabel class]]) {
+        UILabel *l = (UILabel *)v;
+        l.font = [MPMetroStyle regularFont:12.0f];
+        l.textColor = [UIColor colorWithWhite:1.0f alpha:0.5f];
+        l.backgroundColor = [UIColor clearColor];
+        l.shadowColor = nil;
+        l.shadowOffset = CGSizeZero;
+    }
+    for (UIView *sub in v.subviews) MPStyleFooterLabelDeep(sub);
 }
 
 - (id)tableView:(id)tableView viewForFooterInSection:(NSInteger)section {
     UIView *v = %orig;
     if (![MPSettingsTheme restyleEnabled]) return v;
     @try {
-        if ([v isKindOfClass:[UILabel class]]) {
-            UILabel *l = (UILabel *)v;
-            l.font = [MPMetroStyle regularFont:12.0f];
-            l.textColor = [UIColor colorWithWhite:1.0f alpha:0.5f];
-            l.backgroundColor = [UIColor clearColor];
-            l.shadowColor = nil;
+        if (v != nil) {
+            MPStyleFooterLabelDeep(v);
+        } else {
+            // текстовый футер: iOS рисует серым по центру с тенью — делаем плоским
+            NSString *t = nil;
+            if ([self respondsToSelector:@selector(tableView:titleForFooterInSection:)]) {
+                t = [(id)self tableView:tableView titleForFooterInSection:section];
+            }
+            if (t.length > 0) {
+                CGFloat tw = ((UITableView *)tableView).bounds.size.width;
+                UIView *wrap = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tw, 44.0f)];
+                wrap.backgroundColor = [UIColor blackColor];
+                wrap.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                UILabel *l = [[UILabel alloc] initWithFrame:
+                              CGRectMake(16.0f, 0.0f, tw - 32.0f, 44.0f)];
+                l.text = t;
+                l.font = [MPMetroStyle regularFont:12.0f];
+                l.textColor = [UIColor colorWithWhite:1.0f alpha:0.5f];
+                l.textAlignment = NSTextAlignmentLeft;
+                l.numberOfLines = 0;
+                l.backgroundColor = [UIColor blackColor];
+                l.shadowColor = nil;
+                l.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                [wrap addSubview:l];
+                return wrap;
+            }
         }
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] footer: %@ (%@)", e.name, e.reason);
@@ -258,6 +419,22 @@ static void MPStyleTable(UITableView *table) {
     if (![MPSettingsTheme restyleEnabled]) return;
     if (![self isMemberOfClass:[UITableViewCell class]]) return;
     [MPSettingsCellStyler styleGenericCell:self];
+}
+
+%end
+
+// Синхронизация WP-тумблера с оригинальным свитчем (логика PS остаётся на свитче)
+%hook UISwitch
+
+- (void)setOn:(BOOL)on animated:(BOOL)animated {
+    %orig;
+    @try {
+        static char kToggleKey;
+        MPSettingsToggle *t = objc_getAssociatedObject(self, &kToggleKey);
+        if (t != nil) [t syncFromSwitch];
+    } @catch (NSException *e) {
+        NSLog(@"[MetroPhone][Settings] toggle sync: %@ (%@)", e.name, e.reason);
+    }
 }
 
 %end

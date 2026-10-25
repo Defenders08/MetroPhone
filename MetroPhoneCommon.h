@@ -15,6 +15,7 @@ static NSString * const MPKeyBlackWallpaper = @"blackWallpaper";  // чёрны�
 static NSString * const MPKeyMetroLabels    = @"metroLabels";     // шрифт подписей иконок
 static NSString * const MPKeyUppercase      = @"uppercaseLabels"; // ЗАГЛАВНЫЕ буквы
 static NSString * const MPKeyAccent         = @"accent";          // имя цвета из палитры WP
+static NSString * const MPKeyMultitask      = @"multitaskEnabled";// свой свитчер по двойному Home
 
 // Палитра акцентов Windows Phone: имя → HEX
 //   blue    #1BA1E2 (по умолчанию)

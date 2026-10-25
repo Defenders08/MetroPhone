@@ -19,10 +19,11 @@
 #import <time.h>
 #import <sys/stat.h>
 #import <sys/time.h>
+#import <signal.h>
 #import "MetroPhoneCommon.h"
 #import "MetroLauncher/MPMetroStyle.h"
 
-#define MP_VERSION @"0.5.2"
+#define MP_VERSION @"0.6.3"
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
 #pragma mark - Журналирование
@@ -373,8 +374,35 @@ static void MPApplyMetroTitle(UIView *view) {
 
 // Минимальные объявления по дампу заголовков iOS 6.1 (MP0w/iOS-Headers):
 // Logos даёт только @class, а ARC требует знать селекторы.
+// Селекторы SBApplication сверены с бинарником SpringBoard 6.1.3 (python-дамп):
+// displayIdentifier, isRunning, pid, _pid — есть; runningApplications у
+// контроллера на этой прошивке нет (см. MPRunningAppIDs ниже).
 @interface SBApplication : NSObject
 - (NSString *)path;
+- (NSString *)displayIdentifier;   // идентификатор запущенного приложения
+- (BOOL)isRunning;                 // жив ли процесс приложения
+- (pid_t)_pid;
+- (pid_t)pid;
+@end
+
+// Список приложений (свитчер многозадачности). runningApplications на iOS 6 нет —
+// только allApplications (все установленные), состояние берём у SBApplication.
+@interface SBApplicationController : NSObject
++ (id)sharedInstance;
+- (NSArray *)allApplications;
+- (id)applicationWithDisplayIdentifier:(NSString *)identifier;
+@end
+
+// Живые снимки приложений (механизм системного жеста «предыдущее приложение» iOS 6.1)
+@interface SBUIController : NSObject
++ (id)sharedInstance;
+- (id)systemGestureSnapshotForApp:(id)app includeStatusBar:(BOOL)includeStatusBar decodeImage:(BOOL)decodeImage;
+@end
+
+// Модель родного бара многозадачности: недавние приложения (порядок для свитчера)
+@interface SBAppSwitcherModel : NSObject
++ (id)sharedInstance;
+- (NSArray *)identifiers;
 @end
 
 @interface SBApplicationIcon : NSObject
@@ -734,9 +762,158 @@ static void MPConfigureAppearanceIfNeeded(void) {
 
 #import "MetroLauncher/MPAppDataSource.h"
 #import "MetroLauncher/MPHomeController.h"
+#import "MetroLauncher/MPMultitaskView.h"
 
 static MPHomeController *MPLauncher = nil;
 static void MPEnsureLauncher(void); // ленивое создание лаунчера (реализация ниже)
+
+#pragma mark - Свитчер многозадачности (WP8.1)
+
+// Свой свитчер: двойное нажатие Home вместо родной панели многозадачности.
+static MPMultitaskView *MPMultitask = nil;
+
+static BOOL MPTaskSwitcherOn(void) { return MPOn() && MPFlag(MPKeyMultitask, YES); }
+
+// Запущенные приложения iOS 6.1. Селектора runningApplications у
+// SBApplicationController на этой прошивке НЕТ (сверено с бинарником
+// SpringBoard): есть allApplications (все установленные) и флаг isRunning
+// у SBApplication. Порядок «недавние первыми» берём из модели родного
+// бара многозадачности SBAppSwitcherModel (identifiers, недавние в начале).
+static NSArray *MPRunningAppIDs(void) {
+    NSMutableArray *ids = [NSMutableArray array];
+    @try {
+        Class cls = objc_getClass("SBApplicationController");
+        id ctrl = (cls != nil && [cls respondsToSelector:@selector(sharedInstance)]) ? [cls sharedInstance] : nil;
+        NSArray *all = (ctrl != nil && [ctrl respondsToSelector:@selector(allApplications)])
+            ? [ctrl allApplications] : nil;
+        if (all == nil) {
+            MPLogOnce(@"mt-no-allapps", @"!! SBApplicationController.allApplications недоступен — список пуст");
+            return ids;
+        }
+
+        NSMutableSet *running = [NSMutableSet set];
+        for (id app in all) {
+            BOOL isRunning = ([app respondsToSelector:@selector(isRunning)]) ? [app isRunning] : NO;
+            if (!isRunning) continue;
+            NSString *bid = [app respondsToSelector:@selector(displayIdentifier)] ? [app displayIdentifier] : nil;
+            if ([bid isKindOfClass:[NSString class]] && bid.length > 0) [running addObject:bid];
+        }
+        if (running.count == 0) {
+            MPLog(@"многозадачность: запущенных нет (установленных %lu)", (unsigned long)all.count);
+            return ids;
+        }
+
+        // недавние — из модели родного свитчера; пропускаем нестроковые значения
+        Class swCls = objc_getClass("SBAppSwitcherModel");
+        id swModel = (swCls != nil && [swCls respondsToSelector:@selector(sharedInstance)]) ? [swCls sharedInstance] : nil;
+        NSArray *recentIds = (swModel != nil && [swModel respondsToSelector:@selector(identifiers)])
+            ? [swModel identifiers] : nil;
+        if (recentIds != nil) {
+            for (NSString *bid in recentIds)
+                if ([bid isKindOfClass:[NSString class]] && [running containsObject:bid] && ![ids containsObject:bid])
+                    [ids addObject:bid];
+        }
+        // только что запущенные могли ещё не попасть в недавние — дописываем в конец
+        for (NSString *bid in running)
+            if (![ids containsObject:bid]) [ids addObject:bid];
+
+        MPLog(@"многозадачность: запущенных %lu — %@", (unsigned long)ids.count, ids);
+    } @catch (NSException *e) {
+        MPLog(@"!! список запущенных: %@ (%@)", e.name, e.reason);
+    }
+    return ids;
+}
+
+// Закрытие приложения: SIGKILL процессу. SpringBoard сам замечает смерть
+// процесса и вычищает своё состояние — так же, как при обычном падении приложения.
+// pid у SBApplication на iOS 6.1 — свойства _pid/pid (сверено с бинарником).
+static void MPKillAppWithBundleID(NSString *bid) {
+    @try {
+        Class cls = objc_getClass("SBApplicationController");
+        id ctrl = (cls != nil && [cls respondsToSelector:@selector(sharedInstance)]) ? [cls sharedInstance] : nil;
+        NSArray *all = (ctrl != nil && [ctrl respondsToSelector:@selector(allApplications)])
+            ? [ctrl allApplications] : nil;
+        for (id app in all) {
+            NSString *other = [app respondsToSelector:@selector(displayIdentifier)] ? [app displayIdentifier] : nil;
+            if (![other isEqualToString:bid]) continue;
+            BOOL isRunning = ([app respondsToSelector:@selector(isRunning)]) ? [app isRunning] : NO;
+            pid_t pid = -1;
+            if ([app respondsToSelector:@selector(_pid)]) pid = [app _pid];
+            else if ([app respondsToSelector:@selector(pid)]) pid = [app pid];
+            if (isRunning && pid > 0) {
+                kill(pid, SIGKILL);
+                MPLog(@"многозадачность: приложение закрыто %@ (pid %d)", bid, pid);
+            } else {
+                MPLog(@"многозадачность: %@ не запущено (isRunning=%d, pid=%d) — закрывать нечего",
+                      bid, isRunning, pid);
+            }
+            return;
+        }
+        MPLog(@"!! многозадачность: %@ не найдено среди установленных", bid);
+    } @catch (NSException *e) {
+        MPLog(@"!! закрытие %@: %@ (%@)", bid, e.name, e.reason);
+    }
+}
+
+// Живой снимок приложения: SpringBoard сам умеет снимать содержимое запущенного
+// приложения (этим механизмом iOS 6.1 показывает «предыдущее приложение» при
+// свайпе от края). Нужен для карточек без кэшированного снимка — прежде всего
+// для приложения на переднем плане. Селекторы сверены с бинарником 6.1.3.
+static UIImage *MPLiveAppSnapshot(NSString *bid) {
+    UIImage *result = nil;
+    @try {
+        Class ctrlCls = objc_getClass("SBApplicationController");
+        id appCtrl = (ctrlCls != nil && [ctrlCls respondsToSelector:@selector(sharedInstance)]) ? [ctrlCls sharedInstance] : nil;
+        id app = (appCtrl != nil && [appCtrl respondsToSelector:@selector(applicationWithDisplayIdentifier:)])
+            ? [appCtrl applicationWithDisplayIdentifier:bid] : nil;
+        if (app == nil) return nil;
+
+        Class uiCls = objc_getClass("SBUIController");
+        id ui = (uiCls != nil && [uiCls respondsToSelector:@selector(sharedInstance)]) ? [uiCls sharedInstance] : nil;
+        if (ui == nil || ![ui respondsToSelector:@selector(systemGestureSnapshotForApp:includeStatusBar:decodeImage:)])
+            return nil;
+
+        id img = [ui systemGestureSnapshotForApp:app includeStatusBar:YES decodeImage:YES];
+        if ([img isKindOfClass:[UIImage class]]) result = img;
+        MPLog(@"многозадачность: живой снимок %@ → %@", bid, result != nil ? @"ок" : @"пусто");
+    } @catch (NSException *e) {
+        MPLog(@"!! живой снимок %@: %@ (%@)", bid, e.name, e.reason);
+    }
+    return result;
+}
+
+// Показ свитчера: ленивое создание. Главное окно к этому моменту уже захвачено
+// хуком SBWallpaperView (см. MPSetHostWindow) — телефон давно разблокировался.
+static void MPShowMultitask(void) {
+    @try {
+        if (MPMultitask == nil) {
+            MPMultitask = [[MPMultitaskView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+            MPMultitask.onActivateBlock = ^(NSString *bid) {
+                [[MPAppDataSource sharedDataSource] launchAppWithBundleID:bid];
+            };
+            MPMultitask.onCloseBlock = ^(NSString *bid) {
+                MPKillAppWithBundleID(bid);
+            };
+            MPMultitask.livePreviewBlock = ^(NSString *bid) {
+                return MPLiveAppSnapshot(bid);
+            };
+            MPLog(@"свитчер многозадачности создан");
+        }
+        if (MPMultitask.superview == nil) {
+            UIView *host = MPSharedHostWindow();
+            if (host == nil) {
+                MPLog(@"!! свитчер: главное окно не захвачено — открыть нельзя");
+                return;
+            }
+            [host addSubview:MPMultitask];
+            MPLog(@"свитчер установлен в %@", NSStringFromClass([host class]));
+        }
+        [MPMultitask.superview bringSubviewToFront:MPMultitask];
+        [MPMultitask openAnimated:YES withAppIDs:MPRunningAppIDs()];
+    } @catch (NSException *e) {
+        MPLog(@"!! показ свитчера: %@ (%@)", e.name, e.reason);
+    }
+}
 
 @interface SBAwayController : NSObject
 + (id)sharedAwayController;
@@ -745,14 +922,16 @@ static void MPEnsureLauncher(void); // ленивое создание лаун�
 
 static void MPLockStateChanged(CFNotificationCenterRef center, void *observer,
                                CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-	// наблюдатель регистрируется во всех UIKit-процессах, живём только в SpringBoard
-	if (objc_getClass("SBIconView") == nil) return;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		MPEnsureLauncher();
-		BOOL locked = [[objc_getClass("SBAwayController") sharedAwayController] isLocked];
-		if (locked) [MPLauncher hideMetroAnimated:NO];
-		else [MPLauncher showMetroAnimated:NO];
-	});
+    // наблюдатель регистрируется во всех UIKit-процессах, живём только в SpringBoard
+    if (objc_getClass("SBIconView") == nil) return;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // свитчер на заблокированном экране не нужен
+        if (MPMultitask != nil && [MPMultitask isOpen]) [MPMultitask closeAnimated:NO];
+        MPEnsureLauncher();
+        BOOL locked = [[objc_getClass("SBAwayController") sharedAwayController] isLocked];
+        if (locked) [MPLauncher hideMetroAnimated:NO];
+        else [MPLauncher showMetroAnimated:NO];
+    });
 }
 
 // Ленивое создание лаунчера (только главный поток). Класс SpringBoard на iOS 6.1
@@ -769,17 +948,59 @@ static void MPEnsureLauncher(void) {
 }
 
 // Кнопка Home: выход из режима редактирования плиток (как «назад» в WP8)
+// и свой свитчер многозадачности по двойному нажатию. «Проглоченные» свитчером
+// нажатия не отдаём SpringBoard (парой down/up), иначе под нашей вьюхой
+// откроется родная панель многозадачности и повиснет после закрытия свитчера.
 struct __GSEvent;
+
+static NSTimeInterval MPLastMenuDownAt = 0;
+static BOOL MPConsumeNextMenuUp = NO;
 
 %group MPLauncherHooks
 
 %hook SpringBoard
 - (void)menuButtonDown:(struct __GSEvent *)event {
-	%orig;
-	if (MPLauncher != nil && [MPLauncher isMetroVisible]) {
-		[MPLauncher homeButtonPressed];
-		MPLog(@"Home: выход из режима правки");
-	}
+    NSTimeInterval now = CFAbsoluteTimeGetCurrent();
+
+    // 1) Свитчер открыт: Home закрывает его
+    if (MPMultitask != nil && [MPMultitask isOpen]) {
+        MPLastMenuDownAt = 0;          // следующее нажатие — новое, не «второе»
+        MPConsumeNextMenuUp = YES;
+        MPLog(@"Home: закрытие свитчера");
+        [MPMultitask closeAnimated:YES];
+        return;
+    }
+
+    // 2) Двойное нажатие — свой свитчер WP8.1 вместо родной панели
+    if (MPTaskSwitcherOn() && MPLastMenuDownAt > 0 && now - MPLastMenuDownAt < 0.45) {
+        id away = [objc_getClass("SBAwayController") sharedAwayController];
+        BOOL locked = (away != nil && [away respondsToSelector:@selector(isLocked)]) ? [away isLocked] : NO;
+        if (!locked) {
+            MPLastMenuDownAt = 0;
+            MPConsumeNextMenuUp = YES; // второй up поглощается вместе с down
+            MPLog(@"Home: двойное нажатие → свитчер WP");
+            MPShowMultitask();
+            return;
+        }
+    }
+
+    MPLastMenuDownAt = now;
+
+    // 3) Обычное нажатие: выход из режима правки плиток
+    %orig;
+    if (MPLauncher != nil && [MPLauncher isMetroVisible]) {
+        [MPLauncher homeButtonPressed];
+        MPLog(@"Home: выход из режима правки");
+    }
+}
+
+- (void)menuButtonUp:(struct __GSEvent *)event {
+    if (MPConsumeNextMenuUp) {
+        MPConsumeNextMenuUp = NO;
+        MPLog(@"Home: up поглощён (нажатие досталось свитчеру)");
+        return;
+    }
+    %orig;
 }
 %end
 
@@ -816,11 +1037,11 @@ static void MPCleanupOldLog(void) {
 %ctor {
 	MPCleanupOldLog();
 	MPLog(@"=== MetroPhone %@ запуск (pid %d) ===", MP_VERSION, getpid());
-	MPLog(@"настройки: вкл=%d панели=%d плитки=%d стильПлиток=%ld обои=%d подписи=%d заглавные=%d акцент=%@",
+	MPLog(@"настройки: вкл=%d панели=%d плитки=%d стильПлиток=%ld обои=%d подписи=%d заглавные=%d акцент=%@ многозадачность=%d",
 	      MPOn(), MPFlag(MPKeyFlatPanels, YES), MPFlag(MPKeyTiles, YES),
 	      (long)MPInt(MPKeyTileStyle, 0), MPFlag(MPKeyBlackWallpaper, YES),
 	      MPFlag(MPKeyMetroLabels, YES), MPFlag(MPKeyUppercase, YES),
-	      MPString(MPKeyAccent, @"blue"));
+	      MPString(MPKeyAccent, @"blue"), MPFlag(MPKeyMultitask, YES));
 
 	// В %ctor делаем только расстановку хуков (чистый MSHookMessageEx, безопасно до main).
 	// Любые вызовы UIKit/графики откладываем на главный поток: до старта runloop

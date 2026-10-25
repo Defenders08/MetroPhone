@@ -1,5 +1,6 @@
 #import "MPSettingsCellStyler.h"
 #import "MPSettingsTheme.h"
+#import "MPSettingsToggle.h"
 
 static const CGFloat MPCellStyleInset = 16.0f;
 
@@ -68,28 +69,51 @@ static BOOL MPCGColorIsRed(UIColor *c) {
         BOOL hasValue = (value.text.length > 0);
 
         // Контрол справа (тумблер/слайдер/галочка-поле) — если он есть, текст не шире его
+        // PSControlTableCell хранит контрол в свойстве control (свитч/слайдер
+        // лежат ПРЯМО в ячейке, не в contentView); fallback — поиск по подвью
         UIView *control = nil;
-        for (UIView *v in cell.contentView.subviews) {
-            if ([v isKindOfClass:[UISwitch class]] || [v isKindOfClass:[UISlider class]] ||
-                [v isKindOfClass:[UITextField class]] || [v isKindOfClass:[UISegmentedControl class]]) {
-                control = v;
-                break;
+        if ([cell respondsToSelector:@selector(control)]) {
+            control = [(id<MPHasControl>)cell control];
+        }
+        if (control == nil) {
+            for (UIView *v in cell.subviews) {
+                if ([v isKindOfClass:[UIControl class]]) { control = v; break; }
             }
+        }
+        if (control == nil) {
+            for (UIView *v in cell.contentView.subviews) {
+                if ([v isKindOfClass:[UIControl class]]) { control = v; break; }
+            }
+        }
+
+        if ([control isKindOfClass:[UISlider class]]) {
+            [MPSettingsTheme styleSlider:(UISlider *)control];   // WP-ползунок на каждом проходе
+        }
+        if ([control isKindOfClass:[UISwitch class]]) {
+            // WP-тумблер поверх оригинального UISwitch (оригинал скрыт, жив)
+            MPSettingsToggle *tg = [MPSettingsToggle attachedToggleForSwitch:(UISwitch *)control];
+            [tg syncFrameFromSwitch];
+            [tg syncFromSwitch];
         }
         CGFloat rightLimit = b.size.width - MPCellStyleInset;
         if (control != nil) {
             rightLimit = MIN(rightLimit, control.frame.origin.x - 8.0f);
         }
 
+        // grouped-таблица вставляет contentView на ~10 pt — компенсируем,
+        // чтобы текст был на 16 pt от края экрана
+        CGFloat inset = MPCellStyleInset - 10.0f;
+        if (inset < 2.0f) inset = 2.0f;
+
         if (title != nil) {
             CGFloat titleY = hasValue ? 6.0f : (b.size.height - 30.0f) / 2.0f;
-            title.frame = CGRectMake(MPCellStyleInset, titleY,
-                                     rightLimit - MPCellStyleInset, 30.0f);
+            title.frame = CGRectMake(inset, titleY,
+                                     rightLimit - inset, 30.0f);
         }
         if (value != nil && hasValue) {
             // значение iOS «справа» переносится ПОД заголовок серым
-            value.frame = CGRectMake(MPCellStyleInset + 1.0f, CGRectGetMaxY(title.frame) - 2.0f,
-                                     b.size.width - MPCellStyleInset * 2.0f, 18.0f);
+            value.frame = CGRectMake(inset + 1.0f, CGRectGetMaxY(title.frame) - 2.0f,
+                                     b.size.width - inset * 2.0f, 18.0f);
             value.textAlignment = NSTextAlignmentLeft;
         }
     } @catch (NSException *e) {
