@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>MetroPhone</string>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>MetroPhone — тема Windows Phone (Metro) для iOS 6: лаунчер с плитками вместо иконок, плоские тёмные панели, квадратные значки, типографика Segoe WP и акцентный цвет на выбор. Все изменения применяются сразу, обои и док — после перезапуска SpringBoard.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Основное</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>label</key>
+			<string>Включить MetroPhone</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Плоские панели, статус-бар и плитки применяются сразу; обои и док в SpringBoard — после перезапуска.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>blue</string>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>detail</key>
+			<string>PSListItems</string>
+			<key>key</key>
+			<string>accent</string>
+			<key>label</key>
+			<string>Акцентный цвет</string>
+			<key>validTitles</key>
+			<array>
+				<string>Синий</string>
+				<string>Фиолетовый</string>
+				<string>Маджента</string>
+				<string>Зелёный</string>
+				<string>Лаймовый</string>
+				<string>Оранжевый</string>
+				<string>Красный</string>
+				<string>Бирюзовый</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>blue</string>
+				<string>purple</string>
+				<string>magenta</string>
+				<string>green</string>
+				<string>lime</string>
+				<string>orange</string>
+				<string>red</string>
+				<string>teal</string>
+			</array>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>0</integer>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>detail</key>
+			<string>PSListItems</string>
+			<key>key</key>
+			<string>tileStyle</string>
+			<key>label</key>
+			<string>Стиль плиток</string>
+			<key>validTitles</key>
+			<array>
+				<string>Тёмные</string>
+				<string>Акцентные</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Элементы темы</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>flatPanels</string>
+			<key>label</key>
+			<string>Плоские тёмные панели</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>squareTiles</string>
+			<key>label</key>
+			<string>Квадратные плитки</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>metroLabels</string>
+			<key>label</key>
+			<string>Шрифт подписей как в WP</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>uppercaseLabels</string>
+			<key>label</key>
+			<string>ЗАГЛАВНЫЕ подписи</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>blackWallpaper</string>
+			<key>label</key>
+			<string>Чёрный фон вместо обоев</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Применение</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>respring</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Перезапустить SpringBoard</string>
+		</dict>
+	</array>
+</dict>
+</plist>

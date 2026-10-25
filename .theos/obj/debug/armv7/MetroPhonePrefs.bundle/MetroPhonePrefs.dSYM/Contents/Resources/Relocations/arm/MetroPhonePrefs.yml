@@ -1,0 +1,19 @@
+---
+triple:          'armv7-apple-darwin'
+binary-path:     "/Users/ash/Documents/Проекты/MetroPhone/.theos/obj/debug/armv7/MetroPhonePrefs.bundle/MetroPhonePrefs"
+relocations:
+  - { offset: 0x1E, size: 0x4, addend: 0x0, symName: '-[MPRootListController specifiers]', symObjAddr: 0x0, symBinAddr: 0x3D8C, symSize: 0x80 }
+  - { offset: 0x33, size: 0x4, addend: 0x0, symName: _MPKeyEnabled, symObjAddr: 0x208, symBinAddr: 0x4028, symSize: 0x0 }
+  - { offset: 0xAC, size: 0x4, addend: 0x0, symName: _MPKeyFlatPanels, symObjAddr: 0x20C, symBinAddr: 0x402C, symSize: 0x0 }
+  - { offset: 0xBD, size: 0x4, addend: 0x0, symName: _MPKeyTiles, symObjAddr: 0x210, symBinAddr: 0x4030, symSize: 0x0 }
+  - { offset: 0xCE, size: 0x4, addend: 0x0, symName: _MPKeyTileStyle, symObjAddr: 0x214, symBinAddr: 0x4034, symSize: 0x0 }
+  - { offset: 0xDF, size: 0x4, addend: 0x0, symName: _MPKeyBlackWallpaper, symObjAddr: 0x218, symBinAddr: 0x4038, symSize: 0x0 }
+  - { offset: 0xF0, size: 0x4, addend: 0x0, symName: _MPKeyMetroLabels, symObjAddr: 0x21C, symBinAddr: 0x403C, symSize: 0x0 }
+  - { offset: 0x101, size: 0x4, addend: 0x0, symName: _MPKeyUppercase, symObjAddr: 0x220, symBinAddr: 0x4040, symSize: 0x0 }
+  - { offset: 0x112, size: 0x4, addend: 0x0, symName: _MPKeyAccent, symObjAddr: 0x224, symBinAddr: 0x4044, symSize: 0x0 }
+  - { offset: 0x1E08, size: 0x4, addend: 0x0, symName: '-[MPRootListController specifiers]', symObjAddr: 0x0, symBinAddr: 0x3D8C, symSize: 0x80 }
+  - { offset: 0x1E0C, size: 0x4, addend: 0x0, symName: '-[MPRootListController respring]', symObjAddr: 0x80, symBinAddr: 0x3E0C, symSize: 0x56 }
+  - { offset: 0x1E5B, size: 0x4, addend: 0x0, symName: '-[MPRootListController respring]', symObjAddr: 0x80, symBinAddr: 0x3E0C, symSize: 0x56 }
+  - { offset: 0x1E5F, size: 0x4, addend: 0x0, symName: '___32-[MPRootListController respring]_block_invoke', symObjAddr: 0xD6, symBinAddr: 0x3E62, symSize: 0x1C }
+  - { offset: 0x1E9C, size: 0x4, addend: 0x0, symName: '___32-[MPRootListController respring]_block_invoke', symObjAddr: 0xD6, symBinAddr: 0x3E62, symSize: 0x1C }
+...

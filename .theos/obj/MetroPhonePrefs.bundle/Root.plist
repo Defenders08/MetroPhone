@@ -9,6 +9,12 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>MetroPhone — тема Windows Phone (Metro) для iOS 6: лаунчер с плитками вместо иконок, плоские тёмные панели, квадратные значки, типографика Segoe WP и акцентный цвет на выбор. Все изменения применяются сразу, обои и док — после перезапуска SpringBoard.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Основное</string>
 		</dict>
@@ -155,6 +161,26 @@
 			<string>blackWallpaper</string>
 			<key>label</key>
 			<string>Чёрный фон вместо обоев</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Многозадачность</string>
+			<key>footerText</key>
+			<string>Двойное нажатие Home открывает свитчер в стиле WP 8.1: карточка приложения по центру, свайп карточки вниз закрывает приложение, касание — переход, Home — выход. Родная панель многозадачности (и плеер в ней) при этом недоступна.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>multitaskEnabled</string>
+			<key>label</key>
+			<string>Свой свитчер (двойное Home)</string>
 		</dict>
 		<dict>
 			<key>cell</key>

@@ -9,6 +9,7 @@
   /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/../MetroLauncher/MPLayoutModel.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsTheme.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsHeaderView.h \
+  /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsToggle.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsCellStyler.h \
   /Users/ash/theos/vendor/include/substrate.h \
   /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h
@@ -21,6 +22,7 @@
 /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/../MetroLauncher/MPLayoutModel.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsTheme.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsHeaderView.h:
+/Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsToggle.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroSettings/MPSettingsCellStyler.h:
 /Users/ash/theos/vendor/include/substrate.h:
 /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h:
