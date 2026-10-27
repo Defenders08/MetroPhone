@@ -807,9 +807,9 @@ static void MPStyleFooterLabelDeep(UIView *v) {
 - (void)setOn:(BOOL)on animated:(BOOL)animated {
     %orig;
     @try {
-        static char kToggleKey;
-        MPSettingsToggle *t = objc_getAssociatedObject(self, &kToggleKey);
-        if (t != nil) [t syncFromSwitch];
+        // состояние может меняться программно (система, refreshCellContents) без
+        // лейаута — зеркалим в оверлей, если он уже создан
+        [MPSettingsToggle syncExistingForSwitch:self];
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] toggle sync: %@ (%@)", e.name, e.reason);
     }

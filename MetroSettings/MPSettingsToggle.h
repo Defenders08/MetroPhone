@@ -10,6 +10,10 @@
 // Найти/создать тумблер для свитча (один на свитч); сам свитч скрывается
 + (MPSettingsToggle *)attachedToggleForSwitch:(UISwitch *)sw;
 
+// Обновить вид УЖЕ существующего тумблера (если оверлея нет — ничего не делает).
+// Для %hook -setOn:animated:: состояние свитча может менять система без лейаута.
++ (void)syncExistingForSwitch:(UISwitch *)sw;
+
 // Подогнать кадр под положение оригинального свитча
 - (void)syncFrameFromSwitch;
 

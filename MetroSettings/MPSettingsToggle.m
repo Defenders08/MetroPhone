@@ -2,6 +2,11 @@
 #import "../MetroLauncher/MPMetroStyle.h"
 #import <objc/runtime.h>
 
+// Один ключ ассоциации на файл: и attachedToggleForSwitch, и syncExistingForSwitch
+// обязаны искать тумблер по одному адресу — раньше у каждой функции был свой
+// static char, и хук setOn:animated: никогда не находил оверлей.
+static char kToggleKey;
+
 @implementation MPSettingsToggle {
     UISwitch *_switch;
     UIView   *_fill;         // акцентная заливка (включён)
@@ -9,7 +14,6 @@
 }
 
 + (MPSettingsToggle *)attachedToggleForSwitch:(UISwitch *)sw {
-    static char kToggleKey;
     MPSettingsToggle *t = objc_getAssociatedObject(sw, &kToggleKey);
     if (t == nil) {
         t = [[MPSettingsToggle alloc] initWithFrame:sw.frame];
@@ -19,6 +23,11 @@
         objc_setAssociatedObject(sw, &kToggleKey, t, OBJC_ASSOCIATION_RETAIN);
     }
     return t;
+}
+
++ (void)syncExistingForSwitch:(UISwitch *)sw {
+    MPSettingsToggle *t = objc_getAssociatedObject(sw, &kToggleKey);
+    if (t != nil) [t syncFromSwitch];
 }
 
 - (id)initWithFrame:(CGRect)frame {

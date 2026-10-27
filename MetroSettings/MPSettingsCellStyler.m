@@ -389,7 +389,15 @@ static NSInteger MPNetworkLevel(UITableViewCell *cell) {
         nameLabel = l;
         break;
     }
-    if (nameLabel == nil) return;
+    if (nameLabel == nil) {
+        // «Другая…» и служебные строки без имени: ячейка могла быть переиспользована
+        // из сети — прячем наши полоски/замок, иначе они остаются висеть.
+        UIImageView *staleSig = (UIImageView *)[cell viewWithTag:MPSigTag];
+        UIImageView *staleLock = (UIImageView *)[cell viewWithTag:MPLockTag];
+        if (staleSig != nil) staleSig.hidden = YES;
+        if (staleLock != nil) staleLock.hidden = YES;
+        return;
+    }
 
     // 83B: подключённая сеть приходит с системным синим tint — в нашем списке имя белое.
     nameLabel.textColor = [UIColor whiteColor];
@@ -612,8 +620,10 @@ static void MPMakeDiscAccent(UIView *v, CGFloat w, CGFloat h) {
     NSUInteger bytesPerRow = w * 4;
     unsigned char *px = (unsigned char *)malloc(bytesPerRow * h);
     if (px == NULL) return NO;
-    CGContextRef ctx = CGBitmapContextCreate(px, w, h, 8, bytesPerRow,
-        CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedLast);
+    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(px, w, h, 8, bytesPerRow, space,
+        kCGImageAlphaPremultipliedLast);
+    CFRelease(space);                 // контекст копирует пространство — не отпускали, текло
     BOOL blue = NO;
     if (ctx != NULL) {
         CGContextDrawImage(ctx, CGRectMake(0, 0, w, h), cg);
@@ -758,9 +768,6 @@ static void MPMakeDiscAccent(UIView *v, CGFloat w, CGFloat h) {
         UIColor *tc = field.textColor;
         if (tc == nil || [tc isEqual:[UIColor blackColor]]) {
             field.textColor = [UIColor whiteColor];
-        }
-        if (field.placeholder != nil) {
-            field.placeholder = field.placeholder; // текст не меняем
         }
         // плоское подчёркивание вместо рамки
         field.borderStyle = UITextBorderStyleNone;
