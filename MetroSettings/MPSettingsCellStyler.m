@@ -533,7 +533,7 @@ static void MPMakeDiscAccent(UIView *v, CGFloat w, CGFloat h) {
     }
 }
 
-+ (void)mp_recolorView:(UIView *)v {
++ (void)mp_recolorView:(UIView *)v inControl:(BOOL)inControl {
     // круглый синий диск «›» у подключённых сетей/устройств: ловим по форме
     // (квадратные границы ~14–30 pt). Он бывает UIButton с глянцем (рамка/круг
     // не гарантированы) и UIImageView с картинкой — для картинки различаем
@@ -574,7 +574,9 @@ static void MPMakeDiscAccent(UIView *v, CGFloat w, CGFloat h) {
             return;   // внутрь диска не идём
         }
     }
-    if ([v isKindOfClass:[UIImageView class]] && v.bounds.size.width <= 24.0f &&
+    // Внутри контролов (слайдер, свитч) мелкие UIImageView — это треки и бегунок:
+    // скрытие «мелких иконок» убивало ползунки громкости и яркости целиком.
+    if (!inControl && [v isKindOfClass:[UIImageView class]] && v.bounds.size.width <= 24.0f &&
         v.tag != MPLockTag && v.tag != MPSigTag &&
         !MPIsOurGlyph(((UIImageView *)v).image) &&
         ![v.superview isKindOfClass:[UIButton class]]) {
@@ -602,7 +604,14 @@ static void MPMakeDiscAccent(UIView *v, CGFloat w, CGFloat h) {
         }
         l.shadowColor = nil;
     }
-    for (UIView *sub in v.subviews) [self mp_recolorView:sub];
+    BOOL subInControl = inControl || [v isKindOfClass:[UISlider class]] ||
+                        [v isKindOfClass:[UISwitch class]];
+    for (UIView *sub in v.subviews) [self mp_recolorView:sub inControl:subInControl];
+}
+
+// Обёртка для внешних вызовов: корень дерева — не внутри контрола
++ (void)mp_recolorView:(UIView *)v {
+    [self mp_recolorView:v inControl:NO];
 }
 
 // Синяя ли картинка (глянцевый синий диск iOS): рисуем в 8×8 и считаем

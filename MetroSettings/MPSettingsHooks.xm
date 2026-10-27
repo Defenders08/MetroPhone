@@ -67,6 +67,7 @@ static void *MPLastTitleKey = &MPLastTitleKey;
 // MPApplyPageStyle, который идёт раньше по тексту файла.
 static void MPNormalizeTopGap(UITableView *table, UIViewController *controller);
 static void MPClampSectionLabels(UITableView *table);
+static void MPStyleHeaderLabelDeep(UIView *v);
 
 // Привязать/обновить шапку на таблице контроллера
 static void MPInstallOrUpdateHeader(UIViewController *controller, UITableView *table) {
@@ -243,6 +244,15 @@ static void MPApplyPageStyle(UIViewController *controller, UITableView *table) {
         BOOL hasHeader = [table.tableHeaderView isKindOfClass:[MPSettingsHeaderView class]];
         if (hasHeader) MPNormalizeTopGap(table, controller);
         MPClampSectionLabels(table);
+
+        // Кастомные заголовки-вьюхи контроллера («Фотопоток» на странице «Фото и
+        // камера» — MSSPhotoStreamHeaderView) не приходят в viewForHeaderInSection:
+        // стилизуем их прямо среди подвью таблицы (та же плоская типографика).
+        for (UIView *v in table.subviews) {
+            if ([NSStringFromClass([v class]) isEqualToString:@"MSSPhotoStreamHeaderView"]) {
+                MPStyleHeaderLabelDeep(v);
+            }
+        }
 
         // Куда возвращаться: push в стеке ИЛИ модальное представление
         // (страницы настроек твиков часто открываются модально со своим стеком,
@@ -507,6 +517,42 @@ static void MPStyleHeaderLabelDeep(UIView *v) {
     return v;
 }
 
+// Есть ли глубже в дереве кнопка (кнопочные футеры вроде SUSettingsLinkHeaderFooterView)
+static BOOL MPViewContainsButton(UIView *v) {
+    if ([v isKindOfClass:[UIButton class]]) return YES;
+    for (UIView *sub in v.subviews) {
+        if (MPViewContainsButton(sub)) return YES;
+    }
+    return NO;
+}
+
+// Кнопки внутри футера — строки-действия: акцент вместо серого цвета футера
+static void MPAccentFooterButtons(UIView *v) {
+    if ([v isKindOfClass:[UIButton class]]) {
+        [(UIButton *)v setTitleColor:[MPMetroStyle accentColor] forState:UIControlStateNormal];
+        return;
+    }
+    for (UIView *sub in v.subviews) MPAccentFooterButtons(sub);
+}
+
+// Есть ли глубже в дереве кнопка (кнопочные футеры вроде SUSettingsLinkHeaderFooterView)
+static BOOL MPViewContainsButton(UIView *v) {
+    if ([v isKindOfClass:[UIButton class]]) return YES;
+    for (UIView *sub in v.subviews) {
+        if (MPViewContainsButton(sub)) return YES;
+    }
+    return NO;
+}
+
+// Кнопки внутри футера — строки-действия: акцент вместо серого цвета футера
+static void MPAccentFooterButtons(UIView *v) {
+    if ([v isKindOfClass:[UIButton class]]) {
+        [(UIButton *)v setTitleColor:[MPMetroStyle accentColor] forState:UIControlStateNormal];
+        return;
+    }
+    for (UIView *sub in v.subviews) MPAccentFooterButtons(sub);
+}
+
 - (float)tableView:(id)tableView heightForFooterInSection:(NSInteger)section {
     CGFloat h = %orig;
     if (![MPSettingsTheme restyleEnabled]) return h;
@@ -516,7 +562,13 @@ static void MPStyleHeaderLabelDeep(UIView *v) {
             t = [(id)self tableView:tableView titleForFooterInSection:section];
         }
     } @catch (NSException *e) { t = nil; }
-    if (t.length == 0) return 8.0f;            // 28B/38B: пустые футеры — 8 pt
+    if (t.length == 0) {
+        // 28B/38B: пустые футеры — 8 pt. НО у «кнопочных» футеров (STORE:
+        // «Забыли Apple ID или пароль?», SUSettingsLinkHeaderFooterView) текста
+        // нет, а родная высота (>8) учитывает кнопку — возвращаем её, иначе
+        // кнопка налезает на следующую ячейку. Пустые секции приходят с h=-1.
+        return (h > 8.0f) ? h : 8.0f;
+    }
     // 35B: высота по реальному тексту, а не по «38 знакам в строке» —иначе
     // кириллица обрезалась «…», а латиница получала лишние строки.
     CGFloat w = ((UITableView *)tableView).bounds.size.width - 32.0f;
@@ -611,10 +663,40 @@ static void MPStyleFooterLabelDeep(UIView *v) {
 
 - (id)tableView:(id)tableView viewForFooterInSection:(NSInteger)section {
     UIView *v = %orig;
+    MPLog(@"[diag] viewForFooter %@ секция %ld v=%@",
+          NSStringFromClass([self class]), (long)section,
+          v != nil ? NSStringFromClass([v class]) : @"nil");
     if (![MPSettingsTheme restyleEnabled]) return v;
     @try {
         if (v != nil) {
             MPStyleFooterLabelDeep(v);
+            // Кнопочный футер (SUSettingsLinkHeaderFooterView и подобные): высоту
+            // из heightFor мы не знали (текст пуст → 8 pt), поэтому измеряем по
+            // факту и просим таблицу переспросить высоту — иначе кнопка налезает
+            // на следующую ячейку.
+            if (MPViewContainsButton(v)) {
+                MPAccentFooterButtons(v);
+                CGFloat need = 0.0f;
+                for (UIView *sub in v.subviews) {
+                    CGFloat bottom = CGRectGetMaxY(sub.frame);
+                    if (bottom > need) need = bottom;
+                }
+                need = ceilf(need) + 8.0f;
+                NSMutableDictionary *cache = MPFooterHeightsForController(self);
+                NSNumber *old = cache[@(section)];
+                MPLog(@"[diag] кнопочный футер секции %ld: need=%.0f old=%@",
+                      (long)section, need, old);
+                if (old == nil || fabsf(old.floatValue - need) > 0.5f) {
+                    cache[@(section)] = @(need);
+                    __weak UITableView *weakT = tableView;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        @try {
+                            [weakT beginUpdates];
+                            [weakT endUpdates];
+                        } @catch (NSException *e) { /* таблица уже ушла */ }
+                    });
+                }
+            }
         } else {
             // текстовый футер: iOS рисует серым по центру с тенью — делаем плоским
             NSString *t = nil;
@@ -894,7 +976,11 @@ static void MPStyleFooterLabelDeep(UIView *v) {
 
 %end // MPCustomCells
 
-static BOOL MPCustomCellHooksInstalled = NO;
+// Флаги РАЗДЕЛЬНЫЕ: раньше один флаг на обе группы — если Wi-Fi (APTableCell)
+// встречался раньше Bluetooth (BTTableCell), %init(MPBTHooks) не вызывался НИКОГДА,
+// и строки устройств оставались родными (синий текст, глянцевый диск).
+static BOOL MPCustomAPHooksInstalled = NO;
+static BOOL MPCustomBTHooksInstalled = NO;
 
 // Общий хук для ЛЮБОЙ кастомной ячейки «Настроек» (VPN, Twitter, App Store, Wi-Fi…):
 // после родного layoutSubviews применяем наш стиль — тогда белый текст, отступ 16 pt
@@ -946,13 +1032,23 @@ static void MPHookCellClass(Class cls) {
 void MPSettingsInstallCustomCellHooksIfNeeded(UITableViewCell *cell) {
     if (cell == nil) return;
     NSString *cellClass = NSStringFromClass([cell class]);
-    if ([cellClass isEqualToString:@"APTableCell"] || [cellClass isEqualToString:@"BTTableCell"]) {
-        if (MPCustomCellHooksInstalled) return;
-        MPCustomCellHooksInstalled = YES;
+    if ([cellClass isEqualToString:@"APTableCell"]) {
+        if (MPCustomAPHooksInstalled) return;
+        MPCustomAPHooksInstalled = YES;
         @try {
-            if ([cellClass isEqualToString:@"BTTableCell"]) %init(MPBTHooks); else %init(MPCustomCells);
+            %init(MPCustomCells);
         } @catch (NSException *e) {
-            NSLog(@"[MetroPhone][Settings] хук %@: %@", cellClass, e.name);
+            NSLog(@"[MetroPhone][Settings] хук APTableCell: %@", e.name);
+        }
+        return;
+    }
+    if ([cellClass isEqualToString:@"BTTableCell"]) {
+        if (MPCustomBTHooksInstalled) return;
+        MPCustomBTHooksInstalled = YES;
+        @try {
+            %init(MPBTHooks);
+        } @catch (NSException *e) {
+            NSLog(@"[MetroPhone][Settings] хук BTTableCell: %@", e.name);
         }
         return;
     }

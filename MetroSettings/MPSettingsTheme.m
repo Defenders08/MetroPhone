@@ -42,6 +42,17 @@ static UIImage *MPSettingsBlackPixel = nil;
         [slider setMinimumTrackImage:minTrack forState:UIControlStateNormal];
         [slider setMaximumTrackImage:maxTrack forState:UIControlStateNormal];
         [slider setThumbImage:thumb forState:UIControlStateNormal];
+
+        // Декоративные иконки по краям (солнце у ползунка яркости): прячем только их —
+        // треки ниже 8 pt высотой и бегунок не трогаем. Без этого ползунок
+        // «Яркости» носил родные тёмные значки (решение 27.10: иконок нет).
+        UIImageView *thumbView = [slider valueForKey:@"thumbImageView"];
+        for (UIView *sub in slider.subviews) {
+            if ([sub isKindOfClass:[UIImageView class]] && sub != thumbView &&
+                sub.bounds.size.height > 8.0f) {
+                sub.hidden = YES;
+            }
+        }
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] слайдер: %@ (%@)", e.name, e.reason);
     }
