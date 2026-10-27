@@ -11,7 +11,8 @@
   /Users/ash/theos/vendor/include/substrate.h \
   /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPAppDataSource.h \
-  /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPHomeController.h
+  /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPHomeController.h \
+  /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPMultitaskView.h
 /Users/ash/theos/Prefix.pch:
 /Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
 /Users/ash/theos/vendor/include/theos/IOSMacros.h:
@@ -24,3 +25,4 @@
 /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPAppDataSource.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPHomeController.h:
+/Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPMultitaskView.h:

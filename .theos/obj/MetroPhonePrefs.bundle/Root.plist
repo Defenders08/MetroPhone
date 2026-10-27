@@ -38,63 +38,11 @@
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>default</key>
-			<string>blue</string>
-			<key>defaults</key>
-			<string>ru.ash.metrophone</string>
+			<string>PSLinkCell</string>
 			<key>detail</key>
-			<string>PSListItems</string>
-			<key>key</key>
-			<string>accent</string>
+			<string>MPColorsListController</string>
 			<key>label</key>
 			<string>Акцентный цвет</string>
-			<key>validTitles</key>
-			<array>
-				<string>Синий</string>
-				<string>Фиолетовый</string>
-				<string>Маджента</string>
-				<string>Зелёный</string>
-				<string>Лаймовый</string>
-				<string>Оранжевый</string>
-				<string>Красный</string>
-				<string>Бирюзовый</string>
-			</array>
-			<key>validValues</key>
-			<array>
-				<string>blue</string>
-				<string>purple</string>
-				<string>magenta</string>
-				<string>green</string>
-				<string>lime</string>
-				<string>orange</string>
-				<string>red</string>
-				<string>teal</string>
-			</array>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>default</key>
-			<integer>0</integer>
-			<key>defaults</key>
-			<string>ru.ash.metrophone</string>
-			<key>detail</key>
-			<string>PSListItems</string>
-			<key>key</key>
-			<string>tileStyle</string>
-			<key>label</key>
-			<string>Стиль плиток</string>
-			<key>validTitles</key>
-			<array>
-				<string>Тёмные</string>
-				<string>Акцентные</string>
-			</array>
-			<key>validValues</key>
-			<array>
-				<integer>0</integer>
-				<integer>1</integer>
-			</array>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -181,6 +129,46 @@
 			<string>multitaskEnabled</string>
 			<key>label</key>
 			<string>Свой свитчер (двойное Home)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Локскрин</string>
+			<key>footerText</key>
+			<string>Экран блокировки в стиле WP 8.1: обои, крупные часы и дата внизу слева, уровень батареи и строки уведомлений с бейджами. Разблокировка — свайпом вверх, как в iOS 7. При код-пароле после свайпа появится нативный ввод кода. Входящие звонки пока могут требовать свайпа.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>lockscreenEnabled</string>
+			<key>label</key>
+			<string>Локскрин в стиле WP 8.1</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Диагностика</string>
+			<key>footerText</key>
+			<string>Журнал твика всегда пишется в /var/mobile/Library/Preferences/metrophone.log. Дублирование в syslog удобно для idevicesyslog, но на iOS 6 каждый NSLog стоит миллисекунды — включайте только на время отладки.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>verboseLog</string>
+			<key>label</key>
+			<string>Подробный журнал в syslog</string>
 		</dict>
 		<dict>
 			<key>cell</key>

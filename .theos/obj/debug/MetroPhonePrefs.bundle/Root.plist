@@ -38,45 +38,17 @@
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>default</key>
-			<string>blue</string>
-			<key>defaults</key>
-			<string>ru.ash.metrophone</string>
+			<string>PSLinkCell</string>
 			<key>detail</key>
-			<string>PSListItems</string>
-			<key>key</key>
-			<string>accent</string>
+			<string>MPColorsListController</string>
 			<key>label</key>
 			<string>Акцентный цвет</string>
-			<key>validTitles</key>
-			<array>
-				<string>Синий</string>
-				<string>Фиолетовый</string>
-				<string>Маджента</string>
-				<string>Зелёный</string>
-				<string>Лаймовый</string>
-				<string>Оранжевый</string>
-				<string>Красный</string>
-				<string>Бирюзовый</string>
-			</array>
-			<key>validValues</key>
-			<array>
-				<string>blue</string>
-				<string>purple</string>
-				<string>magenta</string>
-				<string>green</string>
-				<string>lime</string>
-				<string>orange</string>
-				<string>red</string>
-				<string>teal</string>
-			</array>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSLinkListCell</string>
 			<key>default</key>
-			<integer>0</integer>
+			<integer>1</integer>
 			<key>defaults</key>
 			<string>ru.ash.metrophone</string>
 			<key>detail</key>
@@ -161,6 +133,46 @@
 			<string>blackWallpaper</string>
 			<key>label</key>
 			<string>Чёрный фон вместо обоев</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Многозадачность</string>
+			<key>footerText</key>
+			<string>Двойное нажатие Home открывает свитчер в стиле WP 8.1: карточка приложения по центру, свайп карточки вниз закрывает приложение, касание — переход, Home — выход. Родная панель многозадачности (и плеер в ней) при этом недоступна.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>multitaskEnabled</string>
+			<key>label</key>
+			<string>Свой свитчер (двойное Home)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Диагностика</string>
+			<key>footerText</key>
+			<string>Журнал твика всегда пишется в /var/mobile/Library/Preferences/metrophone.log. Дублирование в syslog удобно для idevicesyslog, но на iOS 6 каждый NSLog стоит миллисекунды — включайте только на время отладки.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>verboseLog</string>
+			<key>label</key>
+			<string>Подробный журнал в syslog</string>
 		</dict>
 		<dict>
 			<key>cell</key>
