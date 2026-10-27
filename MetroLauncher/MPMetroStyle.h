@@ -33,13 +33,14 @@ UIWindow *MPSharedHostWindow(void);
 + (UIColor *)badgeColor;           // #E51400
 + (UIColor *)placeholderColor;     // фон заглушки иконки
 
++ (BOOL)uppercaseLabels;           // ключ uppercaseLabels (подписи плиток и панелей)
+
 // Шрифты — только через кэш
 + (UIFont *)thinFont:(CGFloat)size;
 + (UIFont *)lightFont:(CGFloat)size;
 + (UIFont *)regularFont:(CGFloat)size;
 + (UIFont *)mediumFont:(CGFloat)size;
 
-+ (CGFloat)unitSize;               // U = (ширина − 5·gap) / 4 (устаревшее — для старых вызовов)
 + (CGFloat)cellForContainerWidth:(CGFloat)width;   // cell = (width − 3·gap) / 4
 + (CGSize)tilePixelSize:(MPTileSize)size containerWidth:(CGFloat)width; // Small/Medium/Wide по формулам WP8
 + (CGFloat)statusBarInset;         // верхний отступ под статус-бар (applicationFrame.origin.y)

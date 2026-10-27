@@ -13,6 +13,7 @@
 // ---- Красный кружок с числом (#E51400). Скрыт при count <= 0. ----
 // Размер берётся из sizeThatFits:, позицию задаёт владелец.
 @interface MPBadgeView : UIView
+@property (nonatomic, readonly) NSInteger count;   // текущее число (readonly: ставится setCount:)
 - (void)setCount:(NSInteger)count;
 @end
 

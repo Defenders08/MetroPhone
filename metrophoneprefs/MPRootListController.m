@@ -3,8 +3,18 @@
 
 @implementation MPRootListController
 
+// Имя страницы для крупной шапки WP: ставим до того, как контроллер начнёт
+// появляться (стилизация идёт в viewWillAppear базового класса)
+- (void)viewWillAppear:(BOOL)animated {
+	if (self.title.length == 0) self.title = @"MetroPhone";
+	[super viewWillAppear:animated];
+}
+
 - (id)specifiers {
 	if (_specifiers == nil) {
+		// Крупная шапка WP берёт имя страницы из title; без этого она
+		// показывает имя приложения («настройки») вместо «metrophone»
+		if (self.title.length == 0) self.title = @"MetroPhone";
 		_specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
 	}
 	return _specifiers;

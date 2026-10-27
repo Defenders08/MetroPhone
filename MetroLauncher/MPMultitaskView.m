@@ -1,6 +1,7 @@
 #import "MPMultitaskView.h"
 #import "MPMetroStyle.h"
 #import "MPAppDataSource.h"
+#import "MPTileView.h"   // MPIconLoader — общий серийный загрузчик иконок
 
 // Метрики под iPhone 4 (320×480), по скрину WP8.1:
 // карточка 2:3 (как снимок экрана 320×480), соседние карточки выглядывают
@@ -13,6 +14,18 @@ static const CGFloat MPPagerH     = 420.0;  // карточка + строка �
 static const CGFloat MPPagerInset = 30.0;   // (320 − 260) / 2 — центрирование страницы
 
 static UIImage *MPSnapshotForBundleID(NSString *bid); // реализация ниже по файлу
+
+// Снимки экранов читаются с диска строго по одному и не на главном потоке:
+// пачка из десяти карточек раньше означала десятки обращений к файловой системе
+// и декодирований вьюх прямо во время открытия свитчера.
+static dispatch_queue_t MPSnapshotQueue(void) {
+    static dispatch_queue_t q = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        q = dispatch_queue_create("ru.ash.metrophone.snapshots", DISPATCH_QUEUE_SERIAL);
+    });
+    return q;
+}
 
 #pragma mark - Карточка приложения
 
@@ -244,7 +257,6 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
 }
 
 - (UIView *)buildPageForBundleID:(NSString *)bid index:(NSUInteger)idx card:(MPCard **)outCard {
-    MPLog(@"карточка[%lu]: начата %@", (unsigned long)idx, bid);
     UIView *page = [[UIView alloc] initWithFrame:CGRectMake(idx * MPPageW, 0, MPPageW, MPPagerH)];
     page.backgroundColor = nil;
 
@@ -258,44 +270,48 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     [page addSubview:card];
     if (outCard != nil) *outCard = card;
 
-    // содержимое карточки: снимок экрана, живое превью или заглушка с иконкой
-    UIImageView *placeholder = nil;
-    UIImage *snap = MPSnapshotForBundleID(bid);
-    if (snap == nil && self.livePreviewBlock != nil) {
-        // кэша нет (например, карточка приложения на переднем плане) —
-        // просим у SpringBoard живой снимок содержимого
-        snap = self.livePreviewBlock(bid);
-        if (snap != nil) MPLog(@"карточка[%lu]: живой снимок получен", (unsigned long)idx);
-    }
-    MPLog(@"карточка[%lu]: снимок %@", (unsigned long)idx, snap ? @"найден" : @"нет");
-    if (snap != nil) {
-        UIImageView *snapView = [[UIImageView alloc] initWithFrame:card.bounds];
-        snapView.contentMode = UIViewContentModeScaleAspectFill;
-        snapView.clipsToBounds = YES;
-        snapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        snapView.image = snap;
-        [card addSubview:snapView];
-    } else {
-        placeholder = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 72.0, 72.0)];
-        placeholder.center = CGPointMake(MPCardW / 2.0, MPCardH / 2.0);
-        placeholder.contentMode = UIViewContentModeScaleAspectFill;
-        placeholder.clipsToBounds = YES;
-        [card addSubview:placeholder];
-    }
+    // Содержимое карточки: заглушка с иконкой видна сразу, снимок экрана приходит
+    // фоном и ложится сверху. Порядок в WP8.1 тот же — карточка не бывает пустой.
+    UIImageView *placeholder = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 72.0, 72.0)];
+    placeholder.center = CGPointMake(MPCardW / 2.0, MPCardH / 2.0);
+    placeholder.contentMode = UIViewContentModeScaleAspectFill;
+    placeholder.clipsToBounds = YES;
+    [card addSubview:placeholder];
+
+    NSString *snapBID = [bid copy];
+    dispatch_async(MPSnapshotQueue(), ^{
+        @autoreleasepool {
+            UIImage *snap = MPSnapshotForBundleID(snapBID);        // только диск
+            dispatch_async(dispatch_get_main_queue(), ^{
+                MPCard *c = weakCard;
+                if (c == nil || c.superview == nil || c.isClosing) return;
+                if (snap != nil) {
+                    [weakSelf installSnapshot:snap onCard:c];
+                    return;
+                }
+                // кэша на диске нет (обычно приложение на переднем плане) —
+                // живой снимок спрашиваем у SpringBoard, но уже после показа
+                MPMultitaskView *s = weakSelf;
+                UIImage *live = (s != nil && s.livePreviewBlock != nil)
+                    ? s.livePreviewBlock(snapBID) : nil;
+                if (live != nil) [s installSnapshot:live onCard:c];
+            });
+        }
+    });
 
     // под карточкой: иконка + имя, по центру (как на скрине WP8.1)
     MPAppEntry *entry = [[MPAppDataSource sharedDataSource] appWithBundleID:bid];
     NSString *name = (entry.displayName.length > 0) ? entry.displayName : bid;
-    MPLog(@"карточка[%lu]: имя «%@»", (unsigned long)idx, name);
     UIFont *font = [MPMetroStyle lightFont:17.0];
     // ВАЖНО: boundingRectWithSize:options:attributes:context: — только iOS 7+,
     // на iOS 6 он даёт unrecognized selector (был причиной сейфмода).
     // Замеряем текст старым sizeWithFont, доступным с iOS 2.
-    CGSize fit = [name sizeWithFont:font
-                  constrainedToSize:CGSizeMake(MPPageW - 48.0, 26.0)
-                      lineBreakMode:NSLineBreakByClipping];
-    CGFloat textW = ceilf(fit.width);
+    // sizeWithFont:constrainedToSize: на iOS 6.1 при сборке новым SDK уходит в
+    // несуществующий boundingRectWithSize (NSString-вариант только с iOS 7) —
+    // меряем одной строкой и ограничиваем вручную
+    CGFloat textW = ceilf([name sizeWithFont:font].width);
     if (textW <= 0.0) textW = 40.0;
+    if (textW > MPPageW - 48.0) textW = MPPageW - 48.0;
     CGFloat startX = (MPPageW - (28.0 + 8.0 + textW)) / 2.0;
     UIImageView *iconView = [[UIImageView alloc] initWithFrame:CGRectMake(startX, MPCardH + 10.0, 28.0, 28.0)];
     iconView.contentMode = UIViewContentModeScaleAspectFill;
@@ -309,20 +325,29 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     label.text = name;
     [page addSubview:label];
 
-    // иконка декодируется в фоновой серийной очереди и приходит, возможно, с другого потока
+    // иконки идут через общий серийный загрузчик (один запрос за раз, кэш в памяти)
     if (entry != nil) {
         __weak UIImageView *weakSmall = iconView;
         __weak UIImageView *weakBig = placeholder;
-        [[MPAppDataSource sharedDataSource] iconForEntry:entry completion:^(UIImage *icon) {
+        [MPIconLoader loadIconForEntry:entry completion:^(UIImage *icon) {
             if (icon == nil) return;
-            dispatch_async(dispatch_get_main_queue(), ^{
-                weakSmall.image = icon;
-                weakBig.image = icon;
-            });
+            weakSmall.image = icon;
+            weakBig.image = icon;
         }];
     }
-    MPLog(@"карточка[%lu]: готова", (unsigned long)idx);
+    MPLog(@"карточка[%lu]: %@", (unsigned long)idx, bid);
     return page;
+}
+
+// Снимок ложится поверх заглушки: иконка остаётся под ним и не мигает
+- (void)installSnapshot:(UIImage *)snap onCard:(MPCard *)card {
+    if (snap == nil || card == nil || card.superview == nil) return;
+    UIImageView *snapView = [[UIImageView alloc] initWithFrame:card.bounds];
+    snapView.contentMode = UIViewContentModeScaleAspectFill;
+    snapView.clipsToBounds = YES;
+    snapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    snapView.image = snap;
+    [card addSubview:snapView];
 }
 
 // Снимок экрана приложения из системного кэша iOS 6

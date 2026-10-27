@@ -75,19 +75,23 @@ static BOOL                 MPIconBusy    = NO;    // идёт ровно оди
 
 @implementation MPBadgeView {
     UILabel *_label;
+    NSInteger _count;      // текущее число: нужно для дешёвой проверки «изменилось ли»
 }
+
+- (NSInteger)count { return _count; }
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:CGRectMake(0, 0, 20, 20)];
     if (self) {
-        self.backgroundColor = [MPMetroStyle badgeColor];
-        self.layer.cornerRadius = 10.0f;
+        // В стиле проекта: плоский белый квадрат с тёмной цифрой (без скруглений)
+        self.backgroundColor = [UIColor whiteColor];
+        self.layer.cornerRadius = 0.0f;
         self.userInteractionEnabled = NO;
         self.hidden = YES;
 
         _label = [[UILabel alloc] initWithFrame:CGRectZero];
         _label.backgroundColor = [UIColor clearColor];
-        _label.textColor = [UIColor whiteColor];
+        _label.textColor = [UIColor colorWithWhite:0.08f alpha:1.0f];
         _label.textAlignment = NSTextAlignmentCenter;
         _label.font = [MPMetroStyle mediumFont:12.0f];
         [self addSubview:_label];
@@ -102,6 +106,7 @@ static BOOL                 MPIconBusy    = NO;    // идёт ровно оди
 }
 
 - (void)setCount:(NSInteger)count {
+    _count = count;
     if (count <= 0) {
         self.hidden = YES;
         _label.text = nil;
@@ -125,6 +130,8 @@ static BOOL                 MPIconBusy    = NO;    // идёт ровно оди
     UILabel     *_letter;      // заглушка: первая буква имени
     UILabel     *_nameLabel;
     MPBadgeView *_badge;
+    NSString    *_displayName; // имя как есть: регистр решается настройкой темы
+    CGFloat      _letterFontSize; // размер шрифта заглушки (ставим только при смене размера)
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -134,7 +141,7 @@ static BOOL                 MPIconBusy    = NO;    // идёт ровно оди
         self.backgroundColor = [MPMetroStyle tileColor];
 
         _iconView = [[UIImageView alloc] initWithFrame:CGRectZero];
-        _iconView.backgroundColor = [MPMetroStyle placeholderColor];
+        _iconView.backgroundColor = [UIColor clearColor];   // заглушка — буква на плитке, без серого квадрата
         _iconView.contentMode = UIViewContentModeScaleAspectFit;
         [self addSubview:_iconView];
 
@@ -149,6 +156,7 @@ static BOOL                 MPIconBusy    = NO;    // идёт ровно оди
         _nameLabel.textColor = [UIColor whiteColor];
         _nameLabel.textAlignment = NSTextAlignmentLeft;
         _nameLabel.lineBreakMode = NSLineBreakByTruncatingTail;
+    _nameLabel.numberOfLines = 2;
         _nameLabel.font = [MPMetroStyle lightFont:11.0f];
         [self addSubview:_nameLabel];
 
@@ -170,7 +178,7 @@ static NSString *MPFirstLetter(NSString *name) {
     [self updateWithEntry:entry];
 
     _iconView.image = nil;
-    _iconView.backgroundColor = [MPMetroStyle placeholderColor];
+    _iconView.backgroundColor = [UIColor clearColor];
     _letter.hidden = NO;
 
     NSString *bid = entry.bundleID;
@@ -189,22 +197,53 @@ static NSString *MPFirstLetter(NSString *name) {
     _letter.hidden = YES;
 }
 
+// Обновление «на месте»: бейджи и имена приходят пачками (noteBadgeDidChange),
+// а переукладка всех вьюх плитки — дорогое удовольствие. Трогаем только
+// изменившееся и просим layout лишь когда он действительно нужен.
 - (void)updateWithEntry:(MPAppEntry *)entry {
-    _nameLabel.text = [entry.displayName uppercaseString];
-    _letter.text = MPFirstLetter(entry.displayName);
-    [_badge setCount:entry.badge];
-    [self setNeedsLayout];
+    BOOL changed = NO;
+
+    if (![entry.displayName isEqualToString:_displayName]) {
+        _displayName = [entry.displayName copy];
+        _letter.text = MPFirstLetter(entry.displayName);
+        [self applyTitleText];
+        changed = YES;
+    }
+    if (_badge.count != entry.badge) {
+        [_badge setCount:entry.badge];
+        changed = YES;
+    }
+    if (changed) [self setNeedsLayout];
+}
+
+// Подпись плитки: ЗАГЛАВНЫЕ или как есть — по ключу темы uppercaseLabels.
+- (void)applyTitleText {
+    if (_displayName.length == 0) return;
+    NSString *shown = [MPMetroStyle uppercaseLabels]
+        ? [_displayName uppercaseStringWithLocale:[NSLocale currentLocale]]
+        : _displayName;
+    _nameLabel.text = shown;
+    // Длинное слово без пробелов в две строки рвётся посередине («НАСТРОЙК/И») —
+    // таким подписям даём кегль меньше, чтобы влезали целиком
+    CGFloat size = 11.0f;
+    if ([shown rangeOfString:@" "].location == NSNotFound && shown.length >= 9) size = 9.0f;
+    if (fabsf(_nameLabel.font.pointSize - size) > 0.1f) {
+        _nameLabel.font = [MPMetroStyle lightFont:size];
+    }
 }
 
 - (void)applyStyle {
-    self.backgroundColor = [MPMetroStyle tileColor];
+    // сравниваем цвета: лишняя установка фона — это лишний проход отрисовки
+    UIColor *color = [MPMetroStyle tileColor];
+    if (![self.backgroundColor isEqual:color]) self.backgroundColor = color;
+    [self applyTitleText];      // регистр мог измениться в настройках
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width;
     CGFloat h = self.bounds.size.height;
-    CGFloat labelH = 14.0f;
+    CGFloat labelH = 26.0f;      // две строки подписи (11 pt)
 
     // Иконка: 55 % ширины плитки, по центру области над подписью
     CGFloat icon = floorf(w * 0.55f);
@@ -213,9 +252,15 @@ static NSString *MPFirstLetter(NSString *name) {
     if (iy < 4.0f) iy = 4.0f;
     _iconView.frame = CGRectMake(floorf((w - icon) / 2.0f), iy, icon, icon);
     _letter.frame = _iconView.bounds;
-    _letter.font = [MPMetroStyle mediumFont:floorf(icon * 0.5f)];
+    // Шрифт заглушки зависит только от размера плитки: ставим при смене размера,
+    // а не в каждом layoutSubviews (это строка-ключ + словарь шрифтов на плитку).
+    CGFloat letterSize = floorf(icon * 0.62f);
+    if (fabsf(_letterFontSize - letterSize) > 0.5f) {
+        _letterFontSize = letterSize;
+        _letter.font = [MPMetroStyle mediumFont:letterSize];
+    }
 
-    _nameLabel.frame = CGRectMake(6.0f, h - labelH - 4.0f, w - 12.0f, labelH);
+    _nameLabel.frame = CGRectMake(6.0f, h - labelH - 2.0f, w - 12.0f, labelH);
 
     CGSize bs = [_badge sizeThatFits:CGSizeZero];
     _badge.frame = CGRectMake(w - bs.width - 4.0f, 4.0f, bs.width, bs.height);

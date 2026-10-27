@@ -6,6 +6,12 @@
 
 @class PSTableCell;
 
+// Видимость иконок на текущей странице «Настроек»: в корневом меню иконок нет
+// (плоский WP-список), на внутренних страницах — наши глифы.
+extern BOOL MPSettingsIconsHidden;
+extern BOOL MPSettingsPageHasIcons;   // на странице есть хотя бы одна иконка
+extern BOOL MPSettingsPageIsSounds;    // страница «Звуки»: картинки убираем
+
 // PSControlTableCell (свитч/слайдер лежат прямо в ячейке) отдаёт контрол
 // через свойство control — объявляем протоколом, класс не трогаем
 @protocol MPHasControl <NSObject>
@@ -23,6 +29,16 @@
 
 // Универсальный слой для не-PS ячеек (обычные UITableView своих экранов)
 + (void)styleGenericCell:(UITableViewCell *)cell;
+
+// Глубокая перекраска ОДНОЙ ячейки (кастомные списки Wi-Fi/VPN):
+// лейблы белым (кроме красных), синие круглые диски → акцентные квадраты,
+// мелкие иконки (замок/сигнал) тинтом в белый.
+// Вызывается из cellForRowAtIndexPath — официальный момент UIKit, безопасно.
++ (void)styleCellDeep:(UITableViewCell *)cell;
+
+// «Парение» по-Zune: при нажатии у текста строки — лёгкая светлая тень
+// (подложка не используется). Вызывается из хука PSTableCell setHighlighted:.
++ (void)applyFloatingEffect:(BOOL)highlighted toCell:(UITableViewCell *)cell;
 
 // Плоское поле ввода: белый текст, серый placeholder, тёмная клавиатура
 + (void)styleTextField:(UITextField *)field;

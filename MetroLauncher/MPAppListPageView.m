@@ -59,15 +59,22 @@ static NSString *MPFirstLetterOf(NSString *name) {
 }
 
 - (void)configureWithEntry:(MPAppEntry *)entry {
+    // Ячейка переиспользуется: если это то же самое приложение и иконка уже стоит,
+    // не сбрасываем её — иначе при каждом reloadData/скролле картинка мигает
+    // и заново дёргает загрузчик.
+    BOOL sameApp = (self.bundleID != nil && [self.bundleID isEqualToString:entry.bundleID]);
+
     self.bundleID = entry.bundleID;
     _name.text = entry.displayName;
     [_badge setCount:entry.badge];
+    [self setNeedsLayout];
+
+    if (sameApp && _iconView.image != nil) return;
 
     _iconView.image = nil;
     _iconView.backgroundColor = [MPMetroStyle placeholderColor];
     _letter.text = MPFirstLetterOf(entry.displayName);
     _letter.hidden = NO;
-    [self setNeedsLayout];
 
     NSString *bid = entry.bundleID;
     __weak MPAppListCell *weakSelf = self;
@@ -111,6 +118,7 @@ static NSString *MPFirstLetterOf(NSString *name) {
     UITableView *_table;
     NSArray     *_allEntries;     // все приложения (отсортированы)
     NSArray     *_sections;       // NSArray<NSDictionary{title, items}>
+    UIColor     *_appliedAccent;  // под каким акцентом собрана таблица (см. applyStyle)
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -164,7 +172,7 @@ static NSString *MPFirstLetterOf(NSString *name) {
     CGFloat g = 6.0f;
     CGFloat rowH = 36.0f;
     CGFloat y = _topInset + g;
-    _searchField.frame = CGRectMake(g, y, w - g * 2.0f, rowH);   // поле поиска на всю ширину
+    _searchField.frame = CGRectMake(g, y, w - g * 2.0f, rowH);   // поле на всю ширину
     CGFloat ty = y + rowH + g;
     _table.frame = CGRectMake(0.0f, ty, w, h - ty);
 }
@@ -178,7 +186,15 @@ static NSString *MPFirstLetterOf(NSString *name) {
 }
 
 - (void)applyStyle {
-    [_table reloadData];
+    // Кнопка «iOS» — всегда в актуальном акценте (это дёшево).
+    // Таблицу пересобираем только когда реально сменился акцент: reloadData на
+    // каждом показе лаунчера — это пересоздание всех ячеек и заметный рывок.
+    // Заголовки секций красятся при создании, поэтому смена цвета требует reload.
+    UIColor *accent = [MPMetroStyle accentColor];
+    if (_appliedAccent == nil || ![accent isEqual:_appliedAccent]) {
+        _appliedAccent = accent;
+        [_table reloadData];
+    }
 }
 
 - (void)dismissKeyboard {
@@ -285,11 +301,14 @@ static NSString *MPFirstLetterOf(NSString *name) {
     if (g.state != UIGestureRecognizerStateBegan) return;
     NSIndexPath *ip = [_table indexPathForRowAtPoint:[g locationInView:_table]];
     if (ip == nil) return;
-    MPAppEntry *entry = [[[_sections objectAtIndex:ip.section] objectForKey:@"rows"] objectAtIndex:ip.row];
+    MPAppEntry *entry = [[[_sections objectAtIndex:ip.section] objectForKey:@"items"] objectAtIndex:ip.row];
     if (entry == nil) return;
     MPLog(@"список: закрепление плитки %@", entry.bundleID);
     [[MPLayoutModel sharedModel] pinBundleID:entry.bundleID];
     [[MPLayoutModel sharedModel] save];
+    // Сетка плиток узнаёт о новой плите через то же уведомление, что и об
+    // изменении списка: MPHomeController перечитает приложения и пересоберёт плитки.
+    [[NSNotificationCenter defaultCenter] postNotificationName:MPAppsChangedNotification object:nil];
 }
 
 @end

@@ -75,70 +75,27 @@ static UIImage *MPDsIconForBundlePath(NSString *bundlePath) {
 
 static id MPDsFindIcon(NSString *bundleID); // объявление до использования ниже
 
-static NSArray *MPDsCollectApps(void) {
-    NSMutableArray *result = [NSMutableArray array];
-    @try {
-        id controller = [objc_getClass("SBIconController") sharedInstance];
-        id model = [controller respondsToSelector:@selector(model)] ? [controller model] : nil;
-        NSDictionary *leafs = [model respondsToSelector:@selector(leafIconsByIdentifier)]
-            ? [model leafIconsByIdentifier] : nil;
-        for (id icon in leafs.allValues) {
-            if (![icon respondsToSelector:@selector(applicationBundleID)]) continue; // папки пропускаются
-            NSString *bid = [icon applicationBundleID];
-            if (bid.length == 0) continue;
-
-            // скрытые системные (DemoApp, FieldTest и т.п.) не показываем:
-            // SpringBoard помечает их тегом "hidden"
-            NSArray *tags = ([icon respondsToSelector:@selector(tags)]) ? [(SBIcon *)icon tags] : nil;
-            if ([tags containsObject:@"hidden"]) continue;
-
-            MPAppEntry *e = [[MPAppEntry alloc] init];
-            e.bundleID = bid;
-            e.displayName = ([icon respondsToSelector:@selector(displayName)] && [icon displayName])
-                ? [icon displayName] : bid;
-            e.badge = [icon respondsToSelector:@selector(badgeValue)] ? [(SBIcon *)icon badgeValue] : 0;
-            [result addObject:e];
-        }
-    } @catch (NSException *ex) {
-        MPLog(@"[DataSource] сборка списка: %@ (%@)", ex.name, ex.reason);
-    }
-    // подстраховка: скрытые через SBAppTags в Info.plist (теги иконки могли не сказать)
-    NSMutableArray *visible = [NSMutableArray array];
-    for (MPAppEntry *e in result) {
-        id sbIcon = MPDsFindIcon(e.bundleID);
-        id app = ([sbIcon respondsToSelector:@selector(application)]) ? [sbIcon application] : nil;
-        NSString *path = ([app respondsToSelector:@selector(path)]) ? [app path] : nil;
-        NSDictionary *info = (path.length > 0)
-            ? [NSDictionary dictionaryWithContentsOfFile:
-                  [path stringByAppendingPathComponent:@"Info.plist"]]
-            : nil;
-        NSArray *sbTags = [info objectForKey:@"SBAppTags"];
-        if ([sbTags containsObject:@"hidden"]) continue; // скрытое — мимо
-        [visible addObject:e];
-    }
-    result = visible;
-
-    [result sortUsingComparator:^(MPAppEntry *a, MPAppEntry *b) {
-        return [a.displayName compare:b.displayName options:NSCaseInsensitiveSearch];
-    }];
-    return result;
-}
-
-static id MPDsFindIcon(NSString *bundleID) {
-    id controller = [objc_getClass("SBIconController") sharedInstance];
-    id model = [controller respondsToSelector:@selector(model)] ? [controller model] : nil;
-    NSDictionary *leafs = [model respondsToSelector:@selector(leafIconsByIdentifier)]
-        ? [model leafIconsByIdentifier] : nil;
-    for (id icon in leafs.allValues) {
-        if ([[icon applicationBundleID] isEqualToString:bundleID]) return icon;
-    }
-    return nil;
-}
-
 @implementation MPAppEntry
 @end
 
-@implementation MPAppDataSource
+// Кэш списка приложений.
+//
+// Сборка списка — самый дорогой вызов датасорса: обход всех листовых иконок
+// SpringBoard (leafIconsByIdentifier отдаёт новый словарь при каждом вызове)
+// плюс чтение Info.plist каждого приложения. А спрашивают его часто — показ
+// лаунчера, обновление бейджей, каждая карточка свитчера (appWithBundleID:).
+// Поэтому: результат держим до 2 с и сбрасываем по MPAppsChangedNotification,
+// вердикт по SBAppTags запоминаем навсегда (на приложение), а пути бандлов
+// собираем за один проход — загрузчику иконок они нужны без повторных обходов.
+static const CFTimeInterval MPDsAppsCacheTTL = 2.0;
+
+@implementation MPAppDataSource {
+    NSArray             *_cachedApps;
+    NSMutableDictionary *_entryByID;     // bundleID → MPAppEntry
+    NSMutableDictionary *_pathByID;      // bundleID → путь к .app ("" = не нашли)
+    NSMutableDictionary *_hiddenByID;    // bundleID → @YES/@NO (скрыто через SBAppTags)
+    CFAbsoluteTime       _cachedAt;
+}
 
 + (MPAppDataSource *)sharedDataSource {
     static MPAppDataSource *ds = nil;
@@ -147,19 +104,150 @@ static id MPDsFindIcon(NSString *bundleID) {
     return ds;
 }
 
+- (id)init {
+    self = [super init];
+    if (self) {
+        _entryByID  = [[NSMutableDictionary alloc] init];
+        _pathByID   = [[NSMutableDictionary alloc] init];
+        _hiddenByID = [[NSMutableDictionary alloc] init];
+        // любое изменение списка/бейджей делает кэш недействительным
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(appsDidChange:)
+                                                     name:MPAppsChangedNotification
+                                                   object:nil];
+        MPLog(@"[DataSource] создан");
+    }
+    return self;
+}
+
+- (void)appsDidChange:(NSNotification *)note {
+    @synchronized (self) {
+        _cachedApps = nil;
+        _cachedAt = 0;
+    }
+}
+
+#pragma mark - Сборка списка
+
+// Путь бандла для иконки. Первый раз спрашиваем SpringBoard, дальше — из карты.
+- (NSString *)cachedPathForIcon:(id)icon bundleID:(NSString *)bid {
+    NSString *cached = [_pathByID objectForKey:bid];
+    if (cached != nil) return cached.length > 0 ? cached : nil;
+
+    NSString *path = nil;
+    @try {
+        id app = ([icon respondsToSelector:@selector(application)]) ? [icon application] : nil;
+        path = ([app respondsToSelector:@selector(path)]) ? [app path] : nil;
+    } @catch (NSException *ex) {
+        path = nil;
+    }
+    [_pathByID setObject:(path ?: @"") forKey:bid];   // промах тоже кэшируем
+    return path;
+}
+
+// Скрыто ли приложение через SBAppTags в Info.plist. Читаем plist один раз
+// на приложение за всё время жизни процесса.
+- (BOOL)isHiddenByAppTags:(NSString *)bid path:(NSString *)path {
+    NSNumber *known = [_hiddenByID objectForKey:bid];
+    if (known != nil) return [known boolValue];
+
+    BOOL hidden = NO;
+    if (path.length > 0) {
+        NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:
+                              [path stringByAppendingPathComponent:@"Info.plist"]];
+        NSArray *sbTags = [info objectForKey:@"SBAppTags"];
+        hidden = [sbTags isKindOfClass:[NSArray class]] && [sbTags containsObject:@"hidden"];
+    }
+    [_hiddenByID setObject:@(hidden) forKey:bid];
+    return hidden;
+}
+
+// Один проход по иконкам: записи, пути бандлов и признак скрытости — за раз.
+// Вызывать под @synchronized(self).
+- (NSArray *)rebuildLocked {
+    NSMutableArray *result = [NSMutableArray array];
+    [_entryByID removeAllObjects];
+
+    @try {
+        id controller = [objc_getClass("SBIconController") sharedInstance];
+        id model = [controller respondsToSelector:@selector(model)] ? [controller model] : nil;
+        NSDictionary *leafs = [model respondsToSelector:@selector(leafIconsByIdentifier)]
+            ? [model leafIconsByIdentifier] : nil;
+
+        for (id icon in leafs.allValues) {
+            @autoreleasepool {
+                if (![icon respondsToSelector:@selector(applicationBundleID)]) continue; // папки пропускаются
+                NSString *bid = [icon applicationBundleID];
+                if (![bid isKindOfClass:[NSString class]] || bid.length == 0) continue;
+
+                // скрытые системные (DemoApp, FieldTest и т.п.) не показываем:
+                // SpringBoard помечает их тегом "hidden"
+                NSArray *tags = ([icon respondsToSelector:@selector(tags)]) ? [(SBIcon *)icon tags] : nil;
+                if ([tags isKindOfClass:[NSArray class]] && [tags containsObject:@"hidden"]) continue;
+
+                NSString *path = [self cachedPathForIcon:icon bundleID:bid];
+                if ([self isHiddenByAppTags:bid path:path]) continue;
+
+                MPAppEntry *e = [[MPAppEntry alloc] init];
+                e.bundleID = bid;
+                e.displayName = ([icon respondsToSelector:@selector(displayName)] && [icon displayName])
+                    ? [icon displayName] : bid;
+                e.badge = [icon respondsToSelector:@selector(badgeValue)] ? [(SBIcon *)icon badgeValue] : 0;
+                [result addObject:e];
+                [_entryByID setObject:e forKey:bid];
+            }
+        }
+    } @catch (NSException *ex) {
+        MPLog(@"[DataSource] сборка списка: %@ (%@)", ex.name, ex.reason);
+    }
+
+    [result sortUsingComparator:^(MPAppEntry *a, MPAppEntry *b) {
+        return [a.displayName compare:b.displayName options:NSCaseInsensitiveSearch];
+    }];
+    return result;
+}
+
 - (NSArray *)allApps {
-    return MPDsCollectApps();
+    @synchronized (self) {
+        CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+        if (_cachedApps != nil && (now - _cachedAt) < MPDsAppsCacheTTL) return _cachedApps;
+        _cachedApps = [self rebuildLocked];
+        _cachedAt = CFAbsoluteTimeGetCurrent();
+        return _cachedApps;
+    }
 }
 
 - (MPAppEntry *)appWithBundleID:(NSString *)bundleID {
-    for (MPAppEntry *e in [self allApps]) {
-        if ([e.bundleID isEqualToString:bundleID]) return e;
+    if (bundleID.length == 0) return nil;
+    @synchronized (self) {
+        [self allApps];          // @synchronized рекурсивен: карта и список — под одной блокировкой
+        return [_entryByID objectForKey:bundleID];
     }
-    return nil;
 }
+
+- (NSString *)bundlePathForBundleID:(NSString *)bundleID {
+    if (bundleID.length == 0) return nil;
+    @synchronized (self) {
+        NSString *cached = [_pathByID objectForKey:bundleID];
+        if (cached != nil) return cached.length > 0 ? cached : nil;
+    }
+    // приложение появилось после сборки списка — ищем один раз
+    id icon = MPDsFindIcon(bundleID);
+    if (icon == nil) return nil;
+    @synchronized (self) {
+        return [self cachedPathForIcon:icon bundleID:bundleID];
+    }
+}
+
+#pragma mark - Иконки и запуск
 
 - (void)iconForEntry:(MPAppEntry *)entry completion:(void (^)(UIImage *icon))completion {
     if (entry == nil || completion == NULL) return;
+    // Путь резолвим на потоке вызывающего: карта путей защищена @synchronized,
+    // но в фоновой очереди нам нужен уже готовый NSString.
+    NSString *path = [self bundlePathForBundleID:entry.bundleID];
+    NSString *bundleID = [entry.bundleID copy];
+
     // СТРОГО серийная очередь: параллельные декодирования PNG на iOS 6/512 МБ
     // дают скачок памяти, и jetsam прибивает SpringBoard.
     static dispatch_queue_t MPDsIconQueue = nil;
@@ -171,25 +259,23 @@ static id MPDsFindIcon(NSString *bundleID) {
         @autoreleasepool {
             UIImage *icon = nil;
             @try {
-                id sbIcon = MPDsFindIcon(entry.bundleID);
-                id app = ([sbIcon respondsToSelector:@selector(application)]) ? [sbIcon application] : nil;
-                NSString *path = ([app respondsToSelector:@selector(path)]) ? [app path] : nil;
                 icon = MPDsIconForBundlePath(path);
 
                 // У Погоды/Калькулятора/Часов/Календаря PNG-иконок в бандле нет —
                 // их рисует код SpringBoard (SBIconClass). Просим готовую у SBIcon.
-                if (icon == nil && sbIcon != nil) {
-                    if ([sbIcon respondsToSelector:@selector(getIconImage:)]) {
+                if (icon == nil) {
+                    id sbIcon = MPDsFindIcon(bundleID);
+                    if (sbIcon != nil && [sbIcon respondsToSelector:@selector(getIconImage:)]) {
                         icon = [(SBIcon *)sbIcon getIconImage:2];
                         if (icon == nil) icon = [(SBIcon *)sbIcon getIconImage:0];
                         if (icon != nil) {
                             MPLog(@"[DataSource] иконка от SpringBoard: %@ (%@)",
-                                  entry.bundleID, NSStringFromCGSize(icon.size));
+                                  bundleID, NSStringFromCGSize(icon.size));
                         }
                     }
                 }
             } @catch (NSException *ex) {
-                MPLog(@"[DataSource] иконка %@: %@", entry.bundleID, ex);
+                MPLog(@"[DataSource] иконка %@: %@", bundleID, ex);
             }
             completion(icon); // nil = рисуй заглушку (первая буква имени)
         }
@@ -206,3 +292,16 @@ static id MPDsFindIcon(NSString *bundleID) {
 }
 
 @end
+
+// Поиск иконки по bundleID (обход всех листовых). Нужен для запуска приложения
+// и как редкий запасной путь для иконок — в горячих местах не используется.
+static id MPDsFindIcon(NSString *bundleID) {
+    id controller = [objc_getClass("SBIconController") sharedInstance];
+    id model = [controller respondsToSelector:@selector(model)] ? [controller model] : nil;
+    NSDictionary *leafs = [model respondsToSelector:@selector(leafIconsByIdentifier)]
+        ? [model leafIconsByIdentifier] : nil;
+    for (id icon in leafs.allValues) {
+        if ([[icon applicationBundleID] isEqualToString:bundleID]) return icon;
+    }
+    return nil;
+}

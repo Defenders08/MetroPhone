@@ -1,5 +1,10 @@
 #import "MPSettingsTheme.h"
 
+// iOS 5+: атрибуты заголовка элемента навигации (в SDK 10.3 метод не объявлен)
+@interface UINavigationItem (MPTitleAttrs)
+- (void)setTitleTextAttributes:(NSDictionary *)attributes;
+@end
+
 static BOOL MPSettingsPrefsBool(NSString *key, BOOL def) {
     CFTypeRef v = CFPreferencesCopyAppValue((__bridge CFStringRef)key, CFSTR("ru.ash.metrophone"));
     if (v == NULL) return def;
@@ -28,13 +33,10 @@ static UIImage *MPSettingsBlackPixel = nil;
 + (void)styleSlider:(UISlider *)slider {
     if (slider == nil) return;
     @try {
-        // По референсу WP8 (.sched/.sr__bar): линия 3px — заполненная часть акцентом,
-        // пустая — белый α .16; бегунок — маленький белый квадрат (без скруглений)
-        UIImage *minTrack = [[self class] mp_flatImageWithSize:CGSizeMake(3.0f, 3.0f)
-                                                         color:[MPMetroStyle accentColor] radius:0.0f];
-        UIImage *maxTrack = [[self class] mp_flatImageWithSize:CGSizeMake(3.0f, 3.0f)
-                                                         color:[UIColor colorWithWhite:1.0f alpha:0.16f]
-                                                          radius:0.0f];
+        // Канал в стиле тумблера: узкий прямоугольник с серой рамкой 1 px,
+        // заполненная часть — акцентом, пустая — тёмная; бегунок — белый квадрат.
+        UIImage *minTrack = [self mp_sliderTrackFilled:YES];
+        UIImage *maxTrack = [self mp_sliderTrackFilled:NO];
         UIImage *thumb    = [[self class] mp_flatImageWithSize:CGSizeMake(14.0f, 14.0f)
                                                          color:[UIColor whiteColor] radius:0.0f];
         [slider setMinimumTrackImage:minTrack forState:UIControlStateNormal];
@@ -43,6 +45,19 @@ static UIImage *MPSettingsBlackPixel = nil;
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] слайдер: %@ (%@)", e.name, e.reason);
     }
+}
+
+// Картинка канала ползунка: прямоугольник 24×6 с рамкой белый α0.25;
+// filled=YES — внутренность акцентом, NO — тёмная. Растяжимая по горизонтали.
++ (UIImage *)mp_sliderTrackFilled:(BOOL)filled {
+    // Тонкая линия, как на странице «Цвета»: заполненная — акцентом, пустая —
+    // белый 16 %. Рамку не рисуем: на коротком участке (ползунок у края) она
+    // превращала трек в белый квадрат.
+    UIImage *img = [self mp_flatImageWithSize:CGSizeMake(3.0f, 3.0f)
+                                        color:(filled ? [MPMetroStyle accentColor]
+                                                      : [UIColor colorWithWhite:1.0f alpha:0.16f])
+                                       radius:0.0f];
+    return [img resizableImageWithCapInsets:UIEdgeInsetsZero];
 }
 
 + (UIImage *)mp_blackPixelImage {
@@ -64,7 +79,9 @@ static UIImage *MPSettingsBlackPixel = nil;
     // Экраны, где наша раскладка ломает контент, добавляются сюда по имени класса
     // (диагностика включается ключом settingsDebug).
     return @[
-        // пока пусто — заполняется по результатам проверки на устройстве
+        // CyDown: свой контроллер с кастомным UI выхода — оформление запирает
+        // страницу (кнопка выхода не в стандартных местах навбара). Штатный вид.
+        @"CyDownSettingsListController",
     ];
 }
 
@@ -77,6 +94,43 @@ static UIImage *MPSettingsBlackPixel = nil;
     return NO;
 }
 
++ (NSArray *)excludedPageTitles {
+    // Твики без своего класса (обычный PSListController) — исключаем по заголовку.
+    // Auxo: страница не покидается через pop/dismiss (не в nav-стеке).
+    return @[
+        @"Auxo",
+    ];
+}
+
++ (BOOL)isTitleExcluded:(NSString *)title {
+    if (title.length == 0) return NO;
+    for (NSString *t in [self excludedPageTitles]) {
+        if ([title caseInsensitiveCompare:t] == NSOrderedSame) return YES;
+    }
+    return NO;
+}
+
+// Слайдерные картинки зависят от акцента — используются в setupAppearanceOnce
+// и в reapplyAccentAppearance (после смены цвета)
++ (void)applySliderAppearance {
+    UIImage *minTrack = [self mp_sliderTrackFilled:YES];
+    UIImage *maxTrack = [self mp_sliderTrackFilled:NO];
+    UIImage *thumb = [[self class] mp_flatImageWithSize:CGSizeMake(14.0f, 14.0f)
+                                                  color:[UIColor whiteColor] radius:0.0f];
+    [[UISlider appearance] setMinimumTrackImage:minTrack forState:UIControlStateNormal];
+    [[UISlider appearance] setMaximumTrackImage:maxTrack forState:UIControlStateNormal];
+    [[UISlider appearance] setThumbImage:thumb forState:UIControlStateNormal];
+}
+
++ (void)reapplyAccentAppearance {
+    @try {
+        [[UISwitch appearance] setOnTintColor:[MPMetroStyle accentColor]];
+        [self applySliderAppearance];
+    } @catch (NSException *e) {
+        NSLog(@"[MetroPhone][Settings] reapplyAccent: %@ (%@)", e.name, e.reason);
+    }
+}
+
 + (void)setupAppearanceOnce {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
@@ -86,26 +140,14 @@ static UIImage *MPSettingsBlackPixel = nil;
             [[UISwitch appearance] setThumbTintColor:[UIColor whiteColor]];
 
             // Слайдеры: WP — линия 3px и белый квадратный бегунок
-            UIImage *minTrack = [[self class] mp_flatImageWithSize:CGSizeMake(3.0f, 3.0f)
-                                                             color:[MPMetroStyle accentColor] radius:0.0f];
-            UIImage *maxTrack = [[self class] mp_flatImageWithSize:CGSizeMake(3.0f, 3.0f)
-                                                             color:[UIColor colorWithWhite:1.0f alpha:0.16f]
-                                                              radius:0.0f];
-            UIImage *thumb = [[self class] mp_flatImageWithSize:CGSizeMake(14.0f, 14.0f)
-                                                          color:[UIColor whiteColor] radius:0.0f];
-            [[UISlider appearance] setMinimumTrackImage:minTrack forState:UIControlStateNormal];
-            [[UISlider appearance] setMaximumTrackImage:maxTrack forState:UIControlStateNormal];
-            [[UISlider appearance] setThumbImage:thumb forState:UIControlStateNormal];
+            [self applySliderAppearance];
 
             // Сегменты (язык и т.п.): плоско
             [[UISegmentedControl appearance] setTintColor:[UIColor colorWithWhite:0.25f alpha:1.0f]];
 
-            // Навбар: Preferences использует подкласс UINavigationBar — хук базового
-            // drawRect его не красит. Appearance с чёрной фоновоой картинкой красит все.
-            UIImage *black = [[self class] mp_blackPixelImage];
-            [[UINavigationBar appearance] setBackgroundImage:black
-                                              forBarMetrics:UIBarMetricsDefault];
-            [[UIBarButtonItem appearance] setTintColor:[UIColor whiteColor]];
+            // Навбар и бар-кнопки НЕ трогаем глобально: на страницах твиков это
+            // делало кнопку «назад» невидимой (белая на белом). Красим инстансно
+            // только системные страницы (MPSettingsTheme styleNavigationBar).
             [self styleWindows];
 
             NSLog(@"[MetroPhone][Settings] UIAppearance настроен");
@@ -123,18 +165,57 @@ static UIImage *MPSettingsBlackPixel = nil;
             UITextAttributeTextColor: [UIColor clearColor],
             UITextAttributeTextShadowColor: [UIColor clearColor],
         }];
-        // заголовок: если это titleView — прячем; если текст — подменяем пустой вьюхой
-        // (атрибутов недостаточно: iOS 6 кэширует отрисованную надпись)
-        if (bar.topItem != nil) {
-            if (bar.topItem.titleView != nil) {
-                bar.topItem.titleView.hidden = YES;
-            } else if (bar.topItem.title.length > 0) {
-                bar.topItem.titleView = [[UIView alloc] initWithFrame:CGRectZero];
-            }
+        bar.tintColor = [UIColor whiteColor];   // бар-кнопки белые (на чёрном фоне)
+        // ВНИМАНИЕ: titleView НЕ трогаем — твики (CyDown и др.) вешают туда
+        // собственные кнопки выхода; скрытие запирало страницу
+        if (bar.topItem != nil && [bar.topItem respondsToSelector:@selector(setTitleTextAttributes:)]) {
+            [(UINavigationItem *)bar.topItem setTitleTextAttributes:@{
+                UITextAttributeTextColor: [UIColor clearColor],
+                UITextAttributeTextShadowColor: [UIColor clearColor],
+            }];
         }
         [bar setNeedsLayout];
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] навбар: %@ (%@)", e.name, e.reason);
+    }
+}
+
+#pragma mark - Бар-кнопки
+
++ (UIImage *)mp_transparentStretchable {
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(4.0f, 4.0f), NO, 1.0f);
+    UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return [img stretchableImageWithLeftCapWidth:2 topCapHeight:2];
+}
+
++ (void)applyFlatBarButtonAppearance {
+    @try {
+        // «только текст»: прозрачная подложка вместо родного глянца — остаётся
+        // белый текст кнопки (tintColor белым ставит styleNavigationBar)
+        UIImage *none = [self mp_transparentStretchable];
+        [[UIBarButtonItem appearance] setBackgroundImage:none
+                                                forState:UIControlStateNormal
+                                              barMetrics:UIBarMetricsDefault];
+        [[UIBarButtonItem appearance] setBackgroundImage:none
+                                                forState:UIControlStateHighlighted
+                                              barMetrics:UIBarMetricsDefault];
+    } @catch (NSException *e) {
+        NSLog(@"[MetroPhone][Settings] barButtons: %@ (%@)", e.name, e.reason);
+    }
+}
+
++ (void)resetBarButtonAppearance {
+    @try {
+        // страницам твиков — родной вид кнопок (на белом фоне их не видно иначе)
+        [[UIBarButtonItem appearance] setBackgroundImage:nil
+                                                forState:UIControlStateNormal
+                                              barMetrics:UIBarMetricsDefault];
+        [[UIBarButtonItem appearance] setBackgroundImage:nil
+                                                forState:UIControlStateHighlighted
+                                              barMetrics:UIBarMetricsDefault];
+    } @catch (NSException *e) {
+        NSLog(@"[MetroPhone][Settings] barButtonsReset: %@ (%@)", e.name, e.reason);
     }
 }
 
@@ -150,8 +231,10 @@ static UIImage *MPSettingsBlackPixel = nil;
 }
 
 + (UIView *)flatSelectionBackground {
+    // подложка нажатия не используется: вместо неё — «парение» текста
+    // (светлая тень, см. MPSettingsCellStyler applyFloatingEffect)
     UIView *v = [[UIView alloc] initWithFrame:CGRectZero];
-    v.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.12f];
+    v.backgroundColor = [UIColor clearColor];
     return v;
 }
 

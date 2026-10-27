@@ -14,8 +14,13 @@ static NSString * const MPKeyTileStyle      = @"tileStyle";       // 0 = тём�
 static NSString * const MPKeyBlackWallpaper = @"blackWallpaper";  // чёрный фон вместо обоев
 static NSString * const MPKeyMetroLabels    = @"metroLabels";     // шрифт подписей иконок
 static NSString * const MPKeyUppercase      = @"uppercaseLabels"; // ЗАГЛАВНЫЕ буквы
-static NSString * const MPKeyAccent         = @"accent";          // имя цвета из палитры WP
+static NSString * const MPKeyAccent         = @"accent";          // имя цвета из палитры WP (до 0.6.11)
+static NSString * const MPKeyAccentHex      = @"accentHex";       // HEX из сетки «Цвета» (WP 8.1), напр. «1BA1E2»
 static NSString * const MPKeyMultitask      = @"multitaskEnabled";// свой свитчер по двойному Home
+static NSString * const MPKeyLockscreen     = @"lockscreenEnabled";// локскрин в стиле WP 8.1
+
+// Darwin-уведомление после смены акцента (страница «Цвета» → твики)
+#define MP_ACCENT_CHANGED_NOTIFICATION "ru.ash.metrophone.accent-changed"
 
 // Палитра акцентов Windows Phone: имя → HEX
 //   blue    #1BA1E2 (по умолчанию)

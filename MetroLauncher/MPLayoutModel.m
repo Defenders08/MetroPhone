@@ -64,6 +64,7 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
 
 - (void)load {
     [_items removeAllObjects];
+    [_excluded removeAllObjects];   // без этого повторный load задвоил бы откреплённые
     NSDictionary *root = [NSDictionary dictionaryWithContentsOfFile:MPLayoutFilePath];
     NSArray *tiles = [root isKindOfClass:[NSDictionary class]] ? [root objectForKey:@"tiles"] : nil;
     NSArray *excl = [root isKindOfClass:[NSDictionary class]] ? [root objectForKey:@"excluded"] : nil;

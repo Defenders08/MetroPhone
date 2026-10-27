@@ -23,12 +23,14 @@ static UIView *MPHCFindHostView(void) {
     UIScrollView     *_pager;
     MPTilesPageView  *_tilesPage;
     MPAppListPageView *_listPage;
-    UIButton         *_toggleButton;     // «M» на родном столе
 
     BOOL _visible;
     BOOL _contentScheduled;
     BOOL _contentLoaded;
     NSInteger _loadAttempts;
+
+    NSArray *_appsForList;        // свежий список для страницы приложений
+    BOOL     _listNeedsReload;    // список изменился, пока его страница была не видна
 }
 
 - (instancetype)init {
@@ -107,23 +109,9 @@ static UIView *MPHCFindHostView(void) {
     v.alpha = 0.0f;
     v.hidden = YES;
     [host addSubview:v];
-    [self addMetroToggleButtonToView:host];
     MPLog(@"вьюха установлена в %@", NSStringFromClass([host class]));
 }
 
-- (void)addMetroToggleButtonToView:(UIView *)nativeView {
-    if (_toggleButton != nil || nativeView == nil) return;
-    CGFloat w = nativeView.bounds.size.width;
-    _toggleButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _toggleButton.frame = CGRectMake(w - 24.0f - 4.0f, 22.0f, 24.0f, 24.0f);
-    _toggleButton.backgroundColor = [[MPMetroStyle accentColor] colorWithAlphaComponent:0.6f];
-    [_toggleButton setTitle:@"M" forState:UIControlStateNormal];
-    [_toggleButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    _toggleButton.titleLabel.font = [MPMetroStyle mediumFont:13.0f];
-    [_toggleButton addTarget:self action:@selector(metroButtonTapped) forControlEvents:UIControlEventTouchUpInside];
-    _toggleButton.hidden = _visible;                         // виден, только когда Metro спрятан
-    [nativeView addSubview:_toggleButton];
-}
 
 #pragma mark - Показ / скрытие
 
@@ -143,10 +131,13 @@ static UIView *MPHCFindHostView(void) {
 
     _visible = YES;
     [v.superview bringSubviewToFront:v];
-    _toggleButton.hidden = YES;
 
-    if (_contentLoaded) [self applyStyleToPages];
-    else [self scheduleContentLoad];
+    if (_contentLoaded) {
+        [self applyStyleToPages];
+        [self flushListIfVisible];      // список мог измениться, пока страница была не видна
+    } else {
+        [self scheduleContentLoad];
+    }
 
     v.hidden = NO;
     if (animated && v.alpha < 1.0f) {
@@ -164,12 +155,6 @@ static UIView *MPHCFindHostView(void) {
     [_tilesPage exitEditingIfNeeded];          // правка завершается с сохранением
     [_listPage dismissKeyboard];
 
-    if (_toggleButton != nil) {
-        _toggleButton.backgroundColor = [[MPMetroStyle accentColor] colorWithAlphaComponent:0.6f];
-        _toggleButton.hidden = ![MPMetroStyle isEnabled];
-        [_toggleButton.superview bringSubviewToFront:_toggleButton];
-    }
-
     UIView *v = self.view;
     if (v.superview == nil) return;
     if (animated && !v.hidden) {
@@ -185,8 +170,6 @@ static UIView *MPHCFindHostView(void) {
     }
 }
 
-- (void)metroButtonTapped { [self showMetroAnimated:YES]; }
-
 // Свайп к плиткам = уход со страницы списка: клавиатура прячется
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     if (scrollView == _pager) [_listPage dismissKeyboard];
@@ -194,6 +177,32 @@ static UIView *MPHCFindHostView(void) {
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     if (scrollView == _pager) [_listPage dismissKeyboard];
+}
+
+// Пока страница списка не видна, таблицу не пересобираем: reloadData на скрытой
+// странице — это пересоздание всех ячеек и рывок на ровном месте (см. reloadAppsNow).
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (scrollView == _pager && _listNeedsReload) [self flushListIfVisible];
+}
+
+#pragma mark - Текущая страница
+
+- (NSInteger)metroCurrentPage {
+    CGFloat w = _pager.bounds.size.width;
+    if (w < 1.0f) return 0;
+    CGFloat x = _pager.contentOffset.x;
+    NSInteger page = (NSInteger)floorf((x + w / 2.0f) / w);
+    if (page < 0) page = 0;
+    if (page > 1) page = 1;
+    return page;
+}
+
+// Отложенный список применяем только когда его страница реально на экране
+- (void)flushListIfVisible {
+    if (!_listNeedsReload || _appsForList == nil) return;
+    if ([self metroCurrentPage] != 1) return;
+    _listNeedsReload = NO;
+    [_listPage reloadApps:_appsForList];
 }
 
 - (void)homeButtonPressed {
@@ -233,6 +242,7 @@ static UIView *MPHCFindHostView(void) {
     _contentLoaded = YES;
     [self view];                                // гарантируем, что вьюха и страницы созданы
     [self applyStyleToPages];
+    _appsForList = apps;
     [_listPage reloadApps:apps];
     [_tilesPage ensureLoadedWithApps:apps];
     MPLog(@"содержимое загружено, приложений: %lu", (unsigned long)apps.count);
@@ -259,7 +269,15 @@ static UIView *MPHCFindHostView(void) {
 - (void)reloadAppsNow {
     if (!_contentLoaded) return;
     NSArray *apps = [[MPAppDataSource sharedDataSource] allApps];
-    [_listPage reloadApps:apps];
+    _appsForList = apps;
+    if ([self metroCurrentPage] == 1) {
+        _listNeedsReload = NO;
+        [_listPage reloadApps:apps];
+    } else {
+        // Страница списка скрыта: запоминаем свежий список и пересоберём таблицу,
+        // только когда пользователь свайпнет к ней (scrollViewDidScroll:).
+        _listNeedsReload = YES;
+    }
     [_tilesPage syncWithApps:apps];
 }
 

@@ -20,10 +20,14 @@
 #import <sys/stat.h>
 #import <sys/time.h>
 #import <signal.h>
+#import <fcntl.h>
+#import <unistd.h>
+#import <objc/message.h>
 #import "MetroPhoneCommon.h"
 #import "MetroLauncher/MPMetroStyle.h"
+#import "MetroLockScreen/MPLockScreen.h"
 
-#define MP_VERSION @"0.6.3"
+#define MP_VERSION @"0.19.3"
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
 #pragma mark - Журналирование
@@ -67,14 +71,6 @@ static NSString *MPString(NSString *key, NSString *def) {
 	return v ?: def;
 }
 
-static NSInteger MPInt(NSString *key, NSInteger def) {
-	CFTypeRef v = CFPreferencesCopyAppValue((CFStringRef)key, CFSTR(MP_PREFS_DOMAIN));
-	if (v == NULL) return def;
-	NSInteger result = def;
-	if (CFGetTypeID(v) == CFNumberGetTypeID()) result = [(__bridge NSNumber *)v integerValue];
-	CFRelease(v);
-	return result;
-}
 
 #pragma mark - Состояние
 
@@ -84,7 +80,7 @@ static BOOL MPTilesOn(void)   { return MPOn() && MPFlag(MPKeyTiles, YES); }
 static BOOL MPWallOn(void)    { return MPOn() && MPFlag(MPKeyBlackWallpaper, YES); }
 static BOOL MPLabelsOn(void)  { return MPOn() && MPFlag(MPKeyMetroLabels, YES); }
 static BOOL MPUpperOn(void)   { return MPOn() && MPFlag(MPKeyUppercase, YES); }
-static BOOL MPTileAccent(void){ return MPInt(MPKeyTileStyle, 0) == 1; }
+static BOOL MPTileAccent(void){ return YES; }   // режим тёмных плиток убран
 
 #pragma mark - Цвета и шрифты
 
@@ -313,10 +309,23 @@ static NSString *MPTileCachePath(NSString *bid, int format, CGFloat scale) {
 		[[NSFileManager defaultManager] createDirectoryAtPath:dir
 		                          withIntermediateDirectories:YES attributes:nil error:NULL];
 	});
-	NSString *style = [NSString stringWithFormat:@"%@-%ld", MPString(MPKeyAccent, @"blue"), (long)MPInt(MPKeyTileStyle, 0)];
+	NSString *style = [NSString stringWithFormat:@"%@-%ld", MPString(MPKeyAccent, @"blue"), (long)1];
 	NSString *suffix = scale > 2.5 ? @"@3x" : (scale > 1.5 ? @"@2x" : @"");
 	return [dir stringByAppendingPathComponent:
 		[NSString stringWithFormat:@"tile-%@-f%d-%@v6%@.png", bid, format, style, suffix]];
+}
+
+// Декодированные плитки с диска, чтобы не читать PNG повторно на главном потоке.
+// Ключ — полный путь (в нём уже есть формат, акцент и масштаб), поэтому старых
+// записей при смене темы не остаётся: сменилась тема — сменился путь.
+static NSCache *MPTileDiskCache(void) {
+	static NSCache *cache = nil;
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		cache = [[NSCache alloc] init];
+		cache.countLimit = 120;          // ~45 приложений × форматы, с запасом
+	});
+	return cache;
 }
 
 // Защита от повторного планирования фоновой сборки для одной иконки
@@ -362,6 +371,9 @@ static void MPApplyTitleToLabel(UILabel *label) {
 
 static void MPApplyMetroTitle(UIView *view) {
 	for (UIView *sub in view.subviews) {
+		// Кнопки панели (UINavigationButton/UIButton) — НЕ заголовок: их подпись
+		// нельзя красить и раздувать до 22 pt (иначе «Изменить» режется в «Из…ть»)
+		if ([sub isKindOfClass:[UIControl class]]) continue;
 		if ([sub isKindOfClass:[UILabel class]]) {
 			MPApplyTitleToLabel((UILabel *)sub);
 		} else {
@@ -412,6 +424,15 @@ static void MPApplyMetroTitle(UIView *view) {
 @end
 
 @interface SBWallpaperView : UIImageView
+@end
+
+// Главное окно SpringBoard: в нём живёт Metro-локскрин, и его надо держать
+// поверх любых добавлений (базовый класс нужен ARC-конверсии self в хуках)
+@interface SBAppWindow : UIWindow
+@end
+
+// Верхняя зона нативного локскрина (часы): двигается при пробуждении
+@interface SBAwayView : UIView
 @end
 
 @interface SBIconView : UIView
@@ -542,8 +563,14 @@ static void MPConfigureAppearanceIfNeeded(void) {
 	NSString *bid = [self applicationBundleID] ?: @"?";
 	NSString *tilePath = MPTileCachePath(bid, format, orig.scale);
 
-	// 1) готовая плитка с диска
-	UIImage *disk = [UIImage imageWithContentsOfFile:tilePath];
+	// 1) готовая плитка: сначала из памяти, иначе с диска
+	// Декодирование PNG на главном потоке стоит несколько миллисекунд на иконку,
+	// а SpringBoard спрашивает одни и те же иконки повторно (reloadIconImage).
+	UIImage *disk = [MPTileDiskCache() objectForKey:tilePath];
+	if (disk == nil) {
+		disk = [UIImage imageWithContentsOfFile:tilePath];
+		if (disk != nil) [MPTileDiskCache() setObject:disk forKey:tilePath];
+	}
 	if (disk != nil) {
 		MPLogOnce([@"disk-" stringByAppendingString:bid], @"плитка из кэша: %@", bid);
 		return disk;
@@ -624,7 +651,7 @@ static void MPConfigureAppearanceIfNeeded(void) {
 		view.hidden = YES;
 		view.alpha = 0.0;
 	}
-	MPLog(@"SBIconView: тень %@ (скрыта=%d)", view ? @"создана" : @"нет", (MPTilesOn() || MPWallOn()));
+	MPLogOnce(@"sbi-shadow", @"SBIconView: тень %@ (скрыта=%d)", view ? @"создана" : @"нет", (MPTilesOn() || MPWallOn()));
 	return view;
 }
 
@@ -646,7 +673,13 @@ static void MPConfigureAppearanceIfNeeded(void) {
 - (void)setFrame:(struct CGRect)frame {
 	MPSetHostWindow(self.window); // второй источник главного окна (иконки видны = окно живо)
 	%orig;
-	MPLogOnce(@"sbiconview-frame", @"SBIconView.setFrame: %@", NSStringFromCGRect(frame));
+	// Селектор вызывается постоянно (лейаут и скролл иконок), поэтому журналируем
+	// ровно один раз простым флагом: без @synchronized и словаря MPLogOnce.
+	static BOOL mpFrameLogged = NO;
+	if (!mpFrameLogged) {
+		mpFrameLogged = YES;
+		MPLog(@"SBIconView.setFrame: %@", NSStringFromCGRect(frame));
+	}
 }
 
 - (void)didMoveToWindow {
@@ -710,6 +743,9 @@ static void MPConfigureAppearanceIfNeeded(void) {
 
 - (void)setImage:(UIImage *)image {
 	MPSetHostWindow(self.window); // дублируем на случай пропуска didMoveToWindow
+	// Оригинальные обои нужны Metro-локскрину; 1×1 — наша же чёрная подмена
+	// (из blackWallpaper и resetCurrentImageToWallpaper), её не запоминаем
+	if (image == nil || image.size.width > 2.0) MPLockScreenNoteWallpaper(image);
 	MPLog(@"обои setImage: %@ → %@", image ? NSStringFromCGSize(image.size) : @"nil",
 	      MPWallOn() ? @"чёрный" : @"как есть");
 	if (MPWallOn()) {
@@ -746,11 +782,35 @@ static void MPConfigureAppearanceIfNeeded(void) {
 }
 %end
 
+// Metro-локскрин занимает главное окно целиком; всё, что iOS добавляет или
+// поднимает после нас (контент нативного локскрина), немедленно оказывается
+// под нашей непрозрачной вьюхой
+%hook SBAppWindow
+- (void)didAddSubview:(UIView *)subview {
+	%orig;
+	MPLockScreenRaise();
+}
+
+- (void)layoutSubviews {
+	%orig;
+	MPLockScreenRaise();
+}
+%end
+
+// Контент локскрина появляется в СВОЁМ окне (выше главного) — из его вьюхи
+// узнаём само окно и садим наш локскрин туда же, поверх нативного
+%hook SBAwayView
+- (void)didMoveToWindow {
+	%orig;
+	MPLockScreenAttach(self.window);
+}
+%end
+
 // Убираем «полку» дока
 %hook SBDockIconListView
 + (UIImage *)backgroundImageForOrientation:(int)orientation {
 	UIImage *orig = %orig;
-	MPLog(@"док: фон %@ (отключён=%d)", orig ? NSStringFromCGSize(orig.size) : @"nil", MPWallOn());
+	MPLogOnce(@"dock-bg", @"док: фон %@ (отключён=%d)", orig ? NSStringFromCGSize(orig.size) : @"nil", MPWallOn());
 	if (MPWallOn()) return nil;
 	return orig;
 }
@@ -924,6 +984,7 @@ static void MPLockStateChanged(CFNotificationCenterRef center, void *observer,
                                CFStringRef name, const void *object, CFDictionaryRef userInfo) {
     // наблюдатель регистрируется во всех UIKit-процессах, живём только в SpringBoard
     if (objc_getClass("SBIconView") == nil) return;
+    MPLockScreenSync(); // сам уйдёт на главный поток
     dispatch_async(dispatch_get_main_queue(), ^{
         // свитчер на заблокированном экране не нужен
         if (MPMultitask != nil && [MPMultitask isOpen]) [MPMultitask closeAnimated:NO];
@@ -932,6 +993,26 @@ static void MPLockStateChanged(CFNotificationCenterRef center, void *observer,
         if (locked) [MPLauncher hideMetroAnimated:NO];
         else [MPLauncher showMetroAnimated:NO];
     });
+}
+
+// Смена акцента на странице «Цвета» (Настройки): перечитать настройки и
+// мгновенно перекрасить плитки, список и кнопку «M»
+static void MPAccentChangedSB(CFNotificationCenterRef center, void *observer,
+                              CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+    if (objc_getClass("SBIconView") == nil) return;    // только SpringBoard
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [MPMetroStyle reloadPreferences];
+        if (MPLauncher != nil) [MPLauncher applyStyleToPages];
+    });
+}
+
+// Включение/выключение экрана (кнопка Power, автосон): покрывает пробуждение
+// при блокировке и возврат к локскрину после отмены ввода кода — в обоих
+// случаях lockstate не меняется, а локскрин должен вернуться
+static void MPDisplayStatusChanged(CFNotificationCenterRef center, void *observer,
+                                   CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+    if (objc_getClass("SBIconView") == nil) return;
+    MPLockScreenSync();
 }
 
 // Ленивое создание лаунчера (только главный поток). Класс SpringBoard на iOS 6.1
@@ -1015,6 +1096,334 @@ static BOOL MPConsumeNextMenuUp = NO;
 
 %end // MPLauncherHooks
 
+// Нативный ввод код-пароля живёт в SBAwayView поверх нашей вьюхи: на время его
+// показа локскрин прячем, после закрытия (отмена кода, «домой» без ввода) —
+// возвращаем через sync, если устройство всё ещё заблокировано
+%group MPLockScreenHooks
+
+%hook SBPasscodeViewController
+- (void)viewWillAppear:(BOOL)animated {
+	%orig;
+	MPLockScreenPasscodeUI(YES);
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+	%orig;
+	MPLockScreenPasscodeUI(NO);
+}
+%end
+
+%end // MPLockScreenHooks
+
+#pragma mark - Отладочный снимок экрана
+
+// Инструмент разработки: в обычной работе молчит (один открытый fd + vnode-источник).
+// Из SSH:
+//   echo x >> /var/mobile/Library/Caches/metrophone/shot.request
+// SpringBoard рендерит верхнее окно (локскрин или рабочий стол) в shot.png рядом.
+// renderInContext рисует слой-дерево и не требует включённого экрана — поэтому
+// снимать можно и залоченный телефон.
+#define MP_SHOT_DIR     @"/var/mobile/Library/Caches/metrophone"
+#define MP_SHOT_REQUEST "/var/mobile/Library/Caches/metrophone/shot.request"
+
+static void MPDebugDump(void);   // объявление: команда ниже ссылается на дамп
+static void MPDebugDumpSpecs(void);
+
+// Первая UITableView в дереве окна (для просмотра «Настроек»)
+static UITableView *MPDebugFindTable(UIView *root) {
+	NSMutableArray *stack = [NSMutableArray arrayWithObject:root];
+	while (stack.count > 0) {
+		UIView *v = [stack lastObject];
+		[stack removeLastObject];
+		if ([v isKindOfClass:[UITableView class]]) return (UITableView *)v;
+		[stack addObjectsFromArray:v.subviews];
+	}
+	return nil;
+}
+
+// Навигационный контроллер в дереве «Настроек»: корнем может быть не UINavigationController
+static UINavigationController *MPDebugFindNav(UIViewController *root) {
+	if (root == nil) return nil;
+	if ([root isKindOfClass:[UINavigationController class]]) return (UINavigationController *)root;
+	if (root.presentedViewController != nil) {
+		UINavigationController *n = MPDebugFindNav(root.presentedViewController);
+		if (n != nil) return n;
+	}
+	for (UIViewController *c in root.childViewControllers) {
+		UINavigationController *n = MPDebugFindNav(c);
+		if (n != nil) return n;
+	}
+	return nil;
+}
+
+static dispatch_source_t MPDebugShotSource = nil;   // vnode-источник канала снимков (держим статикой)
+
+// Команда из файла запроса: "shot" (только снимок), "metro", "ios", "page0"/"page1".
+// После действия снимок делается сам — одна команда = один кадр.
+static void MPDebugRunCommand(NSString *cmd) {
+	// url <строка> — открыть ссылку (например, prefs:root=MetroPhone, чтобы
+	// попасть в наш раздел настроек без ручных тапов)
+	if (cmd.length > 4 &&
+	    [cmd compare:@"url " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 4)] == NSOrderedSame) {
+		NSString *url = [[cmd substringFromIndex:4] stringByTrimmingCharactersInSet:
+		                 [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		MPLog(@"отладка: открываю %@", url);
+		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"dump"] == NSOrderedSame) {
+		MPDebugDump();
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"specs"] == NSOrderedSame) {
+		MPDebugDumpSpecs();
+		return;
+	}
+	// scroll <0..1> — промотать список «Настроек» к доле высоты (для снимков)
+	if (cmd.length > 7 && [cmd compare:@"scroll " options:NSCaseInsensitiveSearch
+	                              range:NSMakeRange(0, 7)] == NSOrderedSame) {
+		CGFloat f = [[cmd substringFromIndex:7] floatValue];
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		UITableView *t = MPDebugFindTable(w);
+		if (t != nil) {
+			CGFloat maxY = MAX(0.0f, t.contentSize.height - t.bounds.size.height);
+			[t setContentOffset:CGPointMake(0.0f, maxY * f) animated:NO];
+			MPLog(@"отладка: прокрутка %.2f (из %.0f)", f, maxY);
+		}
+		return;
+	}
+	// prefscheck / prefspage — работа с бандлом настроек изнутри «Настроек»:
+	// открытие через prefs:root= даёт пустую таблицу (URL не передаёт бандл),
+	// поэтому для просмотра поднимаем контроллер сами.
+	if ([cmd caseInsensitiveCompare:@"prefscheck"] == NSOrderedSame ||
+	    [cmd caseInsensitiveCompare:@"prefspage"] == NSOrderedSame) {
+		NSBundle *bundle = [NSBundle bundleWithPath:@"/Library/PreferenceBundles/MetroPhonePrefs.bundle"];
+		[bundle load];
+		Class cls = [bundle principalClass];
+		id controller = (cls != Nil) ? [[cls alloc] init] : nil;
+		// PSListController ищет Root.plist в своём bundle: без него — в бандле «Настроек».
+		// PreferenceLoader выставляет его сам, при ручном создании — выставляем руками.
+		if (controller != nil && [controller respondsToSelector:NSSelectorFromString(@"setBundle:")]) {
+			[controller setValue:bundle forKey:@"bundle"];   // KVC: без предупреждения ARC о performSelector
+		}
+		NSArray *specs = [controller respondsToSelector:@selector(specifiers)]
+		    ? (NSArray *)[controller valueForKey:@"specifiers"] : nil;
+		MPLog(@"отладка: бандл=%@ класс=%@ specifiers=%lu",
+		      bundle != nil ? @"есть" : @"нет", NSStringFromClass(cls), (unsigned long)specs.count);
+		if ([cmd caseInsensitiveCompare:@"prefspage"] == NSOrderedSame && controller != nil) {
+			UIViewController *rootVC = [[UIApplication sharedApplication] keyWindow].rootViewController;
+			UINavigationController *nav = MPDebugFindNav(rootVC);
+			MPLog(@"отладка: корень %@, навигация %@", NSStringFromClass([rootVC class]),
+			      nav != nil ? @"есть" : @"нет");
+			if (nav != nil) {
+				[nav pushViewController:controller animated:NO];
+				MPLog(@"отладка: страница настроек открыта (стек %lu)",
+				      (unsigned long)nav.viewControllers.count);
+			} else {
+				// У «Настроек» iOS 6 у окна нет rootViewController — показываем панель
+				// в своём отладочном окне поверх (только для снимка, продукт не трогаем)
+				static UIWindow *debugWindow = nil;
+				if (debugWindow == nil) {
+					debugWindow = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+					debugWindow.windowLevel = UIWindowLevelAlert;
+					UINavigationController *own = [[UINavigationController alloc] initWithRootViewController:controller];
+					debugWindow.rootViewController = own;
+				}
+				[debugWindow makeKeyAndVisible];
+				MPLog(@"отладка: панель показана в своём окне");
+			}
+		}
+		return;
+	}
+	if (MPLauncher == nil) return;
+	if ([cmd caseInsensitiveCompare:@"metro"] == NSOrderedSame) {
+		[MPLauncher showMetroAnimated:NO];
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"ios"] == NSOrderedSame) {
+		[MPLauncher hideMetroAnimated:NO];
+		return;
+	}
+	if ([cmd rangeOfString:@"page" options:NSCaseInsensitiveSearch].location == 0) {		// Лента-пейджер — приватный ivar контроллера; для отладки берём через KVC,
+		// чтобы не добавлять в продукт публичных «отладочных» методов.
+		UIScrollView *pager = [MPLauncher valueForKey:@"pager"];
+		NSInteger page = [[cmd substringFromIndex:4] integerValue];
+		if (pager != nil) {
+			[pager setContentOffset:CGPointMake(pager.bounds.size.width * page, 0) animated:NO];
+			MPLog(@"отладка: страница %ld", (long)page);
+		}
+	}
+}
+
+// Дамп дерева вьюх: класс, кадр, скрытость и текст меток/кнопок. Нужен и для
+// диагностики (что именно открылось), и для проверки вёрстки (пересечения,
+// вылеты за экран, обрезанный текст) без глаз.
+static void MPDebugDumpView(UIView *v, NSInteger depth, NSMutableString *out) {
+	if (v == nil || depth > 14) return;
+	NSString *extra = @"";
+	if ([v isKindOfClass:[UILabel class]]) {
+		extra = [NSString stringWithFormat:@" «%@»", ((UILabel *)v).text ?: @""];
+	} else if ([v isKindOfClass:[UIButton class]]) {
+		extra = [NSString stringWithFormat:@" «%@»", [((UIButton *)v) titleForState:UIControlStateNormal] ?: @""];
+	} else if ([v isKindOfClass:[UISwitch class]]) {
+		extra = ((UISwitch *)v).isOn ? @" [вкл]" : @" [выкл]";
+	}
+	[out appendFormat:@"%*s%@ (%.0f,%.0f %.0fx%.0f)%@%@\n",
+	 (int)(depth * 2), "", NSStringFromClass([v class]),
+	 v.frame.origin.x, v.frame.origin.y, v.frame.size.width, v.frame.size.height,
+	 v.hidden ? @" скрыто" : @"", extra];
+	for (UIView *s in v.subviews) MPDebugDumpView(s, depth + 1, out);
+}
+
+static void MPDebugDump(void) {
+	dispatch_async(dispatch_get_main_queue(), ^{
+		@try {
+			BOOL isSpringBoard = (objc_getClass("SBIconView") != nil);
+			UIWindow *w = nil;
+			if (isSpringBoard) {
+				w = MPLockScreenWindow();
+				if (w == nil) w = MPSharedHostWindow();
+			} else {
+				w = [UIApplication sharedApplication].keyWindow;
+			}
+			if (w == nil) { MPLog(@"отладка: дамп — окна нет"); return; }
+
+			NSMutableString *out = [NSMutableString string];
+			[out appendFormat:@"окно %@ %.0fx%.0f\n", NSStringFromClass([w class]),
+			 w.bounds.size.width, w.bounds.size.height];
+			UIViewController *root = [w rootViewController];
+			if (root != nil) [out appendFormat:@"root: %@\n", NSStringFromClass([root class])];
+			if ([root isKindOfClass:[UINavigationController class]]) {
+				// что именно открыто: класс и заголовок каждого контроллера в стеке
+				for (UIViewController *c in ((UINavigationController *)root).viewControllers) {
+					[out appendFormat:@"  стек: %@ «%@»\n", NSStringFromClass([c class]), c.title ?: @""];
+				}
+			}
+			MPDebugDumpView(w, 0, out);
+
+			NSString *name = isSpringBoard ? @"dump.txt" : @"dump-prefs.txt";
+			NSString *path = [MP_SHOT_DIR stringByAppendingPathComponent:name];
+			BOOL ok = [out writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+			MPLog(@"отладка: дамп %@ → %@", name, ok ? @"ок" : @"НЕ записан");
+		} @catch (NSException *e) {
+			MPLog(@"!! отладка: дамп — %@ (%@)", e.name, e.reason);
+		}
+	});
+}
+
+static void MPDebugDumpSpecs(void) {
+	dispatch_async(dispatch_get_main_queue(), ^{
+		@try {
+			if (objc_getClass("SBIconView") != nil) return;      // только процесс «Настроек»
+			UIWindow *w = [UIApplication sharedApplication].keyWindow;
+			UITableView *table = nil;
+			NSMutableArray *stack = [NSMutableArray arrayWithObject:w];
+			while (stack.count > 0 && table == nil) {
+				UIView *v = [stack lastObject];
+				[stack removeLastObject];
+				if ([v isKindOfClass:[UITableView class]]) { table = (UITableView *)v; break; }
+				[stack addObjectsFromArray:v.subviews];
+			}
+			id ds = table.dataSource;
+			NSArray *specs = nil;
+			if ([ds respondsToSelector:NSSelectorFromString(@"specifiers")]) {
+				specs = [ds valueForKey:@"specifiers"];
+			}
+			NSMutableString *out = [NSMutableString string];
+			id (*sendObj)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+			for (id s in specs) {
+				NSString *name = [s respondsToSelector:NSSelectorFromString(@"name")] ? [s valueForKey:@"name"] : @"";
+				NSString *ident = [s respondsToSelector:NSSelectorFromString(@"identifier")] ? [s valueForKey:@"identifier"] : @"";
+				NSString *icon = nil;
+				if ([s respondsToSelector:NSSelectorFromString(@"propertyForKey:")]) {
+					icon = sendObj(s, NSSelectorFromString(@"propertyForKey:"), @"icon");
+				}
+				[out appendFormat:@"%@ | %@ | icon=%@\n", ident ?: @"", name ?: @"", icon ?: @"—"];
+			}
+			NSString *path = [MP_SHOT_DIR stringByAppendingPathComponent:@"dump-specs.txt"];
+			[out writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+			MPLog(@"отладка: спецификаторов %lu → dump-specs.txt", (unsigned long)specs.count);
+		} @catch (NSException *e) {
+			MPLog(@"!! отладка: specs — %@ (%@)", e.name, e.reason);
+		}
+	});
+}
+
+static void MPDebugShotTake(void) {
+	dispatch_async(dispatch_get_main_queue(), ^{
+		@try {
+			// Снимок делаем в том процессе, где живёт нужная вьюха: у SpringBoard
+			// (локскрин — своё окно, лаунчер — главное) и у «Настроек» (свой keyWindow).
+			BOOL isSpringBoard = (objc_getClass("SBIconView") != nil);
+			UIWindow *w = nil;
+			if (isSpringBoard) {
+				w = MPLockScreenWindow();
+				if (w == nil) w = MPSharedHostWindow();
+			} else {
+				w = [UIApplication sharedApplication].keyWindow;
+			}
+			if (w == nil) { MPLog(@"отладка: снимок — окна нет"); return; }
+
+			UIGraphicsBeginImageContextWithOptions(w.bounds.size, YES, 0.0);
+			[w.layer renderInContext:UIGraphicsGetCurrentContext()];
+			UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+			UIGraphicsEndImageContext();
+			if (img == nil) { MPLog(@"отладка: снимок — рендер пуст"); return; }
+
+			NSString *name = isSpringBoard ? @"shot.png" : @"shot-prefs.png";
+			NSString *path = [MP_SHOT_DIR stringByAppendingPathComponent:name];
+			BOOL ok = [UIImagePNGRepresentation(img) writeToFile:path atomically:YES];
+			MPLog(@"отладка: снимок %@ %@ → %@", NSStringFromClass([w class]),
+			      NSStringFromCGSize(w.bounds.size), ok ? @"ок" : @"НЕ записан");
+		} @catch (NSException *e) {
+			MPLog(@"!! отладка: снимок — %@ (%@)", e.name, e.reason);
+		}
+	});
+}
+
+static void MPDebugShotWatch(void) {
+	@try {
+		NSFileManager *fm = [NSFileManager defaultManager];
+		[fm createDirectoryAtPath:MP_SHOT_DIR withIntermediateDirectories:YES attributes:nil error:NULL];
+		if (![fm fileExistsAtPath:@MP_SHOT_REQUEST]) {
+			[fm createFileAtPath:@MP_SHOT_REQUEST contents:[NSData data] attributes:nil];
+		}
+		int fd = open(MP_SHOT_REQUEST, O_EVTONLY);
+		if (fd < 0) { MPLog(@"!! отладка: файл запроса не открылся"); return; }
+
+		dispatch_source_t src = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, fd,
+			DISPATCH_VNODE_WRITE | DISPATCH_VNODE_EXTEND, dispatch_get_main_queue());
+		dispatch_source_set_event_handler(src, ^{
+			struct stat st;
+			if (stat(MP_SHOT_REQUEST, &st) != 0 || st.st_size == 0) return;
+
+			NSString *cmd = [[NSString stringWithContentsOfFile:@MP_SHOT_REQUEST
+			                                              encoding:NSUTF8StringEncoding
+			                                                 error:NULL]
+			                 stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			cmd = [cmd stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			ftruncate(fd, 0);          // гасим запрос, чтобы не сработал повторно
+
+			if (cmd.length > 0 && [cmd caseInsensitiveCompare:@"shot"] != NSOrderedSame) {
+				MPDebugRunCommand(cmd);
+				// даём анимации/лейауту улечься и снимаем
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.7 * NSEC_PER_SEC)),
+				               dispatch_get_main_queue(), ^{ MPDebugShotTake(); });
+			} else {
+				MPDebugShotTake();
+			}
+		});
+		dispatch_source_set_cancel_handler(src, ^{ close(fd); });
+		// Ссылку держим в статике: ARC освободил бы локальный источник сразу
+		// после выхода из функции, и vnode-события бы не приходили.
+		MPDebugShotSource = src;
+		dispatch_resume(src);
+		MPLog(@"отладка: канал снимков готов");
+	} @catch (NSException *e) {
+		MPLog(@"!! отладка: канал — %@ (%@)", e.name, e.reason);
+	}
+}
+
 #pragma mark - Инициализация
 
 // Перекраска «Настроек» в WP 8.1 — инициализация только в com.apple.Preferences
@@ -1034,14 +1443,28 @@ static void MPCleanupOldLog(void) {
 	}
 }
 
+// 133A: перехват необработанного исключения. Само по себе не лечит крэш, но даёт
+// текст причины в журнале — без него «Настройки» падали с SIGABRT без следа.
+static void MPUncaughtExceptionHandler(NSException *exception) {
+	@try {
+		MPLog(@"!! необработанное исключение: %@ — %@", [exception name], [exception reason]);
+		NSArray *stack = [exception callStackSymbols];
+		NSUInteger n = MIN(stack.count, (NSUInteger)10);
+		for (NSUInteger i = 0; i < n; i++) MPLog(@"   %@", [stack objectAtIndex:i]);
+	} @catch (NSException *e) {
+		// журнал недоступен — молчим, чтобы не уронить обработчик
+	}
+}
+
 %ctor {
 	MPCleanupOldLog();
 	MPLog(@"=== MetroPhone %@ запуск (pid %d) ===", MP_VERSION, getpid());
-	MPLog(@"настройки: вкл=%d панели=%d плитки=%d стильПлиток=%ld обои=%d подписи=%d заглавные=%d акцент=%@ многозадачность=%d",
+	MPLog(@"настройки: вкл=%d панели=%d плитки=%d стильПлиток=%ld обои=%d подписи=%d заглавные=%d акцент=%@ многозадачность=%d локскрин=%d",
 	      MPOn(), MPFlag(MPKeyFlatPanels, YES), MPFlag(MPKeyTiles, YES),
-	      (long)MPInt(MPKeyTileStyle, 0), MPFlag(MPKeyBlackWallpaper, YES),
+	      (long)1, MPFlag(MPKeyBlackWallpaper, YES),
 	      MPFlag(MPKeyMetroLabels, YES), MPFlag(MPKeyUppercase, YES),
-	      MPString(MPKeyAccent, @"blue"), MPFlag(MPKeyMultitask, YES));
+	      MPString(MPKeyAccent, @"blue"), MPFlag(MPKeyMultitask, YES),
+	      MPFlag(MPKeyLockscreen, YES));
 
 	// В %ctor делаем только расстановку хуков (чистый MSHookMessageEx, безопасно до main).
 	// Любые вызовы UIKit/графики откладываем на главный поток: до старта runloop
@@ -1091,10 +1514,38 @@ static void MPCleanupOldLog(void) {
 				MPLog(@"!! ctor лаунчер: %@ (%@)", e.name, e.reason);
 			}
 
+			// Хуки код-пароля для локскрина: класс может отсутствовать — ставим только если есть
+			@try {
+				if (objc_getClass("SBPasscodeViewController") != nil) {
+					%init(MPLockScreenHooks);
+					MPLog(@"ctor: хуки локскрина установлены (SBPasscodeViewController есть)");
+				} else {
+					MPLog(@"ctor: SBPasscodeViewController не найден — passcode-хуки пропущены");
+				}
+			} @catch (NSException *e) {
+				MPLog(@"!! ctor локскрин: %@ (%@)", e.name, e.reason);
+			}
+
+			// отладочный канал снимков экрана (см. MPDebugShotWatch)
+			MPDebugShotWatch();
+
 			// блокировка/разблокировка — только для SpringBoard (в приложениях
 			// лаунчеру делать нечего, а коллеги по фильтру com.apple.UIKit его бы создали)
 			CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
 				&MPLockStateChanged, CFSTR("com.apple.springboard.lockstate"), NULL,
+				CFNotificationSuspensionBehaviorDeliverImmediately);
+
+			// включение/выключение экрана: локскрин возвращается после пробуждения
+			// и после отмены ввода кода (lockstate в этих случаях не приходит)
+			CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
+				&MPDisplayStatusChanged, CFSTR("com.apple.iokit.hid.displayStatus"), NULL,
+				CFNotificationSuspensionBehaviorDeliverImmediately);
+
+			// смена акцента в Настройках: при выходе из приложения лаунчер НЕ проходит
+			// через showMetroAnimated (просто виден в окне SpringBoard), поэтому плитки
+			// и кнопка «M» перекрашиваются по уведомлению, а не при показе
+			CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
+				&MPAccentChangedSB, CFSTR("ru.ash.metrophone.accent-changed"), NULL,
 				CFNotificationSuspensionBehaviorDeliverImmediately);
 
 			// лаунчер — через 60 с после старта, когда окно вотчдога пройдено
@@ -1114,6 +1565,8 @@ static void MPCleanupOldLog(void) {
 	// (см. MPConfigureAppearanceIfNeeded): ранние вызовы UIKit/UIFont из конструктора
 	// дедлочили SpringBoard и все приложения на iOS 6.
 	if (mpIsPrefs) MPSettingsInitIfNeeded();
+	if (mpIsPrefs) MPDebugShotWatch();   // снимок экрана «Настроек» для отладки
+	if (mpIsPrefs) NSSetUncaughtExceptionHandler(&MPUncaughtExceptionHandler);   // 133A
 
 	MPLog(@"ctor: завершён");
 }

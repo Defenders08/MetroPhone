@@ -5,7 +5,7 @@
 #import "MPMetroStyle.h"
 #import "MPAppDataSource.h"
 
-static const CGFloat MPTilesHeaderH = 30.0f;          // шапка под статус-баром (там появляется «Готово»)
+static const CGFloat MPTilesHeaderH = 30.0f;          // шапка под статус-баром (отступ сетки под статус-бар)
 static const NSTimeInterval MPLongPressDelay = 0.6;   // долгое нажатие
 static const CGFloat MPTapSlop = 10.0f;               // допуск смещения для тапа/долгого нажатия
 static const NSInteger MPBuildBatch = 8;              // плиток за один проход главного потока
@@ -221,6 +221,11 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     }
     _pendingApps = nil;
     BOOL changed = [_model syncWithApps:apps];
+    // Модель могла измениться не сама по себе, а извне: закрепление плитки из
+    // списка (pinBundleID) добавляет тайл, о котором сетка ещё не знает.
+    // Расхождение числа плиток ловим и пересобираем — это дешевле, чем
+    // пересобирать сетку на каждое обновление бейджей.
+    if (_model.items.count != _tiles.count) changed = YES;
     if (changed) [self rebuildTilesToMatchModel];
     [self refreshTiles];
 }
@@ -255,7 +260,6 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 - (void)applyStyle {
     for (MPTileView *tv in _tiles) [tv applyStyle];
 }
-
 #pragma mark - Режим правки
 
 - (void)exitEditingIfNeeded {

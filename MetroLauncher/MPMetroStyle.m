@@ -5,6 +5,27 @@
 
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
+// Свои горячие пути больше не пишут в syslog: на iOS 6 каждый NSLog уходит
+// через ASL-демон и в хуках иконок стоит миллисекунды. Файл-журнал остаётся
+// всегда, а дублирование в syslog включается ключом verboseLog в настройках.
+static BOOL MPSyslogWanted(void) {
+    static BOOL wanted = NO;
+    static CFAbsoluteTime last = 0;
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    if (now - last > 1.0) {              // читаем настройку не чаще раза в секунду
+        last = now;
+        CFTypeRef v = CFPreferencesCopyAppValue(CFSTR("verboseLog"), CFSTR("ru.ash.metrophone"));
+        if (v != NULL) {
+            if (CFGetTypeID(v) == CFBooleanGetTypeID()) wanted = CFBooleanGetValue((CFBooleanRef)v);
+            else if (CFGetTypeID(v) == CFNumberGetTypeID()) wanted = [(__bridge NSNumber *)v boolValue];
+            CFRelease(v);
+        } else {
+            wanted = NO;
+        }
+    }
+    return wanted;
+}
+
 void MPLog(NSString *format, ...) {
     va_list args;
     va_start(args, format);
@@ -23,7 +44,7 @@ void MPLog(NSString *format, ...) {
         fprintf(f, "[%s.%03d] %s\n", stamp, (int)(tv.tv_usec / 1000), line.UTF8String);
         fclose(f);
     }
-    NSLog(@"[MetroPhone] %@", line);
+    if (MPSyslogWanted()) NSLog(@"[MetroPhone] %@", line);
 }
 
 static UIWindow *MPHostWindow = nil;
@@ -42,7 +63,8 @@ UIWindow *MPSharedHostWindow(void) {
 // Состояние настроек. Читается/пишется только с главного потока (UI-слой).
 static BOOL       MPStyleLoaded    = NO;
 static BOOL       MPStyleEnabled   = YES;
-static NSInteger  MPStyleTileStyle = 0;
+static BOOL       MPStyleUppercase = YES;
+static NSInteger  MPStyleTileStyle = 1;
 static UIColor   *MPStyleAccent    = nil;
 
 static UIColor *MPHexColor(uint32_t hex) {
@@ -50,6 +72,17 @@ static UIColor *MPHexColor(uint32_t hex) {
                            green:((hex >> 8) & 0xFF) / 255.0f
                             blue:(hex & 0xFF) / 255.0f
                            alpha:1.0f];
+}
+
+// «1BA1E2» / «#1ba1e2» → цвет; nil, если строка не HEX
+static UIColor *MPColorFromHexString(NSString *hex) {
+    if (hex.length == 0) return nil;
+    NSString *s = [[hex stringByReplacingOccurrencesOfString:@"#" withString:@""] uppercaseString];
+    if (s.length != 6) return nil;
+    NSScanner *sc = [NSScanner scannerWithString:s];
+    unsigned v = 0;
+    if (![sc scanHexInt:&v]) return nil;
+    return MPHexColor((uint32_t)v);
 }
 
 // Палитра акцентов (раздел 5.2)
@@ -81,17 +114,30 @@ static UIColor *MPAccentForName(NSString *name) {
     id v = (__bridge_transfer id)CFPreferencesCopyAppValue(CFSTR("enabled"), domain);
     if ([v respondsToSelector:@selector(boolValue)]) enabled = [v boolValue];
 
-    NSInteger tileStyle = 0;
-    v = (__bridge_transfer id)CFPreferencesCopyAppValue(CFSTR("tileStyle"), domain);
-    if ([v respondsToSelector:@selector(integerValue)]) tileStyle = [v integerValue];
+    // По умолчанию плитки акцентные (как в WP 8.1); «Тёмные» — осознанный выбор
+    // Режим «тёмные плитки» убран: плитки всегда акцентные (WP 8.1)
+    NSInteger tileStyle = 1;
 
     NSString *accent = nil;
     v = (__bridge_transfer id)CFPreferencesCopyAppValue(CFSTR("accent"), domain);
     if ([v isKindOfClass:[NSString class]]) accent = v;
 
+    // Регистр подписей — общий ключ темы (подписи иконок и панелей уже его читают)
+    BOOL uppercase = YES;
+    v = (__bridge_transfer id)CFPreferencesCopyAppValue(CFSTR("uppercaseLabels"), domain);
+    if ([v respondsToSelector:@selector(boolValue)]) uppercase = [v boolValue];
+
     MPStyleEnabled   = enabled;
+    MPStyleUppercase = uppercase;
     MPStyleTileStyle = tileStyle;
-    MPStyleAccent    = MPAccentForName(accent);
+    // Новый ключ — HEX из сетки «Цвета» (страница WP 8.1). Если не задан
+    // (старые установки) — имя из старого списка, иначе синий по умолчанию.
+    NSString *hexStr = nil;
+    v = (__bridge_transfer id)CFPreferencesCopyAppValue(CFSTR("accentHex"), domain);
+    if ([v isKindOfClass:[NSString class]]) hexStr = v;
+    MPStyleAccent = nil;
+    if (hexStr.length > 0) MPStyleAccent = MPColorFromHexString(hexStr);
+    if (MPStyleAccent == nil) MPStyleAccent = MPAccentForName(accent);
     MPStyleLoaded    = YES;
 }
 
@@ -107,6 +153,11 @@ static UIColor *MPAccentForName(NSString *name) {
 + (NSInteger)tileStyle {
     [self ensureLoaded];
     return MPStyleTileStyle;
+}
+
++ (BOOL)uppercaseLabels {
+    [self ensureLoaded];
+    return MPStyleUppercase;
 }
 
 #pragma mark - Цвета
@@ -166,12 +217,6 @@ static UIColor *MPAccentForName(NSString *name) {
 }
 
 #pragma mark - Метрики
-
-+ (CGFloat)unitSize {
-    CGFloat w = [UIScreen mainScreen].bounds.size.width;
-    CGFloat u = (w - (MPMetroColumns + 1) * MPMetroGap) / MPMetroColumns;
-    return floorf(u * 2.0f) / 2.0f;     // выравнивание по пикселям @2x
-}
 
 // Базовая ячейка по ТЗ WP8: cell = (containerWidth − 3·gap) / 4
 + (CGFloat)cellForContainerWidth:(CGFloat)width {

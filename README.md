@@ -2,7 +2,8 @@
 
 Джейлбрейк-твик, который переделывает интерфейс iOS 6 в стиле Windows Phone:
 
-- **Metro-лаунчер поверх рабочего стола** (основа UI — код Claude, интеграция и приватные API — свои): плитки 2 размеров с перетаскиванием, алфавитный список приложений со свайпом влево и поиском, бейджи, кнопки «M»/«iOS»;
+- **Metro-лаунчер поверх рабочего стола**: плитки Small/Medium/Wide (WP8-сетка) с перетаскиванием и редактированием, алфавитный список приложений со свайпом влево и поиском, бейджи;
+- **«Настройки» в WP 8.1-стиле**: огромный заголовок страницы, чёрный плоский список, WP-тумблеры и ползунки, возврат по тапу на шапку «‹ название» (страницы твиков остаются штатными iOS — совместимость);
 - **Квадратные плитки** вместо скруглённых иконок с глянцем;
 - **Тёмная плоская тема** — чёрные панели навигации, таб-бары, тулбары, без градиентов и теней;
 - **Типографика Segoe WP** — тонкие крупные заголовки (HelveticaNeue-Thin, ближайший аналог Segoe, уже есть в iOS 6), ЗАГЛАВНЫЕ подписи;
@@ -101,12 +102,19 @@ make package FINALPACKAGE=1
 Настройки → MetroPhone:
 
 - **Включить MetroPhone** — главный переключатель;
-- **Акцентный цвет** — 8 цветов палитры WP;
-- **Стиль плиток** — «Тёмные» (иконки-квадраты на чёрном) или «Акцентные» (плитки в цвет акцента);
+- **Акцентный цвет** — страница «Цвета»: 20 цветов палитры WP 8.1 плюс свой цвет тремя ползунками (перекрашивает всё сразу, без respring);
 - **Плоские тёмные панели** — панели приложений и статус-бар;
 - **Квадратные плитки**, **Шрифт подписей как в WP**, **ЗАГЛАВНЫЕ подписи**;
 - **Чёрный фон вместо обоев**;
+- **Свой свитчер (двойное Home)** — свитчер многозадачности в стиле WP 8.1 вместо родной панели;
+- **Подробный журнал в syslog** — дублировать журнал твика в syslog (по умолчанию выключено: на iOS 6 это заметно замедляет хуки иконок);
 - **Перезапустить SpringBoard** — применяет изменения, которые не подхватываются на лету.
+
+Metro — единственный рабочий стол: отдельного выхода на родной стол нет, вернуться к системе можно только выключив твик в настройках.
+
+### Иконки строк «Настроек»
+
+Иконки в списке «Настроек» заменяются на глифы Windows Phone. В пакете лежит шрифт **Metro UI Icons** (MIT, 963 глифа): `/Library/Application Support/MetroPhone/metro-ui-core.ttf` рядом с текстом лицензии. Глиф выбирается по названию строки: замок — VPN/SSL, птица — Twitter, палитра — темы, колокольчик — статус/уведомления, окно — MetroPhone, стрелка — restore, Bluetooth — свой значок, «Не беспокоить» — луна; остальным — шестерёнка. Строки без своей иконки остаются текстовыми (новые не добавляются).
 
 ## Структура проекта
 
@@ -114,32 +122,66 @@ make package FINALPACKAGE=1
 Makefile               — цели: твик (armv7/armv7s, SDK 10.3, min iOS 6.0) + субпроект настроек
 control                — метаданные deb-пакета (ru.ash.metrophone)
 MetroPhone.plist       — фильтр MobileSubstrate: инъекция в процессы с UIKit и в SpringBoard
-Tweak.xm               — все хуки (Logos): UIKit-группа + SpringBoard-группа
-MetroPhoneCommon.h     — ключи настроек, общие для твика и бандла
+Tweak.xm               — ядро: настройки, журнал, хуки темы (UIKit + SpringBoard), кнопка Home
+MetroPhoneCommon.h     — ключи настроек, общие для твика и бандла настроек
+MetroLauncher/         — Metro-лаунчер: плитки, редактор, список приложений, свитчер, стиль
+MetroSettings/         — переоформление приложения «Настройки» в стиле WP 8.1
 metrophoneprefs/       — бандл настроек (PreferenceLoader, раздел в Settings.app)
+layout/                — запись PreferenceLoader для панели твика
 packages/              — готовые .deb
+wp81_build/            — разовая выгрузка иконок WP 8.1 (к сборке твика не относится)
 ```
 
 Хуки (классы сверены с дампом заголовков SpringBoard iOS 6.1):
 
-- **UIKit**: `UINavigationBar` (`drawRect:`, `layoutSubviews`, `setTitleTextAttributes:`), `UIToolbar`, `UITabBar` (`drawRect:`), `UIApplication setStatusBarStyle:`, UIAppearance для `UIBarButtonItem`/`UISearchBar`/`UITabBar`;
-- **SpringBoard**: `SBApplicationIcon`/`SBFolderIcon generateIconImage:` (плитки), `SBIconView` (тени/отражения), `SBIconLabelImageParameters` (шрифт/цвет/тень/регистр подписей), `SBWallpaperView` (чёрный фон), `SBDockIconListView backgroundImageForOrientation:` (полка дока).
+- **Тема, UIKit**: `UINavigationBar` (`drawRect:`, `layoutSubviews`, `setTitleTextAttributes:`), `UIToolbar`, `UITabBar` (`drawRect:`), `UIApplication setStatusBarStyle:`, UIAppearance для `UIBarButtonItem`/`UISearchBar`/`UITabBar`;
+- **Тема, SpringBoard**: `SBApplicationIcon`/`SBFolderIcon generateIconImage:` (плитки), `SBIconView` (тени/отражения), `SBIconLabelImageParameters` (шрифт/цвет/тень/регистр подписей), `SBWallpaperView` (чёрный фон), `SBDockIconListView backgroundImageForOrientation:` (полка дока);
+- **Лаунчер**: `SpringBoard menuButtonDown:/Up:` (двойное Home — свитчер, одиночное — выход из правки плиток), `SBIcon noteBadgeDidChange` (обновление бейджей).
+
+Твик ставит хуки только в `com.apple.springboard` и `com.apple.Preferences` — в остальных приложениях остаётся штатный дизайн iOS.
+
+Настройки читаются через CFPreferences на лету. Раскладка плиток лежит отдельно — `/var/mobile/Library/Preferences/metrophone-layout.plist` (порядок, размеры, откреплённые плитки).
 
 ## Известные ограничения
 
 - **Segoe WP проприетарный** — используется HelveticaNeue-Thin/Light/Regular (есть в iOS 6 с версии 6.0, визуально близко к Segoe).
 - **Чёрный фон заменяет обои и на экране блокировки** — `SBWallpaperView` общий для обоих экранов; в стиле Metro это даже уместно, но знайте.
-- **Панель многозадачности** (переключатель задач снизу) пока остаётся в родном виде; её «полка» рисуется отдельными классами — можно добавить тем же способом позже.
+- **Панель многозадачности** заменена своим свитчером в стиле WP 8.1 (двойное Home). Родная панель при этом недоступна — это отключается в настройках («Свой свитчер»).
 - **Плитки folders** (папок) — рисуются превью-картинкой на подложке, точного вида WP-плитки без иконок внутри нет.
 - Проверить тему можно только на реальном девайсе: на iOS 6.1 симуляторе твик не запускается.
 
 ## Отладка
 
-Логи твика видны в syslog девайса (если syslogd настроен — `/var/log/syslog`) или через `idevicesyslog` с Маком:
+Логи твика всегда пишутся в файл `/var/mobile/Library/Preferences/metrophone.log` (он переживает respring; при разрастании больше 512 КБ пересоздаётся). Смотреть с Мака:
+
+```bash
+./iphone-ssh.sh "tail -50 /var/mobile/Library/Preferences/metrophone.log"
+```
+
+Дублирование в syslog по умолчанию выключено: на iOS 6 каждый `NSLog` идёт через ASL и заметно замедляет хуки иконок. Включается в настройках — «Подробный журнал в syslog». После включения:
 
 ```bash
 idevicesyslog | grep -i metro
 ```
+
+### Снимок экрана и дамп вида (инструмент разработки)
+
+`idevicescreenshot` на iOS 6 не работает (нет сервиса screenshotr), поэтому в твик встроен отладочный канал: он слушает файл `/var/mobile/Library/Caches/metrophone/shot.request` и по записи в него делает действие и сохраняет PNG.
+
+```bash
+# снять текущий экран (локскрин или рабочий стол — что на переднем плане)
+./iphone-ssh.sh "echo shot > /var/mobile/Library/Caches/metrophone/shot.request"
+./iphone-ssh.sh --pull /var/mobile/Library/Caches/metrophone/shot.png shot.png
+
+# экран «Настроек» (отдельный процесс — свой файл)
+./iphone-ssh.sh --pull /var/mobile/Library/Caches/metrophone/shot-prefs.png prefs.png
+```
+
+Команды в том же файле: `metro` / `ios` (показать/спрятать лаунчер), `page0` / `page1` (страница плиток/списка), `url <ссылка>` (открыть URL, например `url prefs:root=MetroPhone`), `dump` (дерево вьюх с кадрами и текстами в `dump.txt` / `dump-prefs.txt`), `prefscheck` и `prefspage` (проверить/открыть панель настроек).
+
+Канал пассивен: без записи в файл он не делает ничего, кроме одного открытого fd. Перед релизом его можно вырезать — весь код в одном блоке `#pragma mark - Отладочный снимок экрана` в `Tweak.xm`.
+
+**Важно про права файлов бандла:** ресурсы в `metrophoneprefs/Resources/` должны быть `644`. Файл с правами `600` собирается в .deb такими же и становится нечитаемым для «Настроек» (работают под `mobile`) — страница твика открывается пустой. Если сохранили файл редактором с `600`, выполните `chmod 644 metrophoneprefs/Resources/*`.
 
 Если SpringBoard падает в safe mode — снимите лог и посмотрите последний хук перед падением. Отключить твик без удаления можно из safe mode (уведомление открывает Settings) — переключатель MetroPhone. Полностью удалить: `./iphone-ssh.sh "dpkg -r ru.ash.metrophone; killall SpringBoard"`.
 
