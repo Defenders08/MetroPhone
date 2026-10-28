@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetroPhone · плитки WP 8.1</title>
+<style>
+  :root{
+    --bg:#0a0a0b; --ink:#fff;
+    --dim:rgba(255,255,255,.7); --faint:rgba(255,255,255,.5);
+    --line:rgba(255,255,255,.13);
+    --accent:#1BA1E2;
+    --s:1;                 /* масштаб устройства */
+    --tile:71.5px;         /* сторона малой плитки */
+    --gap:7px;
+    --font:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);font-weight:300;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+  a{color:inherit}
+
+  /* ---------- шапка ---------- */
+  .head{padding:60px 0 30px;border-bottom:1px solid var(--line)}
+  .meta{margin:0 0 16px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  h1{margin:0 0 16px;font-size:clamp(42px,7vw,78px);font-weight:200;line-height:.92;letter-spacing:-.025em}
+  .lede{margin:0;max-width:54ch;font-size:17px;line-height:1.55;color:var(--dim)}
+
+  /* ---------- лаборатория ---------- */
+  .lab{display:grid;grid-template-columns:auto minmax(300px,1fr);gap:48px;padding:40px 0 10px;align-items:start}
+  .stage{position:relative}
+  .deviceWrap{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.18);
+    width:calc(482px * var(--s));height:calc(802px * var(--s))}
+  .device{position:absolute;top:0;left:0;width:480px;height:800px;background:#000;overflow:hidden;
+    transform:scale(var(--s));transform-origin:0 0}
+
+  .status{height:22px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:9px}
+  .battery{display:flex;align-items:center;gap:4px}
+  .battery i{display:block;width:20px;height:10px;border:1px solid #fff;position:relative}
+  .battery i::after{content:"";position:absolute;inset:1px;background:#fff}
+  .start{height:34px;display:flex;align-items:center;padding:0 12px;font-size:15px;font-weight:300}
+
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--gap);
+    padding:0 8px;grid-auto-rows:var(--tile);grid-auto-flow:row dense}
+
+  /* ---------- плитка ---------- */
+  .tile{position:relative;background:var(--accent);overflow:hidden;border:0;padding:0;margin:0;
+    color:#fff;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    perspective:700px;transition:transform .12s ease, filter .12s ease}
+  .tile:active{transform:scale(.965);filter:brightness(.94)}
+  .faces{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.3,.7,.2,1)}
+  .tile.is-flipped .faces{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;background:var(--accent)}
+  .face.back{transform:rotateY(180deg)}
+
+  .glyph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:var(--g,44%);height:var(--g,44%);object-fit:contain}
+  .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo.cycle-img{opacity:0;transition:opacity .55s ease}
+  .photo.cycle-img.on{opacity:1}
+
+  .cap{position:absolute;left:6%;right:6%;bottom:3.5%;font-size:11px;line-height:1.15;font-weight:400;
+    letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:3;
+    text-shadow:0 1px 2px rgba(0,0,0,.45)}
+
+  .count{position:absolute;right:5.5%;top:3%;font-size:15px;line-height:1;font-weight:400;z-index:3;
+    text-shadow:0 1px 2px rgba(0,0,0,.35)}
+  .count.small{font-size:11px;top:4%}
+
+  /* размеры: глиф, кегли */
+  .s1{--g:46%}
+  .s1 .cap{display:none}
+  .s2{--g:40%}
+  .s4{--g:64px}
+  .s4 .glyph{width:auto;height:46%;left:26%}
+  .s4 .cap{font-size:11px}
+  /* обратная сторона flip */
+  .back-inner{position:absolute;inset:0;padding:7% 7% 12%}
+  .back-lines{margin:0;font-size:12px;line-height:1.3;font-weight:400;display:-webkit-box;
+    -webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .back-lines b{display:block;font-weight:600;margin-bottom:2px}
+  .back-title{position:absolute;left:7%;right:7%;bottom:3.5%;font-size:10px;color:rgba(255,255,255,.75);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s4 .back-lines{font-size:14px;max-width:62%}
+  .s2 .back-title,.s4 .back-title{font-size:11px}
+
+  /* iconic: иконка и счётчик рядом */
+  .tile.iconic .glyph{left:50%}
+  .tile.iconic.has-count .glyph{left:38%}
+  .tile.iconic.has-count .count{right:auto;left:62%;top:50%;transform:translateY(-50%);font-size:26px}
+  .s1.iconic.has-count .count{font-size:13px;left:60%}
+
+  /* ---------- панель ---------- */
+  .side{min-width:0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;margin:0 0 24px}
+  .ctrl{display:flex;align-items:center;gap:9px}
+  .ctrl .lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .swatches{display:flex;gap:7px}
+  .sw{width:19px;height:19px;border:0;padding:0;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
+  .sw[aria-pressed="true"]{box-shadow:0 0 0 2px #fff}
+  .seg{display:flex;background:rgba(255,255,255,.06)}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--faint);font:inherit;font-size:12px;
+    padding:6px 10px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:rgba(255,255,255,.16);color:#fff}
+
+  .passport{border-top:1px solid var(--line);padding-top:16px}
+  .passport h2{margin:0 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:400}
+  .passport dl{display:grid;grid-template-columns:1fr auto;gap:8px 16px;margin:0}
+  .passport dt{font-size:12px;color:var(--faint)}
+  .passport dd{margin:0;font-size:13px;color:rgba(255,255,255,.92);text-align:right}
+  .passport .hint{margin:0;font-size:13px;line-height:1.5;color:var(--dim);max-width:40ch}
+
+  .lab-note{margin:22px 0 0;font-size:12px;line-height:1.6;color:var(--faint);max-width:46ch}
+  .look{margin:18px 0 0;padding:0;list-style:none}
+  .look li{position:relative;padding:0 0 8px 15px;font-size:12.5px;color:var(--dim)}
+  .look li::before{content:"";position:absolute;left:0;top:6px;width:4px;height:4px;background:var(--accent)}
+
+  /* ---------- разделы ---------- */
+  section.block{padding:56px 0 6px;border-top:1px solid var(--line);margin-top:46px}
+  h2.big{margin:0 0 24px;font-size:clamp(24px,3.2vw,32px);font-weight:200;letter-spacing:-.015em}
+  .tpl3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .card{display:flex;flex-direction:column;gap:16px}
+  .card .mini{width:150px;height:150px;position:relative}
+  .card .mini .tile{position:absolute;inset:0;width:auto;height:auto}
+  .card h3{margin:0;font-size:15px;font-weight:400}
+  .card p{margin:0;font-size:13.5px;line-height:1.55;color:var(--dim)}
+  .card .fields{margin:0;font-size:11.5px;line-height:1.6;color:var(--faint);font-family:ui-monospace,Menlo,monospace}
+
+  .nums{display:grid;grid-template-columns:1.1fr .9fr;gap:20px 56px}
+  .nums h3{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:400}
+  .nums ul.list{margin:0;padding:0;list-style:none}
+  .nums ul.list li{position:relative;padding:0 0 12px 16px;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.82)}
+  .nums ul.list li::before{content:"";position:absolute;left:0;top:7px;width:4px;height:4px;background:var(--accent)}
+  .table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .table th,.table td{text-align:left;padding:7px 10px 7px 0;border-bottom:1px solid rgba(255,255,255,.07);font-weight:400}
+  .table th{color:var(--faint);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .table td:first-child{color:#fff}
+  .table td{color:var(--dim)}
+
+  .port p{margin:0 0 14px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.82);max-width:62ch}
+  .port b{font-weight:500;color:#fff}
+  .port ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+  .port li{padding:0 0 12px 16px;position:relative;font-size:13.5px;line-height:1.55;color:var(--dim)}
+  .port li::before{content:"";position:absolute;left:0;top:7px;width:4px;height:4px;background:var(--accent)}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.7;color:var(--faint)}
+
+  @media (max-width:1000px){
+    .lab{grid-template-columns:1fr}
+    .tpl3{grid-template-columns:1fr}
+    .nums{grid-template-columns:1fr}
+    .port ul{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .faces{transition:none}
+    .tile{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <p class="meta">Windows Phone 8.1 · макет 480 × 800 · сетка 6 колонок</p>
+    <h1>плитки WP 8.1</h1>
+    <p class="lede">Три шаблона, три размера и живое содержимое. Ниже рабочий экран: плитки переворачиваются, меняют кадр и считают непрочитанное.</p>
+  </header>
+
+  <section class="lab">
+    <div class="stage">
+      <div class="deviceWrap">
+        <div class="device" id="device">
+          <div class="status"><span class="st-time">12:04</span><span class="battery">100% <i></i></span></div>
+          <div class="start">Start</div>
+          <div class="grid" id="grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="controls">
+        <div class="ctrl">
+          <span class="lbl">акцент</span>
+          <div class="swatches" id="swatches"></div>
+        </div>
+        <div class="ctrl">
+          <span class="lbl">темп</span>
+          <div class="seg" id="speedSeg">
+            <button type="button" data-speed="1" aria-pressed="true">1×</button>
+            <button type="button" data-speed="2" aria-pressed="false">2×</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <span class="lbl">живые</span>
+          <div class="seg" id="playSeg">
+            <button type="button" data-play="1" aria-pressed="true">идти</button>
+            <button type="button" data-play="0" aria-pressed="false">пауза</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <span class="lbl">оборот</span>
+          <div class="seg" id="flipSeg">
+            <button type="button" id="flipNow">перевернуть</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="passport" id="passport">
+        <h2>паспорт плитки</h2>
+        <p class="hint" id="passportHint">Наведи или тапни плитку: покажу шаблон, размер и что у неё на обороте.</p>
+        <dl id="passportList" hidden></dl>
+      </div>
+
+      <p class="lab-note">Экран собран по гайдлайнам: 6 колонок, малая плитка без подписи, подпись снизу слева, счётчик сверху справа. Темп переворота и смены кадра в документации не задан, здесь он для показа: 8 и 7 секунд.</p>
+      <ul class="look">
+        <li>переворот: календарь и музыка</li>
+        <li>смена кадра: игры</li>
+        <li>счётчик: телефон и twitter</li>
+        <li>без подписи: все плитки 1 × 1</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="big">три шаблона</h2>
+    <div class="tpl3">
+      <div class="card">
+        <div class="mini" id="demoFlip"></div>
+        <h3>flip</h3>
+        <p>Две стороны. Лицо: картинка или знак, подпись снизу слева, счётчик сверху справа. Оборот: заголовок и до трёх строк текста. Плитка переворачивается сама.</p>
+        <p class="fields">Title · BackTitle · BackContent · WideBackContent · Count</p>
+      </div>
+      <div class="card">
+        <div class="mini" id="demoIconic"></div>
+        <h3>iconic</h3>
+        <p>Знак 130 × 202 по центру, счётчик справа от него, подпись снизу слева, свой цвет фона. В широкой версии три строки сверху, а знак со счётчиком уходит вниз вправо.</p>
+        <p class="fields">IconImage · SmallIconImage · WideContent1-3 · BackgroundColor</p>
+      </div>
+      <div class="card">
+        <div class="mini" id="demoCycle"></div>
+        <h3>cycle</h3>
+        <p>От одной до девяти картинок, смена по кругу. Подпись и счётчик те же, что у остальных: имя не двигается, чтобы плитку узнавали в лицо.</p>
+        <p class="fields">CycleImage1…9 · Title · Count</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="big">что в цифрах</h2>
+    <div class="nums">
+      <div>
+        <h3>размеры ассетов</h3>
+        <table class="table">
+          <tr><th>плитка</th><th>flip / cycle</th><th>iconic</th></tr>
+          <tr><td>малая</td><td>159 × 159</td><td>110 × 110</td></tr>
+          <tr><td>средняя</td><td>336 × 336</td><td>202 × 202</td></tr>
+          <tr><td>широкая</td><td>691 × 336</td><td>нет</td></tr>
+        </table>
+        <h3 style="margin-top:22px">сетка в макете</h3>
+        <ul class="list">
+          <li>6 колонок, малая плитка 71, зазор 7, поле 8.</li>
+          <li>Средняя 150, широкая 307.</li>
+          <li>Так же выглядит 1080p-телефон, только там всё в 2,25 раза крупнее: 160, 336, 691.</li>
+          <li>На WVGA колонок четыре: это другая раскладка, не масштаб.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>сколько влезает</h3>
+        <ul class="list">
+          <li>Средняя: 19 знаков в подписи. Широкая: 39.</li>
+          <li>Строки широкой iconic: по 33 знака на каждую из трёх.</li>
+          <li>Переносов нет: строка обрезается, это часть стиля.</li>
+          <li>Малая плитка подписи не имеет вовсе.</li>
+        </ul>
+        <h3 style="margin-top:22px">правила</h3>
+        <ul class="list">
+          <li>Прозрачное в картинке показывает акцент темы.</li>
+          <li>Счётчик есть у любого шаблона, место под него заложено всегда.</li>
+          <li>Широкая плитка только если содержимое меняется хотя бы раз в неделю.</li>
+          <li>Вся плитка один тап: кнопок и ссылок внутри нет.</li>
+          <li>Относительные даты нельзя, только абсолютные.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block port">
+    <h2 class="big">что из этого на 320 × 480</h2>
+    <p>У нас 4 колонки по 75 и подпись 9,5 pt, поэтому две вещи переносятся один в один, а две нет. <b>Счётчик</b> и <b>обратная сторона</b> данных не требуют: цифру мы уже умеем рисовать, а текст оборота можно взять из системы. <b>Flip</b> без обновлений бессмысленен, а <b>cycle</b> требует картинок, которых у нас нет.</p>
+    <ul>
+      <li>Малая плитка у нас с подписью, в WP без. Стоит попробовать без: освобождает 25 pt под знак.</li>
+      <li>Счётчик ставим цифрой, без плашки: место сверху справа уже свободно.</li>
+      <li>Оборот делаем только для четырёх системных: почта, календарь, сообщения, погода.</li>
+      <li>Широкую 4 × 2 не берём, пока нет контента, который стоит обновлять.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Опоры: Tiles for Windows Phone 8, Flip / Iconic / Cycle Tile template, Iconic Tile design guidelines, Multi-resolution apps (Microsoft Learn, previous-versions). Сетка 480 × 800 и кегли восстановлены по схемам из документации и снимкам, в тексте это помечено.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var ACCENTS = ['#1BA1E2', '#A200FF', '#D80073', '#008A00', '#F09609', '#00ABA9'];
+
+  // порядок и геометрия: [row, col, rowSpan, colSpan]
+  var TILES = [
+    { id:'cal', name:'Календарь', tpl:'flip', size:'s4', area:[1,1,2,4], glyph:'wp-calendar',
+      back:{ lines:['Сегодня','10:00 планёрка','19:00 ужин'] }, count:null,
+      note:'три строки повестки' },
+    { id:'ie', name:'Internet Explorer', tpl:'iconic', size:'s2', area:[1,5,2,2], glyph:'wp-ie', count:null },
+    { id:'music', name:'Музыка', tpl:'flip', size:'s2', area:[3,1,2,2], glyph:'wp-music',
+      back:{ lines:['Сейчас играет','Boards of Canada','Roygbiv'] }, count:null,
+      note:'что играет' },
+    { id:'games', name:'Игры', tpl:'cycle', size:'s2', area:[3,3,2,2], photos:['wp-minecraft','wp-temple'], count:null },
+    { id:'weather', name:'Погода', tpl:'flip', size:'s2', area:[3,5,2,2], photo:'wp-weather', count:null },
+
+    { name:'Телефон', tpl:'iconic', glyph:'wp-phone', count:2, size:'s1' },
+    { name:'Видео', tpl:'flip', glyph:'wp-video', size:'s1' },
+    { name:'Подкасты', tpl:'iconic', glyph:'wp-podcasts', size:'s1' },
+    { name:'Батарея', tpl:'iconic', glyph:'wp-battery', size:'s1' },
+    { name:'Fitbit', tpl:'iconic', glyph:'wp-fitbit', size:'s1' },
+    { name:'UC Browser', tpl:'iconic', glyph:'wp-uc', size:'s1' },
+    { name:'Nokia', tpl:'iconic', glyph:'wp-nokia', size:'s1' },
+    { name:'Калькулятор', tpl:'iconic', glyph:'wp-calculator', size:'s1' },
+    { name:'Настройки', tpl:'iconic', glyph:'wp-settings', size:'s1' },
+    { name:'Twitter', tpl:'flip', size:'s1', photo:'wp-twitter', count:5 },
+    { name:'Netflix', tpl:'flip', size:'s1', photo:'wp-netflix' },
+
+    { name:'Angry Birds', tpl:'flip', size:'s1', photo:'wp-game-ab' },
+    { name:'Cut the Rope', tpl:'flip', size:'s1', photo:'wp-game-ctr' },
+    { name:'Tetris', tpl:'flip', size:'s1', photo:'wp-game-tetris' },
+    { name:'Asphalt 5', tpl:'flip', size:'s1', photo:'wp-game-asphalt' },
+    { name:'Candy Crush', tpl:'flip', size:'s1', photo:'wp-game-candy' },
+    { name:'Fruit Ninja', tpl:'flip', size:'s1', photo:'wp-game-fruit' },
+    { name:'Doodle Jump', tpl:'flip', size:'s1', photo:'wp-game-doodle' },
+    { name:'Bejeweled', tpl:'flip', size:'s1', photo:'wp-game-bejeweled' },
+    { name:'Plants vs Zombies', tpl:'flip', size:'s1', photo:'wp-game-pvz' },
+    { name:'Sonic', tpl:'flip', size:'s1', photo:'wp-game-sonic' },
+    { name:'Solitaire', tpl:'flip', size:'s1', photo:'wp-game-solitaire' },
+    { name:'Mahjong', tpl:'flip', size:'s1', photo:'wp-game-mahjong' },
+    { name:'Minesweeper', tpl:'flip', size:'s1', photo:'wp-game-minesweeper' }
+  ];
+
+  function faceFront(t) {
+    var html = '';
+    if (t.photo) html += '<img class="photo" src="assets/' + t.photo + '.png" alt="">';
+    if (t.glyph) html += '<img class="glyph" src="assets/' + t.glyph + '.png" alt="">';
+    if (t.photos) {
+      html += t.photos.map(function (p, i) {
+        return '<img class="photo cycle-img' + (i === 0 ? ' on' : '') + '" src="assets/' + p + '.png" alt="">';
+      }).join('');
+    }
+    if (t.name) html += '<span class="cap">' + t.name + '</span>';
+    if (t.count) html += '<span class="count' + (t.size === 's1' ? ' small' : '') + '">' + t.count + '</span>';
+    return html;
+  }
+
+  function faceBack(t) {
+    if (t.tpl !== 'flip' || !t.back) return '';
+    return '<div class="back-inner"><p class="back-lines"><b>' + t.back.lines[0] + '</b>' +
+      t.back.lines.slice(1).join('<br>') + '</p></div>' +
+      '<span class="back-title">' + t.name + '</span>';
+  }
+
+  function tileHTML(t, mini) {
+    var cls = 'tile ' + t.size + ' ' + t.tpl;
+    if (t.tpl === 'iconic' && t.count) cls += ' iconic has-count';
+    else if (t.tpl === 'iconic') cls += ' iconic';
+    if (t.back) cls += ' has-back';
+    var style = (!mini && t.area) ? ' style="grid-area:' + t.area[0] + ' / ' + t.area[1] + ' / span ' + t.area[2] + ' / span ' + t.area[3] + '"' : '';
+    return '<button type="button" class="' + cls + '"' + style + ' aria-label="' + t.name + '" ' +
+      'data-tpl="' + t.tpl + '" data-size="' + t.size + '" data-name="' + t.name + '" data-count="' + (t.count || '') + '" data-note="' + (t.note || '') + '">' +
+      '<span class="faces"><span class="face front">' + faceFront(t) + '</span>' +
+      (t.back ? '<span class="face back">' + faceBack(t) + '</span>' : '') + '</span></button>';
+  }
+
+  function build() {
+    document.getElementById('grid').innerHTML = TILES.map(function (t) { return tileHTML(t, false); }).join('');
+
+    var flip = TILES.find(function (t) { return t.id === 'music'; });
+    var iconic = TILES.find(function (t) { return t.id === 'ie'; });
+    var cycle = TILES.find(function (t) { return t.id === 'games'; });
+
+    document.getElementById('demoFlip').innerHTML = miniTile(flip);
+    document.getElementById('demoIconic').innerHTML = miniTile(iconic);
+    document.getElementById('demoCycle').innerHTML = miniTile(cycle);
+
+    bindInspector();
+  }
+
+  function miniTile(t) {
+    var copy = Object.assign({}, t, { area: null });
+    var html = tileHTML(copy, true);
+    return html.replace('class="tile', 'class="tile mini-tile');
+  }
+
+  function bindInspector() {
+    var list = document.getElementById('passportList');
+    var hint = document.getElementById('passportHint');
+
+    function show(tile) {
+      var d = tile.dataset;
+      var out = '';
+      out += '<dt>имя</dt><dd>' + d.name + '</dd>';
+      out += '<dt>шаблон</dt><dd>' + d.tpl + '</dd>';
+      out += '<dt>размер</dt><dd>' + ({ s1:'1 × 1', s2:'2 × 2', s4:'4 × 2' }[d.size] || d.size) + '</dd>';
+      out += '<dt>счётчик</dt><dd>' + (d.count ? d.count : 'нет') + '</dd>';
+      out += '<dt>подпись</dt><dd>' + (d.size === 's1' ? 'скрыта' : 'снизу слева') + '</dd>';
+      if (d.note) out += '<dt>оборот</dt><dd>' + d.note + '</dd>';
+      list.innerHTML = out;
+      list.hidden = false;
+      hint.hidden = true;
+    }
+
+    document.querySelectorAll('.tile').forEach(function (tile) {
+      tile.addEventListener('pointerenter', function () { show(tile); });
+      tile.addEventListener('focus', function () { show(tile); });
+      tile.addEventListener('click', function () { show(tile); });
+    });
+
+    var first = document.querySelector('.tile[data-name="Календарь"]');
+    if (first) show(first);
+  }
+
+  /* ---- живые плитки ---- */
+  var flipMs = 8000, cycleMs = 7000, speed = 1, playing = true;
+  var flipTimer = null, cycleTimer = null;
+
+  function flipAll() {
+    document.querySelectorAll('.tile.has-back').forEach(function (t) { t.classList.toggle('is-flipped'); });
+  }
+
+  function cycleStep() {
+    document.querySelectorAll('.tile.cycle').forEach(function (t) {
+      var imgs = t.querySelectorAll('.cycle-img');
+      if (!imgs.length) return;
+      var i = 0;
+      imgs.forEach(function (img, k) { if (img.classList.contains('on')) i = k; });
+      imgs[i].classList.remove('on');
+      imgs[(i + 1) % imgs.length].classList.add('on');
+    });
+  }
+
+  function schedule() {
+    clearInterval(flipTimer); clearInterval(cycleTimer);
+    if (!playing) return;
+    flipTimer = setInterval(flipAll, flipMs / speed);
+    cycleTimer = setInterval(cycleStep, cycleMs / speed);
+  }
+
+  /* ---- управление ---- */
+  function wireSeg(id, fn) {
+    var seg = document.getElementById(id);
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      seg.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      fn(b);
+    });
+  }
+
+  function swatches() {
+    var box = document.getElementById('swatches');
+    ACCENTS.forEach(function (hex, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'sw'; b.style.background = hex;
+      b.setAttribute('aria-label', 'акцент ' + hex);
+      b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        document.documentElement.style.setProperty('--accent', hex);
+        box.querySelectorAll('.sw').forEach(function (s) { s.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function fitDevice() {
+    var lab = document.querySelector('.lab');
+    var avail = lab.clientWidth;
+    var s = Math.min(1, avail / 482);
+    document.documentElement.style.setProperty('--s', s.toFixed(3));
+  }
+
+  function clock() {
+    var d = new Date();
+    var t = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    document.querySelectorAll('.st-time').forEach(function (el) { el.textContent = t; });
+  }
+
+  build();
+  swatches();
+  fitDevice();
+  schedule();
+  clock();
+  setInterval(clock, 30000);
+
+  wireSeg('speedSeg', function (b) { speed = parseInt(b.dataset.speed, 10) || 1; schedule(); });
+  wireSeg('playSeg', function (b) { playing = b.dataset.play === '1'; schedule(); });
+  document.getElementById('flipNow').addEventListener('click', flipAll);
+  window.addEventListener('resize', fitDevice);
+})();
+</script>
+</body>
+</html>

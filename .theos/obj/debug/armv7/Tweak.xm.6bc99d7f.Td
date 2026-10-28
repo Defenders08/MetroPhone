@@ -8,6 +8,7 @@
   /Users/ash/Documents/Проекты/MetroPhone/MetroPhoneCommon.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPMetroStyle.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPLayoutModel.h \
+  /Users/ash/Documents/Проекты/MetroPhone/MetroLockScreen/MPLockScreen.h \
   /Users/ash/theos/vendor/include/substrate.h \
   /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h \
   /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPAppDataSource.h \
@@ -21,6 +22,7 @@
 /Users/ash/Documents/Проекты/MetroPhone/MetroPhoneCommon.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPMetroStyle.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPLayoutModel.h:
+/Users/ash/Documents/Проекты/MetroPhone/MetroLockScreen/MPLockScreen.h:
 /Users/ash/theos/vendor/include/substrate.h:
 /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h:
 /Users/ash/Documents/Проекты/MetroPhone/MetroLauncher/MPAppDataSource.h:
