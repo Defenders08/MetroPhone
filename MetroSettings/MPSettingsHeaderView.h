@@ -7,11 +7,11 @@
 
 @interface MPSettingsHeaderView : UIView
 
-@property (nonatomic, copy) NSString *pageTitle;    // «основные», Light 52 → 30 (ручной подбор)
+@property (nonatomic, copy) NSString *pageTitle;    // «Основные», Light 52 → 30 (ручной подбор)
 
-// WP 8.1: на подстраницах слева от большого заголовка — акцентная «‹»,
+// Стрелки-иконки в шапке нет: на подстранице заголовок остаётся типографикой,
 // тап по всей шапке работает как «Назад»
-@property (nonatomic, assign) BOOL showsBackChevron;
+@property (nonatomic, assign) BOOL showsBackChevron;   // флаг подстраницы; вид от него не зависит
 @property (nonatomic, copy) void (^backTapped)(void);
 
 + (CGFloat)heightForWidth:(CGFloat)width;

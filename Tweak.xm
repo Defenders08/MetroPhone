@@ -13,6 +13,7 @@
 //     укажет виновный хук.
 
 #import <UIKit/UIKit.h>
+#import <dlfcn.h>
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 #import <stdio.h>
@@ -27,7 +28,7 @@
 #import "MetroLauncher/MPMetroStyle.h"
 #import "MetroLockScreen/MPLockScreen.h"
 
-#define MP_VERSION @"0.19.3"
+#define MP_VERSION @"0.21.64"
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
 #pragma mark - Журналирование
@@ -431,8 +432,14 @@ static void MPApplyMetroTitle(UIView *view) {
 @interface SBAppWindow : UIWindow
 @end
 
-// Верхняя зона нативного локскрина (часы): двигается при пробуждении
+// Нативный экран блокировки: из его вьюхи узнаём окно локскрина; пока показан
+// наш Metro-локскрин, сам прячем (иначе просвечивает под нашей вьюхой)
 @interface SBAwayView : UIView
+@end
+
+// Окно нативного локскрина (наш Metro-локскрин живёт в нём же) — в нём надо
+// держать нашу вьюху поверх всего и гасить контент, который iOS поднимает сам
+@interface SBAlertWindow : UIWindow
 @end
 
 @interface SBIconView : UIView
@@ -804,6 +811,31 @@ static void MPConfigureAppearanceIfNeeded(void) {
 	%orig;
 	MPLockScreenAttach(self.window);
 }
+
+// iOS при пробуждении показывает нативный локскрин позже нашей синхронизации —
+// и он оказывался выше подложки, просвечивая под нашей вьюхой при свайпе.
+// Пока наш экран накрывает окно, гасим показ обратно (рекурсии нет: повторный
+// вход в хук идёт с аргументом YES и до гасилки не доходит)
+- (void)setHidden:(BOOL)hidden {
+	%orig;
+	if (!hidden && MPLockScreenCoversNative()) self.hidden = YES;
+}
+%end
+
+// Окно локскрина: всё, что iOS добавляет или переставляет в нём при пробуждении,
+// немедленно отрабатывается Raise — тот возвращает нашу вьюху наверх и гасит
+// нативный контент. Другие SBAlertWindow (алармы, батарея) не задеваем: Raise
+// работает только с окном, в котором реально сидит наша вьюха
+%hook SBAlertWindow
+- (void)didAddSubview:(UIView *)subview {
+	%orig;
+	MPLockScreenRaise();
+}
+
+- (void)layoutSubviews {
+	%orig;
+	MPLockScreenRaise();
+}
 %end
 
 // Убираем «полку» дока
@@ -1141,6 +1173,47 @@ static UITableView *MPDebugFindTable(UIView *root) {
 	return nil;
 }
 
+static UINavigationController *MPDebugFindNavViaBar(UIView *root);
+
+// Сброс всех навигационных стеков в дереве окна (для команды root).
+static NSUInteger MPDebugPopAllNavs(UIView *root) {
+	NSUInteger n = 0;
+	NSMutableArray *stack = [NSMutableArray arrayWithObject:root];
+	while (stack.count > 0) {
+		id v = [stack lastObject];
+		[stack removeLastObject];
+		if ([v isKindOfClass:[UINavigationController class]]) {
+			[(UINavigationController *)v popToRootViewControllerAnimated:NO];
+			n++;
+		}
+		if ([v isKindOfClass:[UIViewController class]]) {
+			UIViewController *vc = (UIViewController *)v;
+			if (vc.presentedViewController != nil) {
+				[vc dismissViewControllerAnimated:NO completion:nil];
+				[stack addObject:vc.presentedViewController];
+			}
+			[stack addObjectsFromArray:vc.childViewControllers];
+			if ([vc isViewLoaded]) [stack addObject:vc.view];
+		}
+		if ([v isKindOfClass:[UIView class]]) {
+			[stack addObjectsFromArray:[(UIView *)v subviews]];
+		}
+	}
+	return n;
+}
+
+// Таблица ТЕКУЩЕЙ страницы. Искать по всему окну нельзя: во время push/pop
+// в иерархии живут таблицы соседних контроллеров, и тап уходил в чужой список
+// (снимок «Статистики» оказывался страницей Bluetooth-устройства).
+static UITableView *MPDebugActiveTable(void) {
+	UIWindow *w = [UIApplication sharedApplication].keyWindow;
+	UINavigationController *nav = MPDebugFindNavViaBar(w);
+	UIViewController *top = nav.topViewController ?: nav;
+	UITableView *t = (top != nil) ? MPDebugFindTable(top.view) : nil;
+	if (t != nil) return t;
+	return MPDebugFindTable(w);
+}
+
 // Навигационный контроллер в дереве «Настроек»: корнем может быть не UINavigationController
 static UINavigationController *MPDebugFindNav(UIViewController *root) {
 	if (root == nil) return nil;
@@ -1156,7 +1229,149 @@ static UINavigationController *MPDebugFindNav(UIViewController *root) {
 	return nil;
 }
 
+// У «Настроек» iOS 6 у окна нет rootViewController — достаём навигацию из делегата бара
+static UINavigationController *MPDebugFindNavViaBar(UIView *root) {
+	if (root == nil) return nil;
+	NSMutableArray *stack = [NSMutableArray arrayWithObject:root];
+	while (stack.count > 0) {
+		UIView *v = [stack lastObject];
+		[stack removeLastObject];
+		if ([v isKindOfClass:[UINavigationBar class]]) {
+			id d = [(UINavigationBar *)v delegate];
+			if ([d isKindOfClass:[UINavigationController class]]) return (UINavigationController *)d;
+		}
+		[stack addObjectsFromArray:v.subviews];
+	}
+	return nil;
+}
+
+// Первый UIControl заданного класса в дереве (свитч/слайдер в ячейке)
+static UIControl *MPDebugFindControlIn(UIView *root, Class cls) {
+	if (root == nil) return nil;
+	if ([root isKindOfClass:cls]) return (UIControl *)root;
+	for (UIView *s in root.subviews) {
+		UIControl *r = MPDebugFindControlIn(s, cls);
+		if (r != nil) return r;
+	}
+	return nil;
+}
+
+// object_isClass — API iOS 8; в libobjc iOS 6.1.3 его нет, и первый же вызов
+// роняет процесс через dyld («Symbol not found: _object_isClass»), @try не спасает.
+// Эквивалент, доступный с iOS 2: у объекта-класса object_getClass даёт метакласс.
+static BOOL MPIsClassObject(id v) {
+	return (v != nil) && class_isMetaClass(object_getClass(v));
+}
+
 static dispatch_source_t MPDebugShotSource = nil;   // vnode-источник канала снимков (держим статикой)
+
+// Инициализатор PS-контроллеров (объявлен в PSViewController.h, класс берём как id)
+@interface UIViewController (MPPSDebugInit)
+- (id)initForContentSize:(CGSize)size;
+@end
+
+// Открыть строку по плоскому индексу specifier'а (iOS 6): detail-класс или
+// principal class бандла → initForContentSize: + specifier → pushController:.
+// PS не использует tableView:didSelectRowAtIndexPath: (проверено), поэтому
+// переход честно повторяет внутренний механизм PS. YES — переход состоялся.
+static BOOL MPPushSpecifierByIndex(id ds, NSInteger flat) {
+	if (ds == nil || flat < 0 || ![ds respondsToSelector:@selector(specifierAtIndex:)]) return NO;
+	id (*sendSpec)(id, SEL, long) = (id (*)(id, SEL, long))objc_msgSend;
+	id (*sendProp)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+	SEL propSel = NSSelectorFromString(@"propertyForKey:");
+	id spec = sendSpec(ds, @selector(specifierAtIndex:), flat);
+	if (spec == nil) return NO;
+
+	// 1) Штатная фабрика PS знает про bundle/detail больше, чем ручная сборка;
+	//    без неё страницы-плагины (USAGE, NOTES, WALLPAPER…) открываются пустыми.
+	id made = nil;
+	NSString *usedSel = nil;
+	for (NSString *selName in @[@"controllerForSpecifier:", @"detailControllerForSpecifier:",
+	                              @"makeControllerForSpecifier:"]) {
+		SEL s = NSSelectorFromString(selName);
+		if (![ds respondsToSelector:s]) continue;
+		id (*sendCtl)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+		@try { made = sendCtl(ds, s, spec); } @catch (NSException *e) { made = nil; }
+		if (made != nil) { usedSel = selName; break; }
+	}
+	if (made != nil && [made isKindOfClass:[UIViewController class]]) {
+		MPLog(@"отладка: push %@ через %@", NSStringFromClass([made class]), usedSel);
+		void (*sendPush)(id, SEL, id, BOOL) = (void (*)(id, SEL, id, BOOL))objc_msgSend;
+		sendPush(ds, @selector(pushController:animate:), made, YES);
+		return YES;
+	}
+
+	Class cls = nil;
+	NSString *detailName = nil, *bundleName = nil;
+	if ([spec respondsToSelector:@selector(detailControllerClass)]) {
+		id (*sendCls)(id, SEL) = (id (*)(id, SEL))objc_msgSend;
+		id c = sendCls(spec, @selector(detailControllerClass));
+		if (MPIsClassObject(c)) cls = (Class)c;
+	}
+	if (cls == nil && [spec respondsToSelector:propSel]) {
+		id d = sendProp(spec, propSel, @"detail");
+		if ([d isKindOfClass:[NSString class]]) detailName = d;
+		else if (MPIsClassObject(d)) cls = (Class)d;
+		id b = sendProp(spec, propSel, @"bundle");
+		if ([b isKindOfClass:[NSString class]]) bundleName = b;
+	}
+	NSBundle *loaded = nil;
+	if (bundleName.length > 0) {
+		NSArray *candidates = @[
+			[NSString stringWithFormat:@"/System/Library/PreferenceBundles/%@.bundle", bundleName],
+			[NSString stringWithFormat:@"/Library/PreferenceBundles/%@.bundle", bundleName],
+			[NSString stringWithFormat:@"/Applications/Preferences.app/%@.bundle", bundleName],
+		];
+		for (NSString *p in candidates) {
+			NSBundle *bndl = [NSBundle bundleWithPath:p];
+			if (bndl != nil && [bndl load]) { loaded = bndl; break; }
+		}
+	}
+	if (cls == nil && detailName.length > 0) {
+		cls = NSClassFromString(detailName);
+		if (cls == Nil && loaded != nil) cls = NSClassFromString(detailName);
+	}
+	if (cls == nil && loaded != nil) {
+		cls = [loaded principalClass];      // строка без detail: страница — principal
+	}
+	if (cls == Nil) return NO;
+
+	UIViewController *vc = [[cls alloc] initForContentSize:CGSizeMake(320.0f, 480.0f)];
+	if ([vc respondsToSelector:@selector(setSpecifier:)]) {
+		id (*s2)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+		s2(vc, @selector(setSpecifier:), spec);
+	}
+	if (loaded != nil && [vc respondsToSelector:@selector(setBundle:)]) {
+		id (*s3)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+		s3(vc, @selector(setBundle:), loaded);
+	}
+	// Часть контроллеров (Заметки, Напоминания, Twitter…) строит содержимое
+	// только когда знает родителя: без parent/root они открываются пустой
+	// полосатой страницей.
+	if ([vc respondsToSelector:@selector(setParentController:)]) {
+		id (*s4)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+		s4(vc, @selector(setParentController:), ds);
+	}
+	if ([vc respondsToSelector:@selector(setRootController:)]) {
+		id root = nil;
+		if ([ds respondsToSelector:@selector(rootController)]) {
+			id (*getRoot)(id, SEL) = (id (*)(id, SEL))objc_msgSend;
+			root = getRoot(ds, @selector(rootController));
+		}
+		if (root == nil && [ds respondsToSelector:@selector(navigationController)]) {
+			id (*getNav)(id, SEL) = (id (*)(id, SEL))objc_msgSend;
+			root = getNav(ds, @selector(navigationController));
+		}
+		if (root != nil) {
+			id (*s5)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+			s5(vc, @selector(setRootController:), root);
+		}
+	}
+	void (*sendPush)(id, SEL, id, BOOL) = (void (*)(id, SEL, id, BOOL))objc_msgSend;
+	MPLog(@"отладка: push %@ (ручная сборка)", NSStringFromClass([vc class]));
+	sendPush(ds, @selector(pushController:animate:), vc, YES);
+	return YES;
+}
 
 // Команда из файла запроса: "shot" (только снимок), "metro", "ios", "page0"/"page1".
 // После действия снимок делается сам — одна команда = один кадр.
@@ -1183,12 +1398,369 @@ static void MPDebugRunCommand(NSString *cmd) {
 	if (cmd.length > 7 && [cmd compare:@"scroll " options:NSCaseInsensitiveSearch
 	                              range:NSMakeRange(0, 7)] == NSOrderedSame) {
 		CGFloat f = [[cmd substringFromIndex:7] floatValue];
-		UIWindow *w = [UIApplication sharedApplication].keyWindow;
-		UITableView *t = MPDebugFindTable(w);
+		UITableView *t = MPDebugActiveTable();
 		if (t != nil) {
 			CGFloat maxY = MAX(0.0f, t.contentSize.height - t.bounds.size.height);
 			[t setContentOffset:CGPointMake(0.0f, maxY * f) animated:NO];
 			MPLog(@"отладка: прокрутка %.2f (из %.0f)", f, maxY);
+		}
+		return;
+	}
+	// tabpreview — отрисовать сегментные вкладки в PNG (инструмент разработки)
+	if ([cmd caseInsensitiveCompare:@"tabpreview"] == NSOrderedSame) {
+		extern void MPPreviewSegmentTabs(void);
+		MPPreviewSegmentTabs();
+		return;
+	}
+	// select <секция>:<строка> — всегда через didSelect делегата, даже на
+	// PS-таблицах: строки без detail (конфигурации VPN) иначе не открыть
+	if (cmd.length > 7 && [cmd compare:@"select " options:NSCaseInsensitiveSearch
+	                           range:NSMakeRange(0, 7)] == NSOrderedSame) {
+		NSArray *parts = [[cmd substringFromIndex:7] componentsSeparatedByString:@":"];
+		UITableView *t = MPDebugActiveTable();
+		if (t != nil && parts.count == 2) {
+			NSInteger sec = [(NSString *)parts[0] intValue];
+			NSInteger row = [(NSString *)parts[1] intValue];
+			id del = t.delegate;
+			SEL sel = @selector(tableView:didSelectRowAtIndexPath:);
+			if ([del respondsToSelector:sel] && row >= 0 && row < [t numberOfRowsInSection:sec]) {
+				NSIndexPath *ip = [NSIndexPath indexPathForRow:row inSection:sec];
+				[t selectRowAtIndexPath:ip animated:NO scrollPosition:UITableViewScrollPositionNone];
+				void (*send)(id, SEL, id, id) = (void (*)(id, SEL, id, id))objc_msgSend;
+				send(del, sel, t, ip);
+				MPLog(@"отладка: select %ld:%ld → didSelect", (long)sec, (long)row);
+			}
+		}
+		return;
+	}
+	// tap row <секция>:<строка> — открыть строку текущей таблицы «Настроек»
+	// (indexPath → плоский индекс specifier'а → pushController:)
+	if (cmd.length > 8 &&
+	    [cmd compare:@"tap row " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 8)] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;      // в SpringBoard тапов нет
+		NSArray *parts = [[cmd substringFromIndex:8] componentsSeparatedByString:@":"];
+		UITableView *t = MPDebugActiveTable();
+		id ds = t.dataSource;
+		Class psVCClass = objc_getClass("PSViewController");
+		BOOL isPS = (t != nil && ds != nil && psVCClass != Nil && [ds isKindOfClass:psVCClass]);
+		if (t != nil && parts.count == 2 && !isPS) {
+			// Обычная таблица («Профили», «Spotlight»): честный didSelect у делегата.
+			NSInteger sec = [(NSString *)parts[0] intValue];
+			NSInteger row = [(NSString *)parts[1] intValue];
+			id del = t.delegate;
+			SEL sel = @selector(tableView:didSelectRowAtIndexPath:);
+			if ([del respondsToSelector:sel] && row >= 0 && row < [t numberOfRowsInSection:sec]) {
+				NSIndexPath *ip = [NSIndexPath indexPathForRow:row inSection:sec];
+				[t selectRowAtIndexPath:ip animated:NO scrollPosition:UITableViewScrollPositionNone];
+				void (*send)(id, SEL, id, id) = (void (*)(id, SEL, id, id))objc_msgSend;
+				send(del, sel, t, ip);
+				MPLog(@"отладка: tap %ld:%ld → didSelect", (long)sec, (long)row);
+			}
+			return;
+		}
+		if (isPS) {
+			NSInteger sec = [(NSString *)parts[0] intValue];
+			NSInteger row = [(NSString *)parts[1] intValue];
+			if (row >= 0 && row < [t numberOfRowsInSection:sec]) {
+				NSIndexPath *ip = [NSIndexPath indexPathForRow:row inSection:sec];
+				[t selectRowAtIndexPath:ip animated:NO scrollPosition:UITableViewScrollPositionNone];
+				NSInteger flat = -1;
+				if ([ds respondsToSelector:@selector(indexForIndexPath:)]) {
+					NSInteger (*sendIdx)(id, SEL, id) = (NSInteger (*)(id, SEL, id))objc_msgSend;
+					flat = sendIdx(ds, @selector(indexForIndexPath:), ip);
+				}
+				BOOL ok = MPPushSpecifierByIndex(ds, flat);
+				if (ok) {
+					MPLog(@"отладка: tap %ld:%ld → push", (long)sec, (long)row);
+				} else {
+					MPLog(@"отладка: tap %ld:%ld — нет detail (кнопка/тумблер/действие)", (long)sec, (long)row);
+				}
+			} else {
+				MPLog(@"отладка: tap %ld:%ld — строки нет (секций %lu)", (long)sec, (long)row,
+				      (unsigned long)t.numberOfSections);
+			}
+		} else {
+			MPLog(@"отладка: tap пропущен (таблица=%@ ds=%@ parts=%lu)",
+			      t != nil ? @"есть" : @"нет", ds != nil ? NSStringFromClass([ds class]) : @"нет",
+			      (unsigned long)parts.count);
+		}
+		return;
+	}
+	// search [on|off] — включить/выключить режим поиска у текущего контроллера
+	if (cmd.length >= 6 &&
+	    [cmd compare:@"search" options:NSCaseInsensitiveSearch range:NSMakeRange(0, 6)] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		BOOL on = (cmd.length < 8 || [cmd rangeOfString:@"off"].location == NSNotFound);
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		UINavigationController *nav = MPDebugFindNavViaBar(w);
+		UIViewController *vc = nav.topViewController;
+		SEL sel = NSSelectorFromString(@"setSearching:");
+		if (vc != nil && [vc respondsToSelector:sel]) {
+			void (*send)(id, SEL, BOOL) = (void (*)(id, SEL, BOOL))objc_msgSend;
+			send(vc, sel, on);
+			MPLog(@"отладка: search %d → %@", (int)on, NSStringFromClass([vc class]));
+		} else {
+			MPLog(@"отладка: search — метода нет (vc=%@)", vc ? NSStringFromClass([vc class]) : @"nil");
+		}
+		return;
+	}
+	// sshot — снимок ЭКРАНА целиком (все окна, как Power+Home)
+	if ([cmd caseInsensitiveCompare:@"sshot"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		extern CGImageRef UICreateScreenImage(void);
+		CGImageRef cg = NULL;
+		// символ приватный и не в стабах SDK — берём через dlsym
+		typedef CGImageRef (*MPScreenFn)(void);
+		MPScreenFn fn = (MPScreenFn)dlsym(RTLD_DEFAULT, "UICreateScreenImage");
+		if (fn != NULL) cg = fn();
+		if (cg == NULL) { MPLog(@"отладка: sshot — пусто"); return; }
+		UIImage *img = [UIImage imageWithCGImage:cg];
+		CGImageRelease(cg);
+		NSString *path = [MP_SHOT_DIR stringByAppendingPathComponent:@"screen.png"];
+		BOOL ok = [UIImagePNGRepresentation(img) writeToFile:path atomically:YES];
+		MPLog(@"отладка: sshot %@ → %@", NSStringFromCGSize(img.size), ok ? @"ок" : @"НЕ записан");
+		return;
+	}
+	// wins — список окон с уровнями (диагностика перекрытий)
+	if ([cmd caseInsensitiveCompare:@"wins"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		for (UIWindow *w in [UIApplication sharedApplication].windows) {
+			MPLog(@"[wins] %@ level=%.0f hidden=%d frame=%@", NSStringFromClass([w class]),
+			      w.windowLevel, (int)w.hidden, NSStringFromCGRect(w.frame));
+		}
+		return;
+	}
+	// hit <x> <y> — что получит тап в этой точке (проверка перекрытий)
+	if (cmd.length > 4 &&
+	    [cmd compare:@"hit " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 4)] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		NSArray *parts = [[cmd substringFromIndex:4] componentsSeparatedByString:@" "];
+		CGFloat x = parts.count > 0 ? [[parts objectAtIndex:0] floatValue] : 0.0f;
+		CGFloat y = parts.count > 1 ? [[parts objectAtIndex:1] floatValue] : 0.0f;
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		UIView *hit = [w hitTest:CGPointMake(x, y) withEvent:nil];
+		NSMutableString *chain = [NSMutableString string];
+		NSArray *allWindows = [UIApplication sharedApplication].windows;
+		for (UIWindow *win in [allWindows reverseObjectEnumerator]) {
+			UIView *h = [win hitTest:CGPointMake(x, y) withEvent:nil];
+			if (h != nil && h != (UIView *)win) {
+				hit = h;
+				[chain appendFormat:@"[level %.0f] ", win.windowLevel];
+				break;
+			}
+		}
+		for (UIView *v = hit; v != nil && chain.length < 180; v = v.superview) {
+			[chain appendFormat:@"%@ < ", NSStringFromClass([v class])];
+		}
+		MPLog(@"отладка: hit %.0f,%.0f → %@", x, y, chain);
+		return;
+	}
+	// focus — поставить курсор в первое поле поиска (проверка страниц с клавиатурой)
+	if ([cmd caseInsensitiveCompare:@"focus"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		NSMutableArray *stack = [NSMutableArray arrayWithObject:w];
+		UITextField *field = nil;
+		while (stack.count > 0) {
+			UIView *v = [stack lastObject];
+			[stack removeLastObject];
+			if ([v isKindOfClass:[UITextField class]]) { field = (UITextField *)v; break; }
+			[stack addObjectsFromArray:v.subviews];
+		}
+		if (field != nil) {
+			[field becomeFirstResponder];
+			MPLog(@"отладка: focus → %@", NSStringFromClass([field class]));
+		} else {
+			MPLog(@"отладка: focus — поля нет");
+		}
+		return;
+	}
+	// back — тап по шапке страницы: выход назад на страницах вне PS
+	// (Spotlight, «Профили», сертификат), где нет навбара с кнопкой
+	if ([cmd caseInsensitiveCompare:@"back"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		UITableView *t = MPDebugActiveTable();
+		UIView *h = (t != nil) ? t.tableHeaderView : nil;
+		if (h == nil) {
+			// панели поиска держат шапку в отдельном окне
+			for (UIWindow *win in [UIApplication sharedApplication].windows) {
+				NSMutableArray *stack = [NSMutableArray arrayWithObject:win];
+				while (stack.count > 0 && h == nil) {
+					UIView *v = [stack lastObject];
+					[stack removeLastObject];
+					if ([v isKindOfClass:NSClassFromString(@"MPSettingsHeaderView")]) { h = v; break; }
+					[stack addObjectsFromArray:v.subviews];
+				}
+			}
+		}
+		SEL tapSel = NSSelectorFromString(@"headerTapped");
+		if (h != nil && [h respondsToSelector:tapSel]) {
+			void (*send)(id, SEL) = (void (*)(id, SEL))objc_msgSend;
+			send(h, tapSel);
+			MPLog(@"отладка: back — тап по шапке");
+		} else {
+			MPLog(@"отладка: back — шапки нет");
+		}
+		return;
+	}
+	// root — гарантированный возврат в корень «Настроек» (проверка для краулера)
+	if ([cmd caseInsensitiveCompare:@"root"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		// Навигация «Настроек» живёт ВНЕ дерева вьюх, поэтому pop делаем через
+		// контроллер бара, а обход дерева — как добивку для вложенных стеков.
+		UINavigationController *nav = MPDebugFindNavViaBar(w);
+		if (nav != nil) [nav popToRootViewControllerAnimated:NO];
+		NSUInteger stacks = MPDebugPopAllNavs(w.rootViewController != nil ? (id)w.rootViewController : (id)w);
+		MPLog(@"отладка: root — nav=%@, стеков в дереве: %lu",
+		      nav != nil ? NSStringFromClass([nav class]) : @"nil", (unsigned long)stacks);
+		return;
+	}
+	// back — назад по стеку «Настроек» (или закрыть модальную страницу)
+	if ([cmd caseInsensitiveCompare:@"back"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;      // в SpringBoard навигации нет
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		UINavigationController *nav = MPDebugFindNavViaBar(w);
+		MPLog(@"отладка: back — nav=%@ стек=%lu", nav != nil ? NSStringFromClass([nav class]) : @"nil",
+		      nav != nil ? (unsigned long)nav.viewControllers.count : 0);
+		if (nav != nil && nav.viewControllers.count > 1) {
+			unsigned long before = (unsigned long)nav.viewControllers.count;
+			[nav popViewControllerAnimated:NO];
+			MPLog(@"отладка: back (pop, стек %lu → %lu)", before, (unsigned long)nav.viewControllers.count);
+		} else if (w != nil && w.rootViewController.presentedViewController != nil) {
+			[w.rootViewController dismissViewControllerAnimated:NO completion:nil];
+			MPLog(@"отладка: back (dismiss)");
+		} else {
+			MPLog(@"отладка: back — некуда");
+		}
+		return;
+	}
+	// set switch <секция>:<строка> on|off — переключить тумблер строки (с PS-логикой)
+	if (cmd.length > 11 &&
+	    [cmd compare:@"set switch " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 11)] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;      // в SpringBoard тумблеров нет
+		NSArray *tokens = [[cmd substringFromIndex:11] componentsSeparatedByString:@" "];
+		NSArray *sr = (tokens.count > 0) ? [tokens[0] componentsSeparatedByString:@":"] : [NSArray array];
+		BOOL on = (tokens.count > 1 && [tokens[1] hasSuffix:@"on"]);
+		UITableView *t = MPDebugActiveTable();
+		id ds = t.dataSource;
+		if (t != nil && ds != nil && sr.count == 2) {
+			NSInteger sec = [(NSString *)sr[0] intValue];
+			NSInteger row = [(NSString *)sr[1] intValue];
+			if (row >= 0 && row < [t numberOfRowsInSection:sec]) {
+				NSIndexPath *ip = [NSIndexPath indexPathForRow:row inSection:sec];
+				[t scrollToRowAtIndexPath:ip atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
+				__weak UITableView *weakT = t;
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.35 * NSEC_PER_SEC)),
+				               dispatch_get_main_queue(), ^{
+					UITableView *tt = weakT;
+					if (tt == nil) return;
+					UISwitch *sw = (UISwitch *)MPDebugFindControlIn([tt cellForRowAtIndexPath:ip], [UISwitch class]);
+					if (sw == nil) { MPLog(@"отладка: switch %ld:%ld не найден", (long)sec, (long)row); return; }
+					if (sw.on != on) {
+						[sw setOn:on animated:NO];
+						// PS-логика слушает ValueChanged; WP-оверлей зеркалится нашим хуком
+						[sw sendActionsForControlEvents:UIControlEventValueChanged];
+					}
+					MPLog(@"отладка: switch %ld:%ld → %@", (long)sec, (long)row, on ? @"on" : @"off");
+				});
+			} else {
+				MPLog(@"отладка: switch %ld:%ld — строки нет", (long)sec, (long)row);
+			}
+		}
+		return;
+	}
+	// set slider <0..1> — значение первого видимого слайдера таблицы
+	if (cmd.length > 11 &&
+	    [cmd compare:@"set slider " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 11)] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;      // в SpringBoard слайдеров нет
+		CGFloat f = [[cmd substringFromIndex:11] floatValue];
+		f = MIN(MAX(f, 0.0f), 1.0f);
+		UITableView *t = MPDebugActiveTable();
+		if (t != nil) {
+			UISlider *slider = nil;
+			for (UITableViewCell *c in t.visibleCells) {
+				slider = (UISlider *)MPDebugFindControlIn(c, [UISlider class]);
+				if (slider != nil) break;
+			}
+			if (slider != nil) {
+				slider.value = slider.minimumValue + f * (slider.maximumValue - slider.minimumValue);
+				[slider sendActionsForControlEvents:UIControlEventValueChanged];
+				MPLog(@"отладка: slider → %.2f (диапазон %.0f…%.0f)", slider.value,
+				      slider.minimumValue, slider.maximumValue);
+			} else {
+				MPLog(@"отладка: слайдер на странице не найден");
+			}
+		}
+		return;
+	}
+	// dismiss — закрыть алерт (краулер случайно может открыть «Другая…» и т.п.)
+	if ([cmd caseInsensitiveCompare:@"dismiss"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") != nil) return;
+		for (UIWindow *w in [UIApplication sharedApplication].windows) {
+			UIAlertView *av = (UIAlertView *)MPDebugFindControlIn(w, [UIAlertView class]);
+			if (av != nil && [av isKindOfClass:[UIAlertView class]]) {
+				[av dismissWithClickedButtonIndex:0 animated:NO];
+				MPLog(@"отладка: алерт закрыт");
+			}
+		}
+		return;
+	}
+	// rotate — попытка повернуть интерфейс (Настройки iOS 6 портретные: ожидаемо игнор)
+	if ([cmd caseInsensitiveCompare:@"rotate"] == NSOrderedSame) {
+		[[UIDevice currentDevice] setValue:@(UIInterfaceOrientationLandscapeRight) forKey:@"orientation"];
+		MPLog(@"отладка: запрос на поворот отправлен");
+		return;
+	}
+	// tap idx <плоский индекс> — открыть строку по specifierAtIndex: (iOS 6)
+	// specs2 — дамп всех specifier'ов текущей страницы для краулера
+	if (cmd.length >= 6 &&
+	    ([cmd compare:@"tap idx " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 8)] == NSOrderedSame ||
+	     [cmd caseInsensitiveCompare:@"specs2"] == NSOrderedSame)) {
+		if (objc_getClass("SBIconView") != nil) return;
+		UITableView *t = MPDebugActiveTable();
+		id ds = t.dataSource;
+		if (t == nil || ds == nil || ![ds respondsToSelector:@selector(specifierAtIndex:)]) return;
+		id (*sendSpec)(id, SEL, long) = (id (*)(id, SEL, long))objc_msgSend;
+		id (*sendProp)(id, SEL, id) = (id (*)(id, SEL, id))objc_msgSend;
+		SEL propSel = NSSelectorFromString(@"propertyForKey:");
+
+		if ([cmd caseInsensitiveCompare:@"specs2"] == NSOrderedSame) {
+			// плоский список: idx | cell | label | detail | bundle
+			NSMutableString *out = [NSMutableString string];
+			NSInteger n = 0;
+			while (YES) {
+				if (![ds respondsToSelector:@selector(specifierAtIndex:)]) break;
+				id spec = sendSpec(ds, @selector(specifierAtIndex:), n);
+				if (spec == nil) break;
+				NSString *cell = @"", *label = @"", *detail = @"", *bundle = @"";
+				if ([spec respondsToSelector:propSel]) {
+					id v = sendProp(spec, propSel, @"cell");
+					if ([v isKindOfClass:[NSString class]]) cell = v;
+					v = sendProp(spec, propSel, @"label");
+					if ([v isKindOfClass:[NSString class]]) label = v;
+					v = sendProp(spec, propSel, @"detail");
+					if ([v isKindOfClass:[NSString class]]) detail = v;
+					else if (MPIsClassObject(v)) detail = NSStringFromClass((Class)v);
+					v = sendProp(spec, propSel, @"bundle");
+					if ([v isKindOfClass:[NSString class]]) bundle = v;
+				}
+				[out appendFormat:@"%ld|%@|%@|%@|%@\n", (long)n, cell, label, detail, bundle];
+				n++;
+				if (n > 300) break;
+			}
+			NSString *path = [MP_SHOT_DIR stringByAppendingPathComponent:@"dump-specs2.txt"];
+			[out writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+			MPLog(@"отладка: specs2 — %ld specifier'ов", (long)n);
+			return;
+		}
+
+		NSInteger flat = [[cmd substringFromIndex:8] intValue];
+		BOOL ok = MPPushSpecifierByIndex(ds, flat);
+		if (!ok) {
+			MPLog(@"отладка: tap idx %ld — нет detail (кнопка/тумблер/действие)", (long)flat);
+		} else {
+			MPLog(@"отладка: tap idx %ld → push", (long)flat);
 		}
 		return;
 	}
@@ -1366,6 +1938,17 @@ static void MPDebugShotTake(void) {
 
 			UIGraphicsBeginImageContextWithOptions(w.bounds.size, YES, 0.0);
 			[w.layer renderInContext:UIGraphicsGetCurrentContext()];
+			if (!isSpringBoard) {
+				// верхние окна (шапка панели поиска живёт в своём окне) — дорисовать
+				for (UIWindow *extra in [UIApplication sharedApplication].windows) {
+					if (extra == w || extra.hidden || extra.windowLevel <= w.windowLevel) continue;
+					CGContextRef ctx = UIGraphicsGetCurrentContext();
+					CGContextSaveGState(ctx);
+					CGContextTranslateCTM(ctx, extra.frame.origin.x, extra.frame.origin.y);
+					[extra.layer renderInContext:ctx];
+					CGContextRestoreGState(ctx);
+				}
+			}
 			UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
 			UIGraphicsEndImageContext();
 			if (img == nil) { MPLog(@"отладка: снимок — рендер пуст"); return; }

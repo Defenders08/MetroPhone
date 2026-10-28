@@ -1,7 +1,8 @@
 #import "MPSettingsHeaderView.h"
 
-// Заголовок страницы: как было до правок — строчными («настройки», «основные»),
-// но бренды сохраняют свой регистр (вопрос 124B: «Wi-Fi», «iCloud», «App Store»).
+// Заголовок страницы — с заглавной буквы («Настройки», «Основные», «Wi-Fi»):
+// бренды сохраняют свой регистр (вопрос 124B: «Wi-Fi», «iCloud», «App Store»),
+// остальные названия — только первая буква заглавная, не каждое слово.
 static NSString *MPDisplayTitle(NSString *raw) {
     if (raw.length == 0) return raw;
     static NSDictionary *brands = nil;
@@ -15,19 +16,22 @@ static NSString *MPDisplayTitle(NSString *raw) {
             @"bluetooth": @"Bluetooth", @"facetime": @"FaceTime",
             @"twitter": @"Twitter", @"facebook": @"Facebook",
             @"safari": @"Safari", @"nike + ipod": @"Nike + iPod",
-            @"2gis": @"2GIS",
+            @"2gis": @"2GIS", @"metrophone": @"MetroPhone",
         };
     });
     NSString *low = [raw lowercaseStringWithLocale:[NSLocale currentLocale]];
     NSString *brand = [brands objectForKey:low];
-    return brand != nil ? brand : low;
+    if (brand != nil) return brand;
+    if (low.length == 0) return low;
+    // Только первое слово: «Об этом устройстве», а не «Об Этом Устройстве».
+    NSString *head = [[low substringToIndex:1] uppercaseStringWithLocale:[NSLocale currentLocale]];
+    return [head stringByAppendingString:[low substringFromIndex:1]];
 }
 
 
 @implementation MPSettingsHeaderView {
     UILabel *_small;
     UILabel *_big;
-    UILabel *_chevron;
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -43,23 +47,33 @@ static NSString *MPDisplayTitle(NSString *raw) {
         _big.lineBreakMode = NSLineBreakByClipping;
         [self addSubview:_big];
 
-        _chevron = [[UILabel alloc] initWithFrame:CGRectZero];
-        _chevron.text = @"\u2039";                       // ‹
-        _chevron.font = [MPMetroStyle mediumFont:48.0f];  // 4B: крупнее и плотнее
-        _chevron.textColor = [MPMetroStyle accentColor];
-        _chevron.backgroundColor = [UIColor clearColor];
-        _chevron.hidden = YES;
-        [self addSubview:_chevron];
+        // Стрелки «‹» в шапке больше нет (просьба 28.10): только типографика,
+        // а «Назад» остаётся действием тапа по всей шапке (жест + кнопка ниже).
 
-        // вся шапка — кнопка «Назад» (обработчик ставит хост)
+        // вся шапка — кнопка «Назад»: и жест, и прозрачная кнопка.
+        // Жест на tableHeaderView срабатывал не всегда, кнопка надёжнее.
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
             initWithTarget:self action:@selector(headerTapped)];
         [self addGestureRecognizer:tap];
+
+        UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        backButton.frame = self.bounds;
+        backButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        backButton.backgroundColor = [UIColor clearColor];
+        [backButton addTarget:self action:@selector(headerTapped)
+             forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:backButton];
     }
     return self;
 }
 
 - (void)headerTapped {
+    // защита от двойного срабатывания: жест и кнопка могут прийти вместе
+    static NSTimeInterval lastTap = 0;
+    NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    if (now - lastTap < 0.5) return;
+    lastTap = now;
+    MPLog(@"[Settings] шапка: тап (%@)", self.backTapped != nil ? @"обработчик есть" : @"обработчика нет");
     if (self.backTapped != nil) self.backTapped();
 }
 
@@ -101,9 +115,8 @@ static NSString *MPDisplayTitle(NSString *raw) {
 }
 
 - (CGFloat)bigLeftOffset {
-    // Как было до правок: без шеврона (корень) — 16 pt, с шевроном — 40 pt.
-    // По 5B делали «всегда 40», но на корне заголовок уезжал от левого края строк.
-    return _chevron.hidden ? 16.0f : 40.0f;
+    // Без стрелки отступ один на всех страницах — 16 pt, как у строк списка.
+    return 16.0f;
 }
 
 + (CGFloat)heightForWidth:(CGFloat)width {
@@ -115,22 +128,20 @@ static NSString *MPDisplayTitle(NSString *raw) {
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    _chevron.textColor = [MPMetroStyle accentColor];   // акцент может смениться на странице «Цвета»
     CGFloat w = self.bounds.size.width;
 
     CGFloat bigTop = 24.0f;    // как в сборках до правок: заголовок ниже статус-бара на 24 pt
     CGFloat bigH = 66.0f;      // фиксировано: добавка высоты — это воздух под текстом
 
-    if (self.showsBackChevron) {
-        _chevron.hidden = NO;
-        _chevron.frame = CGRectMake(4.0f, bigTop + 2.0f, 34.0f, bigH);
-        _big.frame = CGRectMake([self bigLeftOffset], bigTop, w - [self bigLeftOffset], bigH);
-    } else {
-        _chevron.hidden = YES;
-        // место под шеврон остаётся занятым (5B), иначе заголовок прыгает влево
-        _big.frame = CGRectMake([self bigLeftOffset], bigTop, w - [self bigLeftOffset], bigH);
-    }
+    _big.frame = CGRectMake([self bigLeftOffset], bigTop, w - [self bigLeftOffset], bigH);
     [self shrinkTitleFont];
+}
+
+- (void)setShowsBackChevron:(BOOL)showsBackChevron {
+    // Стрелка убрана из вида, но флаг оставлен: вызывающий код помечает им подстраницу.
+    // Выход по-прежнему работает — тап по всей шапке (жест + прозрачная кнопка).
+    _showsBackChevron = showsBackChevron;
+    [self setNeedsLayout];
 }
 
 @end

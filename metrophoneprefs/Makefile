@@ -15,4 +15,9 @@ MetroPhonePrefs_INSTALL_PATH = /Library/PreferenceBundles
 MetroPhonePrefs_LDFLAGS = -lgcc_s.1
 MetroPhonePrefs_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
 
+# 7.5: ресурсы бандла обязаны быть 644 — иначе «Настройки» (работают под mobile)
+# не читают Root.plist и страница MetroPhone открывается пустой
+before-all::
+	chmod 644 Resources/*
+
 include $(THEOS_MAKE_PATH)/bundle.mk

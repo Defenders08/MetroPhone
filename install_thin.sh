@@ -7,7 +7,12 @@ cd "$(dirname "$0")" || exit 1
 CHUNK=1024
 DEB=/tmp/mp_thin.deb
 B64=/tmp/thin.b64
-TOTAL_DEB=120392
+# размер пакета считаем по факту — константа протухала с каждой версией
+if [ ! -s "$DEB" ]; then
+    echo "нет $DEB — скопируй свежий deb перед запуском"
+    exit 1
+fi
+TOTAL_DEB=$(wc -c < "$DEB" | tr -d ' ')
 
 base64 -i "$DEB" -o "$B64"
 rm -f /tmp/thc_
@@ -31,8 +36,10 @@ while [ $SECONDS -lt $DEADLINE ]; do
     nohup iproxy 2222:22 >/tmp/iproxy.log 2>&1 &
     disown
     sleep 3
-    R=$(ssh_run "echo '$PROBE' | wc -c" | grep -x 1024 | head -1)
-    if [ "$R" = "1024" ]; then
+    # printf вместо echo: echo добавляет перевод строки и wc давал 1025 вместо 1024 —
+    # из-за этого проба никогда не проходила и скрипт ждал «канал» вечно
+    R=$(ssh_run "printf '%s' '$PROBE' | wc -c" | grep -x "${#PROBE}" | head -1)
+    if [ "$R" = "${#PROBE}" ]; then
         LINK_OK=YES
         echo "$(date +%H:%M:%S) канал жив (чанк проходит)"
         break
@@ -50,9 +57,11 @@ ssh_run "rm -f /tmp/mp.b64" >/dev/null 2>&1
 offset=0
 DEADLINE=$((SECONDS + 1500))
 for f in "${CHUNKS[@]}"; do
-    CSIZE=$(wc -c < "$f")
-    TARGET=$((offset + CSIZE))
+    # $(cat ...) съедает хвостовой перевод строки чанка (чанк 77 и далее каждые 77) —
+    # считаем размер по факту в переменной, иначе счётчик на телефоне не сойдётся
     DATA=$(cat "$f")
+    CSIZE=${#DATA}
+    TARGET=$((offset + CSIZE))
     SENT=NO
     while [ $SECONDS -lt $DEADLINE ]; do
         R=$(ssh_run "S=\$(wc -c < /tmp/mp.b64 2>/dev/null || echo 0); if [ \"\$S\" -eq $TARGET ]; then echo LANDED; elif [ \"\$S\" -lt $TARGET ]; then printf '%s' '$DATA' >> /tmp/mp.b64; fi; wc -c < /tmp/mp.b64 2>/dev/null || echo 0" | grep -E '^[0-9]+$' | tail -1)

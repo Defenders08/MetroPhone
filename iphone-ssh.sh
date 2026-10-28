@@ -6,6 +6,9 @@
 #   ./iphone-ssh.sh                        — интерактивная root-сессия
 
 PORT=2222
+# Homebrew-утилиты (iproxy, idevice_id) лежат в /opt/homebrew/bin: без этого PATH
+# скрипт падает с «не удалось поднять iproxy», хотя телефон подключён.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 SSH_OPTS="-p $PORT \
   -o HostkeyAlgorithms=+ssh-rsa \
   -o PubkeyAcceptedAlgorithms=+ssh-rsa \

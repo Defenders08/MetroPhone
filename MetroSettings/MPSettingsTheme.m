@@ -30,6 +30,18 @@ static UIImage *MPSettingsBlackPixel = nil;
     return img;
 }
 
+// Белый квадратный бегунок: кэш на процесс — по нему же узнаём бегунок
+// при скрытии декоративных иконок слайдера (KVC thumbImageView ненадёжен)
++ (UIImage *)mp_sliderThumbImage {
+    static UIImage *thumb = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        thumb = [self mp_flatImageWithSize:CGSizeMake(14.0f, 14.0f)
+                                     color:[UIColor whiteColor] radius:0.0f];
+    });
+    return thumb;
+}
+
 + (void)styleSlider:(UISlider *)slider {
     if (slider == nil) return;
     @try {
@@ -37,22 +49,16 @@ static UIImage *MPSettingsBlackPixel = nil;
         // заполненная часть — акцентом, пустая — тёмная; бегунок — белый квадрат.
         UIImage *minTrack = [self mp_sliderTrackFilled:YES];
         UIImage *maxTrack = [self mp_sliderTrackFilled:NO];
-        UIImage *thumb    = [[self class] mp_flatImageWithSize:CGSizeMake(14.0f, 14.0f)
-                                                         color:[UIColor whiteColor] radius:0.0f];
+        UIImage *thumb    = [self mp_sliderThumbImage];
         [slider setMinimumTrackImage:minTrack forState:UIControlStateNormal];
         [slider setMaximumTrackImage:maxTrack forState:UIControlStateNormal];
         [slider setThumbImage:thumb forState:UIControlStateNormal];
 
-        // Декоративные иконки по краям (солнце у ползунка яркости): прячем только их —
-        // треки ниже 8 pt высотой и бегунок не трогаем. Без этого ползунок
-        // «Яркости» носил родные тёмные значки (решение 27.10: иконок нет).
-        UIImageView *thumbView = [slider valueForKey:@"thumbImageView"];
-        for (UIView *sub in slider.subviews) {
-            if ([sub isKindOfClass:[UIImageView class]] && sub != thumbView &&
-                sub.bounds.size.height > 8.0f) {
-                sub.hidden = YES;
-            }
-        }
+        // Декоративные иконки по краям (солнце у яркости, динамики у громкости) —
+        // это публичные minimumValueImage/maximumValueImage (API с iOS 2).
+        // Обнуляем их: слайдер сам убирает вьюхи, бегунок и треки не трогаются.
+        [slider setMinimumValueImage:nil];
+        [slider setMaximumValueImage:nil];
     } @catch (NSException *e) {
         NSLog(@"[MetroPhone][Settings] слайдер: %@ (%@)", e.name, e.reason);
     }
@@ -126,8 +132,7 @@ static UIImage *MPSettingsBlackPixel = nil;
 + (void)applySliderAppearance {
     UIImage *minTrack = [self mp_sliderTrackFilled:YES];
     UIImage *maxTrack = [self mp_sliderTrackFilled:NO];
-    UIImage *thumb = [[self class] mp_flatImageWithSize:CGSizeMake(14.0f, 14.0f)
-                                                  color:[UIColor whiteColor] radius:0.0f];
+    UIImage *thumb = [self mp_sliderThumbImage];
     [[UISlider appearance] setMinimumTrackImage:minTrack forState:UIControlStateNormal];
     [[UISlider appearance] setMaximumTrackImage:maxTrack forState:UIControlStateNormal];
     [[UISlider appearance] setThumbImage:thumb forState:UIControlStateNormal];

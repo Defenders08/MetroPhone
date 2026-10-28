@@ -43,4 +43,7 @@ extern BOOL MPSettingsPageIsSounds;    // страница «Звуки»: ка�
 // Плоское поле ввода: белый текст, серый placeholder, тёмная клавиатура
 + (void)styleTextField:(UITextField *)field;
 
+// WP 8.1 radio 16×16: кольцо 1.5 pt; выбранное — с точкой
++ (UIImage *)radioImageSelected:(BOOL)selected;
+
 @end
