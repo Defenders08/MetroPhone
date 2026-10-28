@@ -12,6 +12,18 @@
 
 Работает на iPhone 3GS/4/4S/5, iPod touch 3–5, iPad 2/3/4 (архитектуры armv7 + armv7s, минимальная версия системы 6.0).
 
+## Структура проекта
+
+| Папка | Что внутри |
+|---|---|
+| `tweak/` | исходник твика — theos-проект: `Makefile`, `control`, `Tweak.xm`, классы лаунчера/локскрина/настроек, `metrophoneprefs/` (бандл настроек), `layout/` (файлы, попадающие в deb) |
+| `builds/` | готовые deb-пакеты всех версий |
+| `ai/` | промпты, планы, контекст и референсы для ИИ-ассистентов |
+| `tools/` | рабочие скрипты: связь с iPhone, установка, скрины, крэшлоги |
+| `archive/` | архив: коллекция иконок WP8.1 (`wp81_build/`), скриншоты, крэшлоги |
+
+`Makefile` в корне — переходник: привычные `make` и `make package` работают как раньше, реальная сборка идёт в `tweak/`, готовый deb падает в `builds/`.
+
 ## Что на что влияет
 
 | Часть темы | Что меняет | Где применяется |
@@ -72,28 +84,30 @@ cd ~/Documents/Проекты/MetroPhone
 make package FINALPACKAGE=1
 ```
 
-Готовый пакет появится в `packages/ru.ash.metrophone_0.1.0_iphoneos-arm.deb`.
+Готовый пакет появится в `builds/ru.ash.metrophone_<версия>_iphoneos-arm.deb`.
 
-(Без `FINALPACKAGE=1` соберётся debug-вариант с суффиксом `-1+debug`.)
+`FINALPACKAGE=1` уже прописан в `tweak/Makefile` — обычная сборка сразу релизная; `make package FINALPACKAGE=0` соберёт debug-вариант с суффиксом `-1+debug`.
 
 ## Установка на девайс
 
-Целевое устройство проекта — iPhone 4 (iOS 6.1.3). По Wi-Fi его SSH недоступен, связь работает только по USB (iproxy) со legacy-алгоритмами — поэтому `make install` у Theos не подойдёт (он зовёт обычный ssh), а используется обёртка [iphone-ssh.sh](iphone-ssh.sh).
+Целевое устройство проекта — iPhone 4 (iOS 6.1.3). По Wi-Fi его SSH недоступен, связь работает только по USB (iproxy) со legacy-алгоритмами — поэтому `make install` у Theos не подойдёт (он зовёт обычный ssh), а используется обёртка [tools/iphone-ssh.sh](tools/iphone-ssh.sh).
 
 Телефон подключён кабелем? Тогда:
 
 ```bash
 # 1. Проверить связь
-./iphone-ssh.sh "uname -a"
+tools/iphone-ssh.sh "uname -a"
 
 # 2. Передать пакет на телефон
-./iphone-ssh.sh --push packages/ru.ash.metrophone_0.1.0_iphoneos-arm.deb /tmp/metrophone.deb
+tools/iphone-ssh.sh --push builds/ru.ash.metrophone_<версия>_iphoneos-arm.deb /tmp/metrophone.deb
 
 # 3. Установить и перезапустить SpringBoard
-./iphone-ssh.sh "dpkg -i /tmp/metrophone.deb; killall SpringBoard"
+tools/iphone-ssh.sh "dpkg -i /tmp/metrophone.deb; killall SpringBoard"
 ```
 
-Через несколько секунд после перезапуска SpringBoard интерфейс станет Metro. Откат: `./iphone-ssh.sh "dpkg -r ru.ash.metrophone; killall SpringBoard"`.
+Через несколько секунд после перезапуска SpringBoard интерфейс станет Metro. Откат: `tools/iphone-ssh.sh "dpkg -r ru.ash.metrophone; killall SpringBoard"`.
+
+Обычно вручную ничего не делается: `tools/install_thin.sh` сам берёт новейший деб из `builds/`, передаёт его чанками base64 через нестабильный USB и ставит; `tools/install_or_wait.sh` — то же, но с ожиданием появления телефона.
 
 Ручная установка с любого другого компьютера: скопировать .deb на девайс и выполнить `dpkg -i файл.deb; killall SpringBoard`.
 
@@ -119,17 +133,22 @@ Metro — единственный рабочий стол: отдельного
 ## Структура проекта
 
 ```
-Makefile               — цели: твик (armv7/armv7s, SDK 10.3, min iOS 6.0) + субпроект настроек
-control                — метаданные deb-пакета (ru.ash.metrophone)
-MetroPhone.plist       — фильтр MobileSubstrate: инъекция в процессы с UIKit и в SpringBoard
-Tweak.xm               — ядро: настройки, журнал, хуки темы (UIKit + SpringBoard), кнопка Home
-MetroPhoneCommon.h     — ключи настроек, общие для твика и бандла настроек
-MetroLauncher/         — Metro-лаунчер: плитки, редактор, список приложений, свитчер, стиль
-MetroSettings/         — переоформление приложения «Настройки» в стиле WP 8.1
-metrophoneprefs/       — бандл настроек (PreferenceLoader, раздел в Settings.app)
-layout/                — запись PreferenceLoader для панели твика
-packages/              — готовые .deb
-wp81_build/            — разовая выгрузка иконок WP 8.1 (к сборке твика не относится)
+Makefile               — переходник в корне: пробрасывает make в tweak/
+tweak/                 — исходник твика (theos-проект):
+  Makefile               — цели: твик (armv7/armv7s, SDK 10.3, min iOS 6.0) + субпроект настроек
+  control                — метаданные deb-пакета (ru.ash.metrophone)
+  MetroPhone.plist       — фильтр MobileSubstrate: инъекция в процессы с UIKit и в SpringBoard
+  Tweak.xm               — ядро: настройки, журнал, хуки темы (UIKit + SpringBoard), кнопка Home
+  MetroPhoneCommon.h     — ключи настроек, общие для твика и бандла настроек
+  MetroLauncher/         — Metro-лаунчер: плитки, редактор, список приложений, свитчер, стиль
+  MetroLockScreen/       — локскрин в стиле WP 8.1
+  MetroSettings/         — переоформление приложения «Настройки» в стиле WP 8.1
+  metrophoneprefs/       — бандл настроек (PreferenceLoader, раздел в Settings.app)
+  layout/                — запись PreferenceLoader для панели твика, глифы и иконки для телефона
+builds/                — готовые .deb
+ai/                    — промпты, планы, контекст и референсы для ИИ
+tools/                 — скрипты: iphone-ssh, установка, скрины, крэшлоги (+ tools/scripts/ — краулеры)
+archive/               — архив: wp81_build (иконки WP 8.1), скриншоты, крэшлоги
 ```
 
 Хуки (классы сверены с дампом заголовков SpringBoard iOS 6.1):

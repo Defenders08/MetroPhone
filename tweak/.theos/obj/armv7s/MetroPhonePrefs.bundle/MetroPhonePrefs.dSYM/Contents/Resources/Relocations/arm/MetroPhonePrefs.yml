@@ -1,0 +1,57 @@
+---
+triple:          'armv7s-apple-darwin'
+binary-path:     "/Users/ash/Documents/Проекты/MetroPhone/tweak/.theos/obj/armv7s/MetroPhonePrefs.bundle/MetroPhonePrefs"
+relocations:
+  - { offset: 0x1E, size: 0x4, addend: 0x0, symName: '-[MPRootListController viewWillAppear:]', symObjAddr: 0x0, symBinAddr: 0x19A0, symSize: 0x88 }
+  - { offset: 0x1D7B, size: 0x4, addend: 0x0, symName: '-[MPRootListController viewWillAppear:]', symObjAddr: 0x0, symBinAddr: 0x19A0, symSize: 0x88 }
+  - { offset: 0x1D7F, size: 0x4, addend: 0x0, symName: '-[MPRootListController specifiers]', symObjAddr: 0x88, symBinAddr: 0x1A28, symSize: 0xB4 }
+  - { offset: 0x1DB9, size: 0x4, addend: 0x0, symName: '-[MPRootListController specifiers]', symObjAddr: 0x88, symBinAddr: 0x1A28, symSize: 0xB4 }
+  - { offset: 0x1DBD, size: 0x4, addend: 0x0, symName: '-[MPRootListController respring]', symObjAddr: 0x13C, symBinAddr: 0x1ADC, symSize: 0x34 }
+  - { offset: 0x1DEC, size: 0x4, addend: 0x0, symName: '-[MPRootListController respring]', symObjAddr: 0x13C, symBinAddr: 0x1ADC, symSize: 0x34 }
+  - { offset: 0x1DF0, size: 0x4, addend: 0x0, symName: '___32-[MPRootListController respring]_block_invoke', symObjAddr: 0x170, symBinAddr: 0x1B10, symSize: 0xE }
+  - { offset: 0x1E17, size: 0x4, addend: 0x0, symName: '___32-[MPRootListController respring]_block_invoke', symObjAddr: 0x170, symBinAddr: 0x1B10, symSize: 0xE }
+  - { offset: 0x1EFE, size: 0x4, addend: 0x0, symName: '-[MPColorsListController specifiers]', symObjAddr: 0x0, symBinAddr: 0x1B20, symSize: 0x58 }
+  - { offset: 0x3C5B, size: 0x4, addend: 0x0, symName: '-[MPColorsListController specifiers]', symObjAddr: 0x0, symBinAddr: 0x1B20, symSize: 0x58 }
+  - { offset: 0x3C8E, size: 0x4, addend: 0x0, symName: '-[MPColorsListController viewDidAppear:]', symObjAddr: 0x58, symBinAddr: 0x1B78, symSize: 0x158 }
+  - { offset: 0x3D56, size: 0x4, addend: 0x0, symName: '+[MPColorsGridView cellSizeForWidth:]', symObjAddr: 0x0, symBinAddr: 0x1CD0, symSize: 0x4C }
+  - { offset: 0x3DD3, size: 0x4, addend: 0x0, symName: _MPGridPalette, symObjAddr: 0x1C90, symBinAddr: 0x40A4, symSize: 0x0 }
+  - { offset: 0x57E5, size: 0x4, addend: 0x0, symName: '+[MPColorsGridView cellSizeForWidth:]', symObjAddr: 0x0, symBinAddr: 0x1CD0, symSize: 0x4C }
+  - { offset: 0x5823, size: 0x4, addend: 0x0, symName: '+[MPColorsGridView heightForWidth:]', symObjAddr: 0x4C, symBinAddr: 0x1D1C, symSize: 0x70 }
+  - { offset: 0x5827, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView initWithFrame:]', symObjAddr: 0xBC, symBinAddr: 0x1D8C, symSize: 0x544 }
+  - { offset: 0x587B, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView initWithFrame:]', symObjAddr: 0xBC, symBinAddr: 0x1D8C, symSize: 0x544 }
+  - { offset: 0x587F, size: 0x4, addend: 0x0, symName: _MPGridCurrentHex, symObjAddr: 0x600, symBinAddr: 0x22D0, symSize: 0x118 }
+  - { offset: 0x59B1, size: 0x4, addend: 0x0, symName: _MPGridCurrentHex, symObjAddr: 0x600, symBinAddr: 0x22D0, symSize: 0x118 }
+  - { offset: 0x59B5, size: 0x4, addend: 0x0, symName: _MPGridColorFromHex, symObjAddr: 0x718, symBinAddr: 0x23E8, symSize: 0x154 }
+  - { offset: 0x5A1E, size: 0x4, addend: 0x0, symName: _MPGridColorFromHex, symObjAddr: 0x718, symBinAddr: 0x23E8, symSize: 0x154 }
+  - { offset: 0x5A22, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView makeSlider]', symObjAddr: 0x86C, symBinAddr: 0x253C, symSize: 0xF0 }
+  - { offset: 0x5A70, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView makeSlider]', symObjAddr: 0x86C, symBinAddr: 0x253C, symSize: 0xF0 }
+  - { offset: 0x5AB2, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView applyHexToSliders:]', symObjAddr: 0x95C, symBinAddr: 0x262C, symSize: 0xF4 }
+  - { offset: 0x5AB6, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView refreshSelection]', symObjAddr: 0xA50, symBinAddr: 0x2720, symSize: 0x284 }
+  - { offset: 0x5B37, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView refreshSelection]', symObjAddr: 0xA50, symBinAddr: 0x2720, symSize: 0x284 }
+  - { offset: 0x5B3B, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView squareTapped:]', symObjAddr: 0xCD4, symBinAddr: 0x29A4, symSize: 0xA2 }
+  - { offset: 0x5BA3, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView squareTapped:]', symObjAddr: 0xCD4, symBinAddr: 0x29A4, symSize: 0xA2 }
+  - { offset: 0x5BA7, size: 0x4, addend: 0x0, symName: _MPGridStoreHex, symObjAddr: 0xD76, symBinAddr: 0x2A46, symSize: 0x46 }
+  - { offset: 0x5BE1, size: 0x4, addend: 0x0, symName: _MPGridStoreHex, symObjAddr: 0xD76, symBinAddr: 0x2A46, symSize: 0x46 }
+  - { offset: 0x5BE5, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView sliderChanged:]', symObjAddr: 0xDBC, symBinAddr: 0x2A8C, symSize: 0x21C }
+  - { offset: 0x5C48, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView sliderChanged:]', symObjAddr: 0xDBC, symBinAddr: 0x2A8C, symSize: 0x21C }
+  - { offset: 0x5C4C, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView storeHexThrottled]', symObjAddr: 0xFD8, symBinAddr: 0x2CA8, symSize: 0x98 }
+  - { offset: 0x5CC9, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView storeHexThrottled]', symObjAddr: 0xFD8, symBinAddr: 0x2CA8, symSize: 0x98 }
+  - { offset: 0x5CCD, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView storeHexFinal]', symObjAddr: 0x1070, symBinAddr: 0x2D40, symSize: 0x72 }
+  - { offset: 0x5D07, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView storeHexFinal]', symObjAddr: 0x1070, symBinAddr: 0x2D40, symSize: 0x72 }
+  - { offset: 0x5D0B, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView sliderFinished:]', symObjAddr: 0x10E2, symBinAddr: 0x2DB2, symSize: 0x22 }
+  - { offset: 0x5D36, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView sliderFinished:]', symObjAddr: 0x10E2, symBinAddr: 0x2DB2, symSize: 0x22 }
+  - { offset: 0x5D3A, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView styleSliders]', symObjAddr: 0x1104, symBinAddr: 0x2DD4, symSize: 0x27A }
+  - { offset: 0x5D6E, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView styleSliders]', symObjAddr: 0x1104, symBinAddr: 0x2DD4, symSize: 0x27A }
+  - { offset: 0x5D72, size: 0x4, addend: 0x0, symName: _MPGridFlatImage, symObjAddr: 0x137E, symBinAddr: 0x304E, symSize: 0x5A }
+  - { offset: 0x5E07, size: 0x4, addend: 0x0, symName: _MPGridFlatImage, symObjAddr: 0x137E, symBinAddr: 0x304E, symSize: 0x5A }
+  - { offset: 0x5E0B, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView layoutSubviews]', symObjAddr: 0x13D8, symBinAddr: 0x30A8, symSize: 0x324 }
+  - { offset: 0x5E4B, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView layoutSubviews]', symObjAddr: 0x13D8, symBinAddr: 0x30A8, symSize: 0x324 }
+  - { offset: 0x5E4F, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView .cxx_destruct]', symObjAddr: 0x16FC, symBinAddr: 0x33CC, symSize: 0xBE }
+  - { offset: 0x5F57, size: 0x4, addend: 0x0, symName: '-[MPColorsGridView .cxx_destruct]', symObjAddr: 0x16FC, symBinAddr: 0x33CC, symSize: 0xBE }
+  - { offset: 0x5F5B, size: 0x4, addend: 0x0, symName: ___MPGridLegacyNames_block_invoke, symObjAddr: 0x17BA, symBinAddr: 0x348A, symSize: 0x12E }
+  - { offset: 0x5F87, size: 0x4, addend: 0x0, symName: ___MPGridLegacyNames_block_invoke, symObjAddr: 0x17BA, symBinAddr: 0x348A, symSize: 0x12E }
+  - { offset: 0x5F8B, size: 0x4, addend: 0x0, symName: _MPGridCurrentHex.cold.1, symObjAddr: 0x18E8, symBinAddr: 0x35B8, symSize: 0x14 }
+  - { offset: 0x5FAA, size: 0x4, addend: 0x0, symName: _MPGridCurrentHex.cold.1, symObjAddr: 0x18E8, symBinAddr: 0x35B8, symSize: 0x14 }
+  - { offset: 0x5FC1, size: 0x4, addend: 0x0, symName: _MPGridCurrentHex.cold.1, symObjAddr: 0x18E8, symBinAddr: 0x35B8, symSize: 0x14 }
+  - { offset: 0x5FD1, size: 0x4, addend: 0x0, symName: _MPGridCurrentHex.cold.1, symObjAddr: 0x18E8, symBinAddr: 0x35B8, symSize: 0x14 }
+...

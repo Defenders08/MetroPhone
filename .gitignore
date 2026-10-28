@@ -1,6 +1,11 @@
+# Дампы прошивок и образ эмулятора WP (3.4 ГБ) в git не идут — именно они
+# когда-то раздули .git до 5.2 ГБ; GitHub всё равно отклоняет файлы >100 МБ.
+# Лёгкие результаты их обработки (out/wp81_icons, build_icons.py) — коммитятся.
+archive/wp81_build/cache/
+archive/wp81_build/lumia/
 /obj/
 .zcode/
-crashlogs/
 .DS_Store
-screenshots/
-screens/
+archive/crashlogs/
+archive/screens/
+archive/screenshots/
