@@ -1,6 +1,7 @@
 #import "MPLayoutModel.h"
 #import "MPAppDataSource.h"
 #import "MPMetroStyle.h"
+#import "MetroWidgets/MPLiveTile.h"   // MPLiveGridSize — размер виджета в систему сетки
 
 static NSString *const MPLayoutFilePath = @"/var/mobile/Library/Preferences/metrophone-layout.plist";
 
@@ -10,9 +11,10 @@ static NSString *const MPLayoutFilePath = @"/var/mobile/Library/Preferences/metr
 NSUInteger MPTileSpanX(MPTileSize size, NSInteger columns) {
     if (size == MPTileSizeSmall) return 1;
     if (size == MPTileSizeMedium) return 2;
+    if (size == MPTileSizeHalf) return 2;   // 2×1 — виджеты
     return (columns < 1) ? 1 : (NSUInteger)columns;   // Wide — во всю ширину сетки
 }
-NSUInteger MPTileSpanY(MPTileSize size) { return (size == MPTileSizeSmall) ? 1 : 2; }
+NSUInteger MPTileSpanY(MPTileSize size) { return (size == MPTileSizeSmall || size == MPTileSizeHalf) ? 1 : 2; }
 
 // ---- Сетка занятости: массив рядов, каждый ряд — NSMutableData из `cols` байт ----
 static BOOL MPCellsFree(NSArray *rows, NSInteger r, NSInteger c, NSInteger sx, NSInteger sy, NSInteger cols) {
@@ -92,7 +94,9 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
         if ([size isEqualToString:@"large"]) size = @"medium";
         it.tileSize = ([size isEqualToString:@"medium"]) ? MPTileSizeMedium
                     : ([size isEqualToString:@"wide"]) ? MPTileSizeWide
+                    : ([size isEqualToString:@"half"]) ? MPTileSizeHalf
                     : MPTileSizeSmall;
+        it.isWidget = [[d objectForKey:@"w"] boolValue];   // виджеты отсутствуют в старых раскладках
         [_items addObject:it];
         [seen addObject:bid];
     }
@@ -103,8 +107,12 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
     NSMutableArray *tiles = [NSMutableArray arrayWithCapacity:_items.count];
     for (MPTileItem *it in _items) {
         NSString *sz = (it.tileSize == MPTileSizeMedium) ? @"medium"
-                     : (it.tileSize == MPTileSizeWide) ? @"wide" : @"small";
-        [tiles addObject:@{ @"bid": it.bundleID, @"size": sz }];
+                     : (it.tileSize == MPTileSizeWide) ? @"wide"
+                     : (it.tileSize == MPTileSizeHalf) ? @"half" : @"small";
+        NSMutableDictionary *d = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                  it.bundleID, @"bid", sz, @"size", nil];
+        if (it.isWidget) d[@"w"] = @YES;
+        [tiles addObject:d];
     }
     NSDictionary *root = @{ @"tiles": tiles, @"excluded": [NSArray arrayWithArray:_excluded] };
     BOOL ok = [root writeToFile:MPLayoutFilePath atomically:YES];
@@ -125,7 +133,8 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
     NSMutableArray *kept = [NSMutableArray arrayWithCapacity:apps.count];
     NSMutableSet *have = [NSMutableSet set];
     for (MPTileItem *it in _items) {
-        if ([appIDs containsObject:it.bundleID]) {
+        // виджеты не приходят из списка приложений — сверке не подлежат
+        if (it.isWidget || [appIDs containsObject:it.bundleID]) {
             [kept addObject:it];
             [have addObject:it.bundleID];
         } else {
@@ -170,6 +179,72 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
         }
     }
     _rowCount = (NSInteger)rows.count;
+}
+
+#pragma mark - Виджеты (живые плитки)
+
+// Сверка виджетов с конфигурацией центра. Виджеты живут в начале раскладки
+// (как блок живых плиток в WP8.1), порядок — порядок конфига, размеры — из конфига.
+- (BOOL)syncWidgets:(NSArray *)widgets {
+    NSArray *list = [widgets isKindOfClass:[NSArray class]] ? widgets : @[];
+
+    // идентификаторы включённых виджетов, по порядку конфига
+    NSMutableArray *ids = [NSMutableArray array];
+    NSMutableDictionary *sizeByID = [NSMutableDictionary dictionary];
+    for (NSDictionary *w in list) {
+        if (![w isKindOfClass:[NSDictionary class]]) continue;
+        NSString *tid = [w objectForKey:@"id"];
+        if (![tid isKindOfClass:[NSString class]] || tid.length == 0) continue;
+        if ([ids containsObject:tid]) continue;
+        [ids addObject:tid];
+        id sz = [w objectForKey:@"size"];
+        if ([sz isKindOfClass:[NSNumber class]]) [sizeByID setObject:sz forKey:tid];
+    }
+
+    BOOL changed = NO;
+    NSMutableArray *kept = [NSMutableArray arrayWithCapacity:_items.count];
+    for (MPTileItem *it in _items) {
+        if (it.isWidget && ![ids containsObject:it.bundleID]) {
+            changed = YES;                       // виджет выключен в настройках
+            continue;
+        }
+        [kept addObject:it];
+    }
+    [_items setArray:kept];
+
+    // включённые и не откреплённые — в начало, в порядке конфига
+    NSInteger insertIndex = 0;
+    for (NSString *tid in ids) {
+        BOOL present = NO;
+        for (MPTileItem *it in _items) {
+            if (it.isWidget && [it.bundleID isEqualToString:tid]) { present = YES; break; }
+        }
+        if (present) continue;
+        if ([_excluded containsObject:tid]) continue;   // убран со стартового редактором
+        MPTileItem *it = [[MPTileItem alloc] init];
+        it.bundleID = tid;
+        it.isWidget = YES;
+        NSNumber *sz = [sizeByID objectForKey:tid];
+        // размер в конфиге хранится в системе виджетов (0=1×1, 1=2×1, 2=2×2)
+        it.tileSize = sz ? MPLiveGridSize((MPLiveTileSize)[sz integerValue]) : MPTileSizeSmall;
+        [_items insertObject:it atIndex:insertIndex++];
+        changed = YES;
+    }
+
+    // размер виджета всегда по конфигу (его меняют «↕» в редакторе и Настройки)
+    for (MPTileItem *it in _items) {
+        if (!it.isWidget) continue;
+        NSNumber *sz = [sizeByID objectForKey:it.bundleID];
+        if (sz == nil) continue;
+        MPTileSize want = MPLiveGridSize((MPLiveTileSize)[sz integerValue]);
+        if (it.tileSize != want) {
+            it.tileSize = want;
+            changed = YES;
+        }
+    }
+
+    if (changed) [self packWithColumns:[MPMetroStyle columns]];
+    return changed;
 }
 
 #pragma mark - Правка
@@ -220,10 +295,20 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
 - (BOOL)cycleSizeAtIndex:(NSInteger)index {
     if (index < 0 || index >= (NSInteger)_items.count) return NO;
     MPTileItem *it = [_items objectAtIndex:index];
-    // small → medium → wide → small
+    // small → medium → wide → small (виджеты циклятся по своему списку через setSize:)
     it.tileSize = (it.tileSize == MPTileSizeSmall) ? MPTileSizeMedium
                : (it.tileSize == MPTileSizeMedium) ? MPTileSizeWide
                : MPTileSizeSmall;
+    [self packWithColumns:[MPMetroStyle columns]];
+    return YES;
+}
+
+// Размер напрямую (виджеты в редакторе: цикл по их supportedSizes)
+- (BOOL)setSize:(MPTileSize)size atIndex:(NSInteger)index {
+    if (index < 0 || index >= (NSInteger)_items.count) return NO;
+    MPTileItem *it = [_items objectAtIndex:index];
+    if (it.tileSize == size) return NO;
+    it.tileSize = size;
     [self packWithColumns:[MPMetroStyle columns]];
     return YES;
 }

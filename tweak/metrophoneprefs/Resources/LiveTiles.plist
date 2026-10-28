@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>Живые плитки</string>
+	<key>Items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Виджеты</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>liveTile.mp.widget.clock.enabled</string>
+			<key>label</key>
+			<string>Часы</string>
+			<key>PostNotification</key>
+			<string>ru.ash.metrophone.livetiles-changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>liveTile.mp.widget.battery.enabled</string>
+			<key>label</key>
+			<string>Батарея</string>
+			<key>PostNotification</key>
+			<string>ru.ash.metrophone.livetiles-changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>liveTile.mp.widget.nowplaying.enabled</string>
+			<key>label</key>
+			<string>Сейчас играет</string>
+			<key>PostNotification</key>
+			<string>ru.ash.metrophone.livetiles-changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>liveTile.mp.widget.test.counter.enabled</string>
+			<key>label</key>
+			<string>Тест: счётчик</string>
+			<key>PostNotification</key>
+			<string>ru.ash.metrophone.livetiles-changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ru.ash.metrophone</string>
+			<key>key</key>
+			<string>liveTile.mp.widget.test.states.enabled</string>
+			<key>label</key>
+			<string>Тест: состояния</string>
+			<key>PostNotification</key>
+			<string>ru.ash.metrophone.livetiles-changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Размер (тап — переключить)</string>
+		</dict>
+	</array>
+</dict>
+</plist>

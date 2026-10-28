@@ -11,6 +11,8 @@
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPIconTheme.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPTileView.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileCenter.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLockScreen/MPLockScreen.h \
   /Users/ash/theos/vendor/include/substrate.h \
   /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h \
@@ -27,6 +29,8 @@
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPIconTheme.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPTileView.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileCenter.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLockScreen/MPLockScreen.h:
 /Users/ash/theos/vendor/include/substrate.h:
 /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h:

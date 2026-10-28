@@ -236,7 +236,8 @@ static UIColor *MPAccentForName(NSString *name) {
     return (width - (CGFloat)(cols - 1) * MPMetroGap) / (CGFloat)cols;
 }
 
-// Small = cell×cell; Medium = 2×2 ячейки; Wide = во всю ширину сетки, высотой с Medium
+// Размеры по пролётам сетки: Small = cell×cell; Medium = 2×2 ячейки; Half (виджеты) = 2×1;
+// Wide = во всю ширину сетки, высотой с Medium. Пролёты даёт MPLayoutModel.
 + (CGSize)tilePixelSize:(MPTileSize)size containerWidth:(CGFloat)width {
     CGFloat cell = [self cellForContainerWidth:width];
     CGFloat g = MPMetroGap;

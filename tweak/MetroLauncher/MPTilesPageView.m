@@ -4,6 +4,10 @@
 #import "MPTileEditor.h"
 #import "MPMetroStyle.h"
 #import "MPAppDataSource.h"
+#import "MetroWidgets/MPLiveTile.h"
+#import "MetroWidgets/MPLiveTileView.h"
+#import "MetroWidgets/MPLiveTileCenter.h"
+#import "MetroWidgets/MPLiveTileRegistry.h"
 
 static const CGFloat MPTilesHeaderH = 30.0f;          // шапка под статус-баром (отступ сетки под статус-бар)
 static const NSTimeInterval MPLongPressDelay = 0.6;   // долгое нажатие
@@ -57,6 +61,7 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     BOOL      _loaded;
     BOOL      _building;
     NSArray  *_pendingApps;             // список, пришедший во время сборки/правки
+    BOOL      _pendingWidgets;          // виджеты изменились, пока шла правка
     NSInteger _columns;                 // плотность сетки, при которой уложены текущие плитки
 
     NSInteger _pressIndex;              // плитка под пальцем (нормальный режим), -1 = нет
@@ -86,12 +91,18 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
         _scrollView.multipleTouchEnabled = NO;
         [self addSubview:_scrollView];
 
+        // состав виджетов на стартовом экране меняется из Настроек и страницы виджетов
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(widgetsChanged:)
+                                                     name:MPLiveWidgetsChangedNotification
+                                                   object:nil];
     }
     return self;
 }
 
 - (void)dealloc {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)setTopInset:(CGFloat)topInset {
@@ -184,6 +195,8 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     [self applyStyle];
     [_model load];                       // чтение plist — лениво, здесь, а не в ctor
     [_model syncWithApps:apps];
+    // виджеты вклиниваются в начало раскладки (блок живых плиток, как в WP8.1)
+    [_model syncWidgets:[[MPLiveTileCenter sharedCenter] homeWidgets]];
     [_model packWithColumns:[MPMetroStyle columns]];
     [self updateEntries:apps];
     [self updateContentSize];
@@ -197,6 +210,22 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 }
 
 - (MPTileView *)makeTileForItem:(MPTileItem *)it {
+    if (it.isWidget) {
+        // живая плитка: вьюха-наследник MPTileView, поэтому редактор и сетка
+        // работают с ней без отличий; провайдер может отсутствовать только
+        // при рассинхроне конфига — тогда пустая плитка-подложка
+        id<MPLiveTileProvider> p = [MPLiveTileRegistry providerForID:it.bundleID];
+        if (p == nil) {
+            MPTileView *blank = [[MPTileView alloc] initWithFrame:[self frameForItem:it]];
+            blank.bundleID = it.bundleID;
+            return blank;
+        }
+        MPLiveTileView *lv = [[MPLiveTileView alloc] initWithTileID:it.bundleID
+                                                               size:MPLiveSizeFromGrid(it.tileSize)];
+        lv.frame = [self frameForItem:it];
+        lv.launchTarget = [p launchTarget];
+        return lv;
+    }
     MPTileView *tv = [[MPTileView alloc] initWithFrame:[self frameForItem:it]];
     MPAppEntry *e = [_entriesByID objectForKey:it.bundleID];
     if (e != nil) [tv configureWithEntry:e];
@@ -220,6 +249,10 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     _building = NO;
     _loaded = YES;
     MPLog(@"плитки: собрано %lu", (unsigned long)_tiles.count);
+    if (_pendingWidgets) {               // виджеты менялись, пока шла сборка пачками
+        _pendingWidgets = NO;
+        [self widgetsChanged:nil];
+    }
     if (_pendingApps != nil) {
         NSArray *p = _pendingApps;
         _pendingApps = nil;
@@ -267,13 +300,17 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
         MPTileView *tv = [byID objectForKey:it.bundleID];
         if (tv != nil) {
             [byID removeObjectForKey:it.bundleID];
+            // размер виджета мог измениться без пересоздания вьюхи («↕», Настройки)
+            if ([tv isKindOfClass:[MPLiveTileView class]]) {
+                [(MPLiveTileView *)tv setLiveTileSize:MPLiveSizeFromGrid(it.tileSize)];
+            }
         } else {
             tv = [self makeTileForItem:it];
             [_scrollView addSubview:tv];
         }
         [newTiles addObject:tv];
     }
-    for (MPTileView *gone in byID.allValues) [gone removeFromSuperview];   // приложение удалено
+    for (MPTileView *gone in byID.allValues) [gone removeFromSuperview];   // приложение удалено / виджет выключен
     _tiles = newTiles;
     [self relayoutAnimated:NO];
 }
@@ -346,10 +383,16 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 
     NSInteger idx = _pressIndex;
     [self cancelPress];
-    if (idx >= 0 && idx < (NSInteger)_tiles.count) {      // тап → запуск приложения
+    if (idx >= 0 && idx < (NSInteger)_tiles.count) {      // тап → запуск
         MPTileView *tv = [_tiles objectAtIndex:idx];
-        MPLog(@"запуск %@", tv.bundleID);
-        [[MPAppDataSource sharedDataSource] launchAppWithBundleID:tv.bundleID];
+        if ([tv isKindOfClass:[MPLiveTileView class]]) {
+            // виджет: тап открывает его launchTarget (приложение/prefs-URL)
+            MPLog(@"виджет: тап %@", tv.bundleID);
+            [[MPLiveTileCenter sharedCenter] launchTileView:(MPLiveTileView *)tv];
+        } else {
+            MPLog(@"запуск %@", tv.bundleID);
+            [[MPAppDataSource sharedDataSource] launchAppWithBundleID:tv.bundleID];
+        }
     }
 }
 
@@ -396,6 +439,22 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 }
 
 - (BOOL)editorCycleSizeAtIndex:(NSInteger)index {
+    // виджеты циклятся по своему списку размеров (1×1 → 2×1 → 2×2) и
+    // запоминают размер в настройках; приложения — как раньше
+    if (index >= 0 && index < (NSInteger)_model.items.count) {
+        MPTileItem *it = [_model.items objectAtIndex:index];
+        if (it.isWidget) {
+            MPLiveTileSize next = [MPLiveTileRegistry nextSizeAfter:MPLiveSizeFromGrid(it.tileSize)
+                                                          forTileID:it.bundleID];
+            if ((NSInteger)next >= 0 && [_model setSize:MPLiveGridSize(next) atIndex:index]) {
+                [self relayoutAnimated:YES];
+                [_editor hostDidLayoutTiles];
+                [[MPLiveTileCenter sharedCenter] setSize:next forTileID:it.bundleID];
+                return YES;
+            }
+            return NO;
+        }
+    }
     BOOL ok = [_model cycleSizeAtIndex:index];
     [self relayoutAnimated:YES];
     [_editor hostDidLayoutTiles];
@@ -411,6 +470,10 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     [_tiles removeObjectAtIndex:index];
     [_model excludeBundleID:bid];
     [self relayoutAnimated:YES];
+    // для виджета открепление меняет состав виджетов (страница виджетов
+    // обновит уголки); для приложений уведомление безвредно
+    [[NSNotificationCenter defaultCenter] postNotificationName:MPLiveWidgetsChangedNotification
+                                                        object:nil];
 }
 
 - (UIView *)editorTilesContainer {
@@ -434,6 +497,31 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
         _pendingApps = nil;
         [self syncWithApps:p];
     }
+    if (!editing && _pendingWidgets) {          // виджеты менялись во время правки
+        _pendingWidgets = NO;
+        [self widgetsChanged:nil];
+    }
+}
+
+#pragma mark - Изменение виджетов
+
+// Состав/размеры виджетов изменились (Настройки, страница виджетов, редактор)
+- (void)widgetsChanged:(NSNotification *)n {
+    if (![NSThread isMainThread]) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self widgetsChanged:n]; });
+        return;
+    }
+    if (!_loaded) {                     // сборка ещё идёт — доливаем в её конце
+        _pendingWidgets = YES;
+        return;
+    }
+    if (_editor.editing) {              // структуру сетки во время правки не трогаем
+        _pendingWidgets = YES;
+        return;
+    }
+    BOOL changed = [_model syncWidgets:[[MPLiveTileCenter sharedCenter] homeWidgets]];
+    if (_model.items.count != _tiles.count) changed = YES;
+    if (changed) [self rebuildTilesToMatchModel];
 }
 
 @end

@@ -28,6 +28,7 @@
 #import "MetroLauncher/MPMetroStyle.h"
 #import "MetroLauncher/MPIconTheme.h"
 #import "MetroLauncher/MPTileView.h"
+#import "MetroWidgets/MPLiveTileCenter.h"
 #import "MetroLockScreen/MPLockScreen.h"
 
 #define MP_VERSION @"0.22.3"
@@ -2165,6 +2166,9 @@ static void MPUncaughtExceptionHandler(NSException *exception) {
 		}
 	} else {
 		MPLog(@"ctor: стороннее приложение — хуки не устанавливаются, оригинальный дизайн");
+		// ТОЧКА ВХОДА будущих сторонних дизайнов приложений: здесь будет скан
+		// MP_APPDESIGNS_DIR и установка дизайна, совпадающего с bundleID этого
+		// процесса (образец дизайна — AppDesigns/Settings/, см. MPSettingsInitIfNeeded).
 	}
 
 	// SpringBoard-классы существуют только в SpringBoard
@@ -2242,6 +2246,10 @@ static void MPUncaughtExceptionHandler(NSException *exception) {
 				dispatch_get_main_queue(), ^{
 					MPEnsureLauncher();
 				});
+
+			// Живые плитки (виджеты): центр регистрирует плитки, планировщик и
+			// Darwin-подписки. Внутри @try; любая ошибка — молча отключается.
+			[[MPLiveTileCenter sharedCenter] start];
 		} @catch (NSException *e) {
 			MPLog(@"!! ctor SpringBoard: %@ (%@)", e.name, e.reason);
 		}

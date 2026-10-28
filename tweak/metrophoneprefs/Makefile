@@ -11,7 +11,7 @@ MODULESFLAGS :=
 
 BUNDLE_NAME = MetroPhonePrefs
 
-MetroPhonePrefs_FILES = MPRootListController.m MPColorsListController.m MPColorsGridView.m
+MetroPhonePrefs_FILES = MPRootListController.m MPColorsListController.m MPColorsGridView.m MPLiveTilesListController.m MPLiveTileSizeView.m
 MetroPhonePrefs_FRAMEWORKS = UIKit CoreGraphics CoreText
 MetroPhonePrefs_PRIVATE_FRAMEWORKS = Preferences
 MetroPhonePrefs_INSTALL_PATH = /Library/PreferenceBundles

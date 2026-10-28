@@ -4,10 +4,22 @@
 <dict>
 	<key>com.Amazon.Amazon</key>
 	<string>wp:Amazon</string>
+	<key>com.apple.AppStore</key>
+	<string>wp:Store</string>
+	<key>com.apple.Maps</key>
+	<string>wp:Maps</string>
+	<key>com.apple.MobileAddressBook</key>
+	<string>wp:People</string>
+	<key>com.apple.MobileSMS</key>
+	<string>wp:Messaging</string>
 	<key>com.apple.Music</key>
 	<string>wp:Xbox_Music</string>
 	<key>com.apple.Preferences</key>
 	<string>glyph:settings</string>
+	<key>com.apple.Shoebox</key>
+	<string>wp:Wallet</string>
+	<key>com.apple.VoiceMemos</key>
+	<string>wp:Voice_Recorder</string>
 	<key>com.apple.calculator</key>
 	<string>wp:Calculator</string>
 	<key>com.apple.camera</key>
@@ -22,14 +34,22 @@
 	<string>wp:Comms_Mail_People_Tasks</string>
 	<key>com.apple.mobilemusic</key>
 	<string>wp:Xbox_Music</string>
+	<key>com.apple.mobilenotes</key>
+	<string>wp:OneNote</string>
 	<key>com.apple.mobilephone</key>
 	<string>glyph:phone</string>
 	<key>com.apple.mobilesafari</key>
 	<string>wp:Internet_Explorer</string>
+	<key>com.apple.mobileslideshow</key>
+	<string>wp:Photos</string>
+	<key>com.apple.mobiletimer</key>
+	<string>wp:Alarms</string>
 	<key>com.apple.newsstand</key>
 	<string>wp:Bing_News</string>
 	<key>com.apple.podcasts</key>
 	<string>wp:Podcasts</string>
+	<key>com.apple.reminders</key>
+	<string>wp:Reminders</string>
 	<key>com.apple.stocks</key>
 	<string>wp:Bing_Finance</string>
 	<key>com.apple.videos</key>
@@ -42,6 +62,8 @@
 	<string>wp:Box</string>
 	<key>com.chillingo.angrybirds</key>
 	<string>wp:Angry_Birds_Classic</string>
+	<key>com.designshed.alienblue</key>
+	<string>wp:Alien_Blue</string>
 	<key>com.ebay.iphone</key>
 	<string>wp:eBay</string>
 	<key>com.facebook.Facebook</key>
@@ -54,23 +76,49 @@
 	<string>wp:Google_Search</string>
 	<key>com.halfbrick.fruitninja</key>
 	<string>wp:Fruit_Ninja</string>
+	<key>com.hottrix.iBeer</key>
+	<string>wp:IBeer</string>
 	<key>com.imangi.templerun</key>
 	<string>wp:Temple_Run</string>
+	<key>com.ixmoe.1pwn.Veteris</key>
+	<string>wp:Veteris</string>
+	<key>com.kiloo.subwaysurfers</key>
+	<string>wp:Subway_Surfers</string>
 	<key>com.king.candycrushsaga</key>
 	<string>wp:Candy_Crush_Saga</string>
+	<key>com.legacyymusic.ios6</key>
+	<string>wp:LegacyY_Music</string>
 	<key>com.mojang.minecraftpe</key>
 	<string>wp:Minecraft</string>
+	<key>com.natenai.glowhockey</key>
+	<string>wp:Glow_Hockey</string>
 	<key>com.netflix.Netflix</key>
 	<string>wp:Netflix</string>
 	<key>com.popcap.PlantsVsZombies</key>
 	<string>wp:Plants_vs_Zombies</string>
 	<key>com.popcap.plantsvszombies</key>
 	<string>wp:Plants_vs_Zombies</string>
+	<key>com.portablepixels.hatchi</key>
+	<string>wp:Hatchi</string>
+	<key>com.qrafter.Qrafter</key>
+	<string>wp:Qrafter</string>
+	<key>com.reederapp.rkit2.ios</key>
+	<string>wp:Reeder</string>
 	<key>com.rovio.AngryBirdsSpace</key>
 	<string>wp:Angry_Birds_Space</string>
+	<key>com.saurik.Cydia</key>
+	<string>wp:Cydia</string>
 	<key>com.tripadvisor.tripadvisor</key>
 	<string>wp:TripAdvisor</string>
 	<key>com.ucweb.iphonebrowser</key>
 	<string>wp:UC_Browser</string>
+	<key>com.unlocalsend.ios6</key>
+	<string>wp:LocalSend</string>
+	<key>eu.heinelt.ifile</key>
+	<string>wp:iFile</string>
+	<key>ru.doublegis.grymmobile</key>
+	<string>wp:2GIS</string>
+	<key>ru.mail.agent</key>
+	<string>wp:Mail_Agent</string>
 </dict>
 </plist>

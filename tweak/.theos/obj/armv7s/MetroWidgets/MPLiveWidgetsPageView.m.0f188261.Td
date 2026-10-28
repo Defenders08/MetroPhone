@@ -1,0 +1,27 @@
+/Users/ash/Documents/Проекты/MetroPhone/tweak/.theos/obj/armv7s/MetroWidgets/MPLiveWidgetsPageView.m.0f188261.o: \
+  MetroWidgets/MPLiveWidgetsPageView.m /Users/ash/theos/Prefix.pch \
+  /Users/ash/theos/vendor/include/theos/BackwardsCompat.h \
+  /Users/ash/theos/vendor/include/theos/IOSMacros.h \
+  /Users/ash/theos/vendor/include/HBLog.h \
+  /Users/ash/theos/vendor/include/CoreFoundation/CFLogUtilities.h \
+  MetroWidgets/MPLiveWidgetsPageView.h MetroWidgets/MPLiveTile.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h \
+  MetroWidgets/MPLiveTileView.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPTileView.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h \
+  MetroWidgets/MPLiveTileCenter.h MetroWidgets/MPLiveTileRegistry.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h
+/Users/ash/theos/Prefix.pch:
+/Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
+/Users/ash/theos/vendor/include/theos/IOSMacros.h:
+/Users/ash/theos/vendor/include/HBLog.h:
+/Users/ash/theos/vendor/include/CoreFoundation/CFLogUtilities.h:
+MetroWidgets/MPLiveWidgetsPageView.h:
+MetroWidgets/MPLiveTile.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h:
+MetroWidgets/MPLiveTileView.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPTileView.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h:
+MetroWidgets/MPLiveTileCenter.h:
+MetroWidgets/MPLiveTileRegistry.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h:

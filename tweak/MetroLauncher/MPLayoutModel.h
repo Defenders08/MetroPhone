@@ -5,6 +5,7 @@ typedef enum {
     MPTileSizeSmall  = 0,   // 1×1 — квадрат с одну ячейку
     MPTileSizeMedium = 1,   // 2×2 — квадрат с 4 маленькие плитки
     MPTileSizeWide   = 2,   // cols×2 — во всю ширину сетки, высотой с Medium
+    MPTileSizeHalf   = 3,   // 2×1 — только живые плитки (виджеты), приложениям не даётся
 } MPTileSize;
 
 // Пролёты плитки по сетке (в ячейках): ширина (зависит от числа колонок) и высота
@@ -12,9 +13,11 @@ NSUInteger MPTileSpanX(MPTileSize size, NSInteger columns);
 NSUInteger MPTileSpanY(MPTileSize size);
 
 // Один тайл раскладки. col/row заполняются упаковкой (packWithColumns:).
+// bundleID — либо bundleID приложения, либо tileID виджета («mp.widget.*»).
 @interface MPTileItem : NSObject
 @property (nonatomic, copy)     NSString *bundleID;
-@property (nonatomic, assign)   MPTileSize tileSize;   // small / medium / wide
+@property (nonatomic, assign)   MPTileSize tileSize;   // small / medium / wide / half
+@property (nonatomic, assign)   BOOL isWidget;         // YES — живая плитка (виджет)
 @property (nonatomic, assign)   NSInteger col;
 @property (nonatomic, assign)   NSInteger row;
 @end
@@ -40,6 +43,13 @@ NSUInteger MPTileSpanY(MPTileSize size);
 
 - (void)moveItemFromIndex:(NSInteger)from toIndex:(NSInteger)to;   // + перепаковка
 - (BOOL)cycleSizeAtIndex:(NSInteger)index;                          // small → medium → wide → small (+ перепаковка)
+- (BOOL)setSize:(MPTileSize)size atIndex:(NSInteger)index;          // для виджетов: размер из их списка (+ перепаковка)
+
+// Сверка виджетов с конфигурацией центра (список @{ id, size } в порядке конфига):
+// выключенные виджеты убираются, включённые добавляются в начало (порядок конфига)
+// с размером из конфига. Откреплённые (excluded) на стартовый не возвращаются.
+// Возвращает YES, если состав изменился.
+- (BOOL)syncWidgets:(NSArray *)widgets;
 
 // Открепление плитки от стартового экрана (кнопка «×»): приложение остаётся
 // в списке, вернуть плитку можно долгим нажатием на строку в списке приложений.

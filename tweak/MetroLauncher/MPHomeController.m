@@ -1,6 +1,7 @@
 #import "MPHomeController.h"
 #import "MPTilesPageView.h"
 #import "MPAppListPageView.h"
+#import "MetroWidgets/MPLiveWidgetsPageView.h"
 #import "MPMetroStyle.h"
 #import "MPAppDataSource.h"
 
@@ -21,8 +22,9 @@ static UIView *MPHCFindHostView(void) {
 
 @implementation MPHomeController {
     UIScrollView     *_pager;
-    MPTilesPageView  *_tilesPage;
-    MPAppListPageView *_listPage;
+    MPLiveWidgetsPageView *_widgetsPage;   // страница 0: живые плитки (свайп вправо)
+    MPTilesPageView  *_tilesPage;          // страница 1: плитки приложений (стартовая)
+    MPAppListPageView *_listPage;          // страница 2: алфавитный список
 
     BOOL _visible;
     BOOL _contentScheduled;
@@ -71,11 +73,17 @@ static UIView *MPHCFindHostView(void) {
     _pager.showsHorizontalScrollIndicator = NO;
     _pager.showsVerticalScrollIndicator = NO;
     _pager.directionalLockEnabled = YES;
-    _pager.delaysContentTouches = NO;      // касания сразу уходят странице плиток
-    _pager.contentSize = CGSizeMake(w * 2.0f, h);
+    _pager.delaysContentTouches = NO;      // касания сразу уходят страницам
+    // Три страницы: [виджеты][плитки][список]; стартуем на плитках (середина)
+    _pager.contentSize = CGSizeMake(w * 3.0f, h);
+    _pager.contentOffset = CGPointMake(w, 0);
     [root addSubview:_pager];
 
-    _tilesPage = [[MPTilesPageView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
+    _widgetsPage = [[MPLiveWidgetsPageView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
+    _widgetsPage.topInset = top;
+    [_pager addSubview:_widgetsPage];
+
+    _tilesPage = [[MPTilesPageView alloc] initWithFrame:CGRectMake(w, 0, w, h)];
     _tilesPage.topInset = top;
     __weak MPHomeController *weakSelf = self;
     _tilesPage.editingChangedBlock = ^(BOOL editing) {
@@ -84,7 +92,7 @@ static UIView *MPHCFindHostView(void) {
     };
     [_pager addSubview:_tilesPage];
 
-    _listPage = [[MPAppListPageView alloc] initWithFrame:CGRectMake(w, 0, w, h)];
+    _listPage = [[MPAppListPageView alloc] initWithFrame:CGRectMake(w * 2.0f, 0, w, h)];
     _listPage.topInset = top;
     [_pager addSubview:_listPage];
 }
@@ -200,18 +208,18 @@ static UIView *MPHCFindHostView(void) {
 
 - (NSInteger)metroCurrentPage {
     CGFloat w = _pager.bounds.size.width;
-    if (w < 1.0f) return 0;
+    if (w < 1.0f) return 1;
     CGFloat x = _pager.contentOffset.x;
     NSInteger page = (NSInteger)floorf((x + w / 2.0f) / w);
     if (page < 0) page = 0;
-    if (page > 1) page = 1;
+    if (page > 2) page = 2;
     return page;
 }
 
 // Отложенный список применяем только когда его страница реально на экране
 - (void)flushListIfVisible {
     if (!_listNeedsReload || _appsForList == nil) return;
-    if ([self metroCurrentPage] != 1) return;
+    if ([self metroCurrentPage] != 2) return;
     _listNeedsReload = NO;
     [_listPage reloadApps:_appsForList];
 }
@@ -253,13 +261,17 @@ static UIView *MPHCFindHostView(void) {
     _contentLoaded = YES;
     [self view];                                // гарантируем, что вьюха и страницы созданы
     [self applyStyleToPages];
+    // iOS 6 мог сбросить стартовый offset при первом лэйауте — стартуем на плитках
+    _pager.contentOffset = CGPointMake(_pager.bounds.size.width, 0.0f);
     _appsForList = apps;
     [_listPage reloadApps:apps];
     [_tilesPage ensureLoadedWithApps:apps];
+    [_widgetsPage ensureLoaded];
     MPLog(@"содержимое загружено, приложений: %lu", (unsigned long)apps.count);
 }
 
 - (void)applyStyleToPages {
+    [_widgetsPage applyStyle];
     [_tilesPage applyStyle];
     [_listPage applyStyle];
 }
@@ -281,7 +293,7 @@ static UIView *MPHCFindHostView(void) {
     if (!_contentLoaded) return;
     NSArray *apps = [[MPAppDataSource sharedDataSource] allApps];
     _appsForList = apps;
-    if ([self metroCurrentPage] == 1) {
+    if ([self metroCurrentPage] == 2) {          // 2 = страница списка (0 виджеты, 1 плитки)
         _listNeedsReload = NO;
         [_listPage reloadApps:apps];
     } else {

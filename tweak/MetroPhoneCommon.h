@@ -21,6 +21,25 @@ static NSString * const MPKeyLockscreen     = @"lockscreenEnabled";// локск
 static NSString * const MPKeyWPIcons        = @"wpIcons";         // WP-иконки для системных приложений
 static NSString * const MPKeyFillSideIcons  = @"fillSideIcons";   // иконки без темы — на всю плитку
 
+// Живые плитки (виджеты). Главный тумблер + ключи на виджет:
+// liveTile.<tileID>.enabled (BOOL, по умолчанию YES) и liveTile.<tileID>.size
+// (NSInteger: 0 = 1×1, 1 = 2×1, 2 = 2×2).
+static NSString * const MPKeyLiveTiles      = @"liveTilesEnabled";
+static NSString * const MPKeyLiveTilePrefix = @"liveTile.";
+
+// Darwin-уведомление «настройки живых плиток изменились» (Настройки → SpringBoard)
+#define MP_LIVETILES_CHANGED_NOTIFICATION "ru.ash.metrophone.livetiles-changed"
+
+// Папка для сторонних виджетов на устройстве (рядом с icons). Пока пустая:
+// когда-нибудь сюда будут падать бандлы/dylib сторонних виджетов, и загрузчик
+// в MPLiveTileRegistry будет их подхватывать (см. scanExternalWidgetsDirectory:).
+#define MP_WIDGETS_DIR "/var/mobile/Library/Application Support/MetroPhone/Widgets"
+
+// Папка для сторонних дизайнов приложений (рядом с Widgets). Будущее: дизайн
+// приложения = группа Logos-хуков + init с проверкой bundleID (образец —
+// AppDesigns/Settings/); диспетчер встанет в %ctor ветки «чужое приложение».
+#define MP_APPDESIGNS_DIR "/var/mobile/Library/Application Support/MetroPhone/AppDesigns"
+
 // Darwin-уведомление после смены акцента (страница «Цвета» → твики)
 #define MP_ACCENT_CHANGED_NOTIFICATION "ru.ash.metrophone.accent-changed"
 

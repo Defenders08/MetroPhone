@@ -7,4 +7,4 @@ Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000), preferenceloader
 Architecture: iphoneos-arm
 Version: 0.22.3
-Installed-Size: 5768
+Installed-Size: 6628
