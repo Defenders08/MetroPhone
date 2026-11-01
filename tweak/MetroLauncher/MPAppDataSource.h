@@ -19,6 +19,7 @@
 - (void)iconForEntry:(MPAppEntry *)entry completion:(void (^)(UIImage *icon))completion;
 
 - (void)launchAppWithBundleID:(NSString *)bundleID;    // запуск приложения
+- (BOOL)canLaunchWithBundleID:(NSString *)bundleID;    // есть ли иконка для запуска (без самого запуска)
 @end
 
 // Уведомление «список/бейджи изменились» (постится из хуков твика)

@@ -5,6 +5,7 @@
 #import "MPTileClock.h"
 #import "MPTileBattery.h"
 #import "MPTileNowPlaying.h"
+#import "MPTileCalendar.h"
 #import "MPTileTestCounter.h"
 #import "MPTileTestStates.h"
 #import "MetroLauncher/MPLayoutModel.h"
@@ -32,16 +33,20 @@ static BOOL MPPrefBool(NSString *key, BOOL def) {
     return def;
 }
 
-// Видна ли вьюха пользователю: вся цепочка надстроек не спрятана и не прозрачна,
-// у цепочки есть окно, и вьюха попадает в кадр окна (отсекает невидимую страницу
-// пейджера и плитки вне видимой части скролла).
+// Видна ли вьюха пользователю: в цепочке надзоров до окна нет спрятанных и
+// прозрачных звеньев, окно есть, и вьюха попадает в кадр окна (отсекает
+// невидимую страницу пейджера и плитки вне видимой части скролла).
+// ВАЖНО: у самого UIWindow свойство window == nil — цепочку останавливаем
+// на окне, иначе проверка u.window == nil рубила ЛЮБУЮ вьюху в окне и виджеты
+// вечно считались невидимыми (пустые плитки без единой ошибки в журнале).
 static BOOL MPLiveViewIsVisible(UIView *v) {
-    for (UIView *u = v; u != nil; u = u.superview) {
+    UIWindow *window = v.window;
+    if (window == nil) return NO;
+    for (UIView *u = v; u != nil && u != window; u = u.superview) {
         if (u.hidden || u.alpha < 0.01f) return NO;
-        if (u.window == nil) return NO;   // цепочка не доходит ни до одного окна
     }
-    CGRect r = [v convertRect:v.bounds toView:v.window];
-    return CGRectIntersectsRect(r, v.window.bounds);
+    CGRect r = [v convertRect:v.bounds toView:window];
+    return CGRectIntersectsRect(r, window.bounds);
 }
 
 // displayStatus-уведомление состояние не передаёт — читаем системный plist
@@ -90,6 +95,7 @@ static void MPLivePrefsChangedCB(CFNotificationCenterRef center, void *observer,
 - (void)registerBuiltIns {
     [MPLiveTileRegistry registerClass:[MPTileClock class]];
     [MPLiveTileRegistry registerClass:[MPTileBattery class]];
+    [MPLiveTileRegistry registerClass:[MPTileCalendar class]];
     // Now Playing держится на частном классе iOS 6 — регистрируем, только если он есть
     if ([MPTileNowPlaying isAvailable]) {
         [MPLiveTileRegistry registerClass:[MPTileNowPlaying class]];
@@ -153,7 +159,11 @@ static void MPLivePrefsChangedCB(CFNotificationCenterRef center, void *observer,
 }
 
 - (BOOL)isTileEnabled:(NSString *)tileID {
-    return MPPrefBool(MPTileKey(tileID, @"enabled"), YES);
+    // Тестовые плитки своё отработали (фреймворк проверен на устройстве) и
+    // теперь живут только явным включением в Настройках: их частые обновления
+    // с кроссфейдами ощутимо дёргают A4.
+    BOOL def = ![tileID hasPrefix:@"mp.widget.test."];
+    return MPPrefBool(MPTileKey(tileID, @"enabled"), def);
 }
 
 - (MPLiveTileSize)sizeForTileID:(NSString *)tileID {
@@ -176,7 +186,8 @@ static void MPLivePrefsChangedCB(CFNotificationCenterRef center, void *observer,
     if (![self isMasterOn]) return @[];
     NSMutableArray *ids = [NSMutableArray array];
     for (id<MPLiveTileProvider> p in [MPLiveTileRegistry allProviders]) {
-        if ([self isTileEnabled:[p tileID]]) [ids addObject:[p tileID]];
+        NSString *id_ = [[p class] tileID];   // классовый метод — у экземпляра только через class
+        if ([self isTileEnabled:id_]) [ids addObject:id_];
     }
     return [ids copy];
 }
@@ -198,7 +209,7 @@ static void MPLivePrefsChangedCB(CFNotificationCenterRef center, void *observer,
     MPLiveTileScheduler *sched = [MPLiveTileScheduler sharedScheduler];
     [sched unregisterAll];
     for (id<MPLiveTileProvider> p in [MPLiveTileRegistry allProviders]) {
-        NSString *tileID = [p tileID];
+        NSString *tileID = [[p class] tileID];   // классовый метод — см. протокол
         if (![self isTileEnabled:tileID]) continue;
         MPLiveTileSize size = [self sizeForTileID:tileID];
         NSTimeInterval interval = [p refreshIntervalForSize:size];
@@ -238,13 +249,21 @@ static void MPLivePrefsChangedCB(CFNotificationCenterRef center, void *observer,
 }
 
 - (void)applyContent:(MPLiveTileContent *)content tileID:(NSString *)tileID {
-    if (_views == nil) return;
+    if (_views == nil) {
+        MPLog(@"живая плитка %@: контент некуда применять — таблицы вьюх нет", tileID);
+        return;
+    }
     id<MPLiveTileProvider> provider = [MPLiveTileRegistry providerForID:tileID];
+    NSUInteger applied = 0;
     for (MPLiveTileView *v in [_views allObjects]) {
         if (![v isKindOfClass:[MPLiveTileView class]]) continue;
         if (![v.tileID isEqualToString:tileID]) continue;
         if (content == nil) [v markStale];
         else [v applyContent:content provider:provider];
+        applied++;
+    }
+    if (applied == 0 && content != nil) {
+        MPLog(@"живая плитка %@: контент готов, но зарегистрированных вьюх нет", tileID);
     }
 }
 

@@ -11,6 +11,7 @@
     NSMutableArray  *_tiles;        // MPLiveTileView
     CGFloat          _builtWidth;   // ширина, под которую страница собрана
     BOOL             _forceRebuild; // состав/размеры изменились — пересобрать обязательно
+    UILabel         *_headerLabel;  // мини-заголовок «Виджеты»
 
     UITapGestureRecognizer          *_tap;
     UILongPressGestureRecognizer   *_longPress;
@@ -32,6 +33,16 @@
         _scrollView.multipleTouchEnabled = NO;
         _scrollView.delaysContentTouches = NO;   // тап по виджету — без задержки
         [self addSubview:_scrollView];
+
+        // мини-заголовок; лежит В КОНТЕНТЕ скролла — уезжает при прокрутке,
+        // касания не перехватывает
+        _headerLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+        _headerLabel.backgroundColor = [UIColor clearColor];
+        _headerLabel.textColor = [UIColor whiteColor];
+        _headerLabel.font = [MPMetroStyle lightFont:38.0f];
+        _headerLabel.text = @"Виджеты";
+        _headerLabel.userInteractionEnabled = NO;
+        [_scrollView addSubview:_headerLabel];
 
         _tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGesture:)];
         [_scrollView addGestureRecognizer:_tap];
@@ -59,7 +70,13 @@
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width, h = self.bounds.size.height;
+    CGFloat inset = [MPMetroStyle pageInset];
+    CGFloat hh = [MPMetroStyle pageHeaderHeight];
     _scrollView.frame = CGRectMake(0.0f, _topInset, w, h - _topInset);
+    // лейбл в контентных координатах скролла — прокручивается вместе с виджетами
+    _headerLabel.frame = CGRectMake(inset, [MPMetroStyle pageHeaderPadTop],
+                                    w - inset * 2.0f,
+                                    hh - [MPMetroStyle pageHeaderPadTop] - [MPMetroStyle pageHeaderPadBottom]);
     [self rebuild];   // сам решит: ширина та же и не было изменений — пропустит
 }
 
@@ -73,7 +90,8 @@
 // Укладка «первое подходящее место» — та же сетка, что у плиток приложений,
 // но локальная: страница виджетов не участвует в раскладке стартового экрана.
 - (void)rebuild {
-    CGFloat W = _scrollView.bounds.size.width;
+    CGFloat inset = [MPMetroStyle pageInset];
+    CGFloat W = _scrollView.bounds.size.width - inset * 2.0f;   // ширина сетки между полями
     if (W < 8.0f) return;                     // кадр ещё не посчитан — пересборка в layoutSubviews
     if (_builtWidth == W && !_forceRebuild) return;
     _builtWidth = W;
@@ -82,13 +100,15 @@
     for (UIView *v in _tiles) [v removeFromSuperview];
     [_tiles removeAllObjects];
 
+    // Сетка занятости локальная, единица — полуячейка (как в раскладке стартового)
     NSInteger cols = [MPMetroStyle columns];
-    CGFloat cell = [MPMetroStyle cellForContainerWidth:W];
+    NSInteger gc = cols * 2;
+    CGFloat cell = [MPMetroStyle halfCellForContainerWidth:W];
     CGFloat g = MPMetroGap;
 
     MPLiveTileCenter *center = [MPLiveTileCenter sharedCenter];
 
-    NSMutableArray *rows = [NSMutableArray array];   // ряды занятости, байт на ячейку
+    NSMutableArray *rows = [NSMutableArray array];   // ряды занятости, байт на полуячейку
     CGFloat maxY = 0.0f;
 
     for (NSString *tileID in [center enabledWidgetIDs]) {
@@ -96,14 +116,14 @@
         if (p == nil) continue;
         MPTileSize gridSize = MPLiveGridSize([center sizeForTileID:tileID]);
         NSInteger sx = (NSInteger)MPTileSpanX(gridSize, cols), sy = (NSInteger)MPTileSpanY(gridSize);
-        if (sx > cols) sx = cols;
+        if (sx > gc) sx = gc;
 
         NSInteger placedRow = 0, placedCol = 0;
         BOOL placed = NO;
         for (NSInteger r = 0; !placed; r++) {
             while ((NSInteger)rows.count < r + sy)
-                [rows addObject:[NSMutableData dataWithLength:(NSUInteger)cols]];
-            for (NSInteger c = 0; c + sx <= cols; c++) {
+                [rows addObject:[NSMutableData dataWithLength:(NSUInteger)gc]];
+            for (NSInteger c = 0; c + sx <= gc; c++) {
                 BOOL free = YES;
                 for (NSInteger rr = r; rr < r + sy && free; rr++) {
                     const uint8_t *bytes = [[rows objectAtIndex:rr] bytes];
@@ -122,7 +142,8 @@
         MPLiveTileView *tv = [[MPLiveTileView alloc] initWithTileID:tileID
                                                                size:MPLiveSizeFromGrid(gridSize)];
         tv.launchTarget = [p launchTarget];
-        tv.frame = CGRectMake((CGFloat)placedCol * (cell + g), (CGFloat)placedRow * (cell + g),
+        tv.frame = CGRectMake(inset + (CGFloat)placedCol * (cell + g),
+                              [MPMetroStyle pageHeaderHeight] + (CGFloat)placedRow * (cell + g),
                               (CGFloat)sx * cell + (CGFloat)(sx - 1) * g,
                               (CGFloat)sy * cell + (CGFloat)(sy - 1) * g);
         [_scrollView addSubview:tv];
@@ -131,7 +152,8 @@
     }
 
     _scrollView.contentSize = CGSizeMake(_scrollView.bounds.size.width,
-                                         MAX(maxY + 20.0f, _scrollView.bounds.size.height));
+                                         MAX([MPMetroStyle pageHeaderHeight] + maxY + 20.0f,
+                                             _scrollView.bounds.size.height));
     [self updatePinIndicators];
 }
 

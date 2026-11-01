@@ -1,0 +1,437 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Часы WP pivot</title><style>body{margin:0;background:#2a2d33;font-family:system-ui,sans-serif}</style></head><body>
+<div id="mp-clock-proto" class="viz-dotted-background">
+  <div class="mp-preview">
+    <div class="mp-phone">
+      <div class="mp-screen">
+        <div class="mp-status">
+          <span class="mp-carrier"><span class="mp-sig"><i></i><i></i><i></i><i></i><i></i></span>vodafone</span>
+          <span class="mp-statusclock mp-tabnum" id="mpStatusClock">19:38</span>
+          <span class="mp-batt mp-tabnum">54% <span class="mp-batticon"><b></b></span></span>
+        </div>
+
+        <div class="mp-pivot" id="mpViewport">
+          <div class="mp-headers"><div class="mp-hrow" id="mpHrow">
+            <button type="button" class="mp-h active" data-i="0">Мировые часы</button><button type="button" class="mp-h" data-i="1">Будильник</button><button type="button" class="mp-h" data-i="2">Секундомер</button><button type="button" class="mp-h" data-i="3">Таймер</button>
+          </div></div>
+          <div class="mp-actions" id="mpActions"><div class="mp-arow" id="mpARow">
+            <div class="mp-actset" id="mpAct0">
+              <button type="button" class="mp-act">изменить</button>
+              <button type="button" class="mp-act">добавить</button>
+            </div>
+            <div class="mp-actset" id="mpAct1">
+              <button type="button" class="mp-act">изменить</button>
+              <button type="button" class="mp-act">добавить</button>
+            </div>
+          </div></div>
+          <div class="mp-pagesclip" id="mpClip"><div class="mp-pages" id="mpPages">
+            <section class="mp-page" id="mpPageWorld"><div class="mp-list" id="mpWorldList"></div></section>
+            <section class="mp-page" id="mpPageAlarm">
+              <div class="mp-alarm"><div><div class="mp-alarmtime mp-tabnum">6:30</div><div class="mp-alarmsub">Будни</div></div><button type="button" class="mp-toggle on" aria-label="Будильник 6:30" aria-pressed="true"><span class="mp-knob"></span></button></div>
+              <div class="mp-alarm"><div><div class="mp-alarmtime mp-tabnum">8:00</div><div class="mp-alarmsub">Выходные</div></div><button type="button" class="mp-toggle" aria-label="Будильник 8:00" aria-pressed="false"><span class="mp-knob"></span></button></div>
+              <div class="mp-alarm"><div><div class="mp-alarmtime mp-tabnum">13:15</div><div class="mp-alarmsub">Полив цветов</div></div><button type="button" class="mp-toggle" aria-label="Будильник 13:15" aria-pressed="false"><span class="mp-knob"></span></button></div>
+            </section>
+            <section class="mp-page" id="mpPageStopwatch">
+              <div class="mp-sw">
+                <div class="mp-swdigits mp-tabnum" id="mpSwDigits">0:00.0</div>
+                <div class="mp-btnrow">
+                  <button type="button" class="mp-bigbtn" id="mpSwLapBtn">круг</button>
+                  <button type="button" class="mp-bigbtn primary" id="mpSwGo">старт</button>
+                </div>
+                <div class="mp-laps mp-tabnum" id="mpSwLaps"></div>
+              </div>
+            </section>
+            <section class="mp-page" id="mpPageTimer">
+              <div class="mp-tm">
+                <div class="mp-picker" id="mpTmPicker">
+                  <div class="mp-col">
+                    <button type="button" class="mp-step" id="mpHrMinus" aria-label="Часы меньше">−</button>
+                    <div class="mp-val mp-tabnum" id="mpHrVal">0</div>
+                    <button type="button" class="mp-step" id="mpHrPlus" aria-label="Часы больше">+</button>
+                    <div class="mp-colname">часы</div>
+                  </div>
+                  <div class="mp-col">
+                    <button type="button" class="mp-step" id="mpMinMinus" aria-label="Минуты меньше">−</button>
+                    <div class="mp-val mp-tabnum" id="mpMinVal">5</div>
+                    <button type="button" class="mp-step" id="mpMinPlus" aria-label="Минуты больше">+</button>
+                    <div class="mp-colname">минуты</div>
+                  </div>
+                  <div class="mp-col">
+                    <button type="button" class="mp-step" id="mpSecMinus" aria-label="Секунды меньше">−</button>
+                    <div class="mp-val mp-tabnum" id="mpSecVal">0</div>
+                    <button type="button" class="mp-step" id="mpSecPlus" aria-label="Секунды больше">+</button>
+                    <div class="mp-colname">секунды</div>
+                  </div>
+                </div>
+                <div class="mp-running hidden" id="mpTmRunning">
+                  <div class="mp-ringwrap">
+                    <svg viewBox="0 0 170 170" role="img" aria-label="Прогресс таймера">
+                      <circle class="mp-ringtrack" cx="85" cy="85" r="72"></circle>
+                      <circle class="mp-ringprog" id="mpTmRing" cx="85" cy="85" r="72"></circle>
+                    </svg>
+                    <div class="mp-ringdigits mp-tabnum" id="mpTmDigits">5:00</div>
+                  </div>
+                </div>
+                <div class="mp-btnrow">
+                  <button type="button" class="mp-bigbtn" id="mpTmCancel">сброс</button>
+                  <button type="button" class="mp-bigbtn primary" id="mpTmGo">старт</button>
+                </div>
+              </div>
+            </section>
+          </div></div>
+        </div>
+      </div>
+    </div>
+    <p class="mp-caption">свайп по экрану — переключение страниц · тап по заголовку — прыжок</p>
+  </div>
+</div>
+
+<style>
+#mp-clock-proto { padding: 28px 16px; }
+#mp-clock-proto .mp-preview { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+/* телефон: фиксированная тёмная тема WP — вне host-переменных */
+#mp-clock-proto .mp-phone { background: #16181c; border: 1px solid #2c2f36; border-radius: 34px; padding: 14px 10px; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+#mp-clock-proto .mp-screen { position: relative; width: 320px; height: 480px; background: #000; overflow: hidden; border-radius: 4px; font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif; color: #fff; display: flex; flex-direction: column; }
+
+/* статус-бар iOS 6 */
+#mp-clock-proto .mp-status { height: 20px; flex: 0 0 20px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; font-size: 11px; font-weight: 400; background: #000; }
+#mp-clock-proto .mp-carrier { display: inline-flex; align-items: center; gap: 5px; }
+#mp-clock-proto .mp-sig { display: inline-flex; gap: 2px; }
+#mp-clock-proto .mp-sig i { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.28); }
+#mp-clock-proto .mp-sig i:nth-child(-n+4) { background: #fff; }
+#mp-clock-proto .mp-batt { display: inline-flex; align-items: center; gap: 4px; }
+#mp-clock-proto .mp-batticon { display: inline-block; width: 18px; height: 9px; border: 1px solid rgba(255,255,255,.7); border-radius: 2px; position: relative; }
+#mp-clock-proto .mp-batticon::after { content: ""; position: absolute; right: -3px; top: 2px; width: 2px; height: 3px; background: rgba(255,255,255,.7); }
+#mp-clock-proto .mp-batticon b { position: absolute; inset: 1px; width: 54%; background: #fff; }
+
+/* pivot */
+#mp-clock-proto .mp-pivot { flex: 1 1 auto; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+#mp-clock-proto .mp-pivot.mp-drag { cursor: grabbing; }
+#mp-clock-proto .mp-headers { height: 66px; overflow: hidden; }
+#mp-clock-proto .mp-hrow { display: inline-flex; align-items: baseline; gap: 34px; padding: 20px 0 0; white-space: nowrap; will-change: transform; }
+#mp-clock-proto .mp-h { background: none; border: 0; padding: 0; font: 100 31px/1 "Helvetica Neue", "Segoe UI", Arial, sans-serif; color: rgba(255,255,255,.26); cursor: pointer; transition: color .25s; }
+#mp-clock-proto .mp-h.active { color: #fff; }
+#mp-clock-proto .mp-pagesclip { overflow: hidden; }
+#mp-clock-proto .mp-pages { display: flex; gap: 0; padding-left: 20px; will-change: transform; }
+#mp-clock-proto .mp-page { flex: 0 0 280px; padding-right: 20px; box-sizing: border-box; overflow: hidden; }
+
+/* списки */
+#mp-clock-proto .mp-list { padding-top: 4px; }
+#mp-clock-proto .mp-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.09); }
+#mp-clock-proto .mp-city { font-weight: 300; font-size: 20px; line-height: 1.15; }
+#mp-clock-proto .mp-citysub { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; }
+#mp-clock-proto .mp-time { font-weight: 100; font-size: 33px; line-height: 1; text-align: right; }
+#mp-clock-proto .mp-timesub { font-size: 11px; color: rgba(255,255,255,.45); text-align: right; margin-top: 3px; }
+#mp-clock-proto .mp-tabnum { font-variant-numeric: tabular-nums; }
+
+/* будильник */
+#mp-clock-proto .mp-alarm { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.09); }
+#mp-clock-proto .mp-alarmtime { font-weight: 100; font-size: 38px; line-height: 1; }
+#mp-clock-proto .mp-alarmsub { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 4px; }
+#mp-clock-proto .mp-toggle { position: relative; width: 58px; height: 22px; border: 0; border-radius: 3px; background: rgba(255,255,255,.34); cursor: pointer; padding: 0; transition: background .2s; flex: 0 0 auto; }
+#mp-clock-proto .mp-toggle.on { background: #1ba1e2; }
+#mp-clock-proto .mp-knob { position: absolute; top: 2px; left: 2px; width: 26px; height: 18px; background: #fff; transition: left .18s; }
+#mp-clock-proto .mp-toggle.on .mp-knob { left: 30px; }
+
+/* секундомер / таймер */
+#mp-clock-proto .mp-sw, #mp-clock-proto .mp-tm { height: 100%; display: flex; flex-direction: column; }
+#mp-clock-proto .mp-swdigits { font-weight: 100; font-size: 50px; line-height: 1; text-align: center; margin-top: 30px; }
+#mp-clock-proto .mp-btnrow { display: flex; gap: 10px; margin-top: 24px; padding: 0 2px; }
+#mp-clock-proto .mp-bigbtn { flex: 1; height: 56px; border: 0; background: rgba(255,255,255,.13); color: #fff; font: 300 17px/1 "Helvetica Neue", "Segoe UI", Arial, sans-serif; cursor: pointer; }
+#mp-clock-proto .mp-bigbtn:active { background: rgba(255,255,255,.26); }
+#mp-clock-proto .mp-bigbtn.primary { background: #1ba1e2; }
+#mp-clock-proto .mp-bigbtn.primary:active { background: #45b7ea; }
+#mp-clock-proto .mp-laps { margin-top: 14px; overflow: hidden; }
+#mp-clock-proto .mp-lap { display: flex; justify-content: space-between; font-size: 13px; font-weight: 300; color: rgba(255,255,255,.6); padding: 6px 2px; border-bottom: 1px solid rgba(255,255,255,.08); }
+
+/* выставление времени таймера */
+#mp-clock-proto .mp-picker { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
+#mp-clock-proto .mp-col { display: flex; flex-direction: column; align-items: center; width: 80px; }
+#mp-clock-proto .mp-step { width: 46px; height: 30px; border: 0; background: rgba(255,255,255,.13); color: #fff; font: 300 20px/1 "Helvetica Neue", "Segoe UI", Arial, sans-serif; cursor: pointer; }
+#mp-clock-proto .mp-step:active { background: rgba(255,255,255,.26); }
+#mp-clock-proto .mp-val { font-weight: 100; font-size: 34px; line-height: 1.35; }
+#mp-clock-proto .mp-colname { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; }
+
+/* отсчёт таймера: кольцо прогресса */
+#mp-clock-proto .mp-running { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; }
+#mp-clock-proto .mp-ringwrap { position: relative; width: 170px; height: 170px; }
+#mp-clock-proto .mp-ringtrack, #mp-clock-proto .mp-ringprog { fill: none; stroke-width: 6; }
+#mp-clock-proto .mp-ringtrack { stroke: rgba(255,255,255,.14); }
+#mp-clock-proto .mp-ringprog { stroke: #1ba1e2; stroke-dasharray: 452.4; stroke-dashoffset: 0; transform: rotate(-90deg); transform-origin: 50% 50%; }
+#mp-clock-proto .mp-ringdigits { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 100; font-size: 40px; }
+#mp-clock-proto .mp-ringdigits.done { color: #1ba1e2; }
+
+/* текстовые действия под заголовком */
+#mp-clock-proto .mp-actions { height: 36px; overflow: hidden; }
+#mp-clock-proto .mp-arow { position: relative; height: 36px; will-change: transform; }
+#mp-clock-proto .mp-actset { position: absolute; top: 0; display: flex; align-items: center; gap: 28px; height: 36px; white-space: nowrap; }
+#mp-clock-proto .mp-actset.hidden { display: none; }
+#mp-clock-proto .mp-act { background: none; border: 0; padding: 0; color: #fff; font: 300 16px/1 "Helvetica Neue", "Segoe UI", Arial, sans-serif; cursor: pointer; }
+#mp-clock-proto .mp-act:active { color: rgba(255,255,255,.45); }
+
+#mp-clock-proto .mp-caption { margin: 0; font-size: 12px; color: var(--muted-foreground); font-family: system-ui, sans-serif; }
+#mp-clock-proto .hidden { display: none; }
+</style>
+
+<script>
+(function () {
+  var root = document.getElementById('mp-clock-proto');
+  if (!root) return;
+  var vp = document.getElementById('mpViewport');
+  var pagesEl = document.getElementById('mpPages');
+  var hrow = document.getElementById('mpHrow');
+  var arow = document.getElementById('mpARow');
+  var actSets = [document.getElementById('mpAct0'), document.getElementById('mpAct1')];
+  var headerEls = Array.prototype.slice.call(hrow.querySelectorAll('.mp-h'));
+  var N = headerEls.length;
+  var STRIDE = 280, LEAD = 20; // страница 280 встык; соседняя выглядывает на 20px
+  var MAX = (N - 1) * STRIDE;
+
+  var offset = 0, startOffset = 0, dragging = false, axis = null, startX = 0, startY = 0;
+  var lastX = 0, lastVX = 0, lastT = 0, suppressClick = false, activePointer = null;
+
+  function headerShifts() {
+    return headerEls.map(function (h) { return LEAD - h.offsetLeft; });
+  }
+  function apply() {
+    // пары «изменить/добавить» стоят под своими заголовками и едут вместе с ними
+    actSets.forEach(function (a, i) { a.style.left = headerEls[i].offsetLeft + 'px'; });
+    pagesEl.style.transform = 'translateX(' + (-offset) + 'px)';
+    var sh = headerShifts();
+    var i0 = Math.max(0, Math.min(N - 1, Math.floor(offset / STRIDE)));
+    var t = Math.max(0, Math.min(1, (offset - i0 * STRIDE) / STRIDE));
+    var a = sh[i0], b = sh[Math.min(N - 1, i0 + 1)];
+    var shift = a + (b - a) * t;
+    hrow.style.transform = 'translateX(' + shift + 'px)';
+    arow.style.transform = 'translateX(' + shift + 'px)';
+    // плавное затухание действий при уходе на Секундомер/Таймер
+    arow.style.opacity = Math.max(0, Math.min(1, (490 - offset) / 210));
+    var idx = Math.round(offset / STRIDE);
+    headerEls.forEach(function (h, i) { h.classList.toggle('active', i === idx); });
+    showActSet(idx);
+  }
+
+  function showActSet(idx) {
+    actSets.forEach(function (a) { a.classList.toggle('hidden', idx > 1); });
+  }
+
+  vp.addEventListener('pointerdown', function (e) {
+    dragging = true; axis = null; suppressClick = false; activePointer = e.pointerId;
+    startX = lastX = e.clientX; startY = e.clientY;
+    startOffset = offset; lastVX = 0; lastT = performance.now();
+    pagesEl.style.transition = 'none'; hrow.style.transition = 'none'; arow.style.transition = 'none';
+    vp.classList.add('mp-drag');
+  });
+  document.addEventListener('pointermove', function (e) {
+    if (!dragging || e.pointerId !== activePointer) return;
+    if (e.pointerType === 'mouse' && e.buttons === 0) { endDrag(); return; } // синтетический move без зажатой кнопки
+    var dx = e.clientX - startX, dy = e.clientY - startY;
+    if (axis === null) {
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      else return;
+    }
+    if (axis !== 'x') return;
+    suppressClick = true;
+    var now = performance.now(), dt = Math.max(1, now - lastT);
+    lastVX = (e.clientX - lastX) / dt; lastX = e.clientX; lastT = now;
+    var raw = startOffset - dx;
+    if (raw < 0) raw = raw * 0.35;
+    if (raw > MAX) raw = MAX + (raw - MAX) * 0.35;
+    offset = raw; apply();
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false; vp.classList.remove('mp-drag');
+    if (axis !== 'x') { apply(); return; }
+    var projected = offset - lastVX * 180; // докат по скорости, как в MPMultitaskView
+    var t = Math.max(0, Math.min(N - 1, Math.round(projected / STRIDE)));
+    settle(t * STRIDE);
+  }
+  function settle(target) {
+    offset = target;
+    pagesEl.style.transition = 'transform .32s cubic-bezier(.22,.7,.3,1)';
+    hrow.style.transition = 'transform .32s cubic-bezier(.22,.7,.3,1)';
+    arow.style.transition = 'transform .32s cubic-bezier(.22,.7,.3,1), opacity .32s linear';
+    apply();
+  }
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+
+  headerEls.forEach(function (h) {
+    h.addEventListener('click', function () {
+      if (suppressClick) { suppressClick = false; return; }
+      settle(parseInt(h.getAttribute('data-i'), 10) * STRIDE);
+    });
+  });
+
+  // мировые часы — живые, через Intl
+  var cities = [
+    { n: 'Лондон', tz: 'Europe/London' },
+    { n: 'Париж', tz: 'Europe/Paris' },
+    { n: 'Нью-Йорк', tz: 'America/New_York' },
+    { n: 'Лос-Анджелес', tz: 'America/Los_Angeles' },
+    { n: 'Токио', tz: 'Asia/Tokyo' }
+  ];
+  var list = document.getElementById('mpWorldList');
+  var rows = cities.map(function (c) {
+    var row = document.createElement('div'); row.className = 'mp-row';
+    row.innerHTML = '<div><div class="mp-city">' + c.n + '</div><div class="mp-citysub"></div></div>' +
+                    '<div><div class="mp-time mp-tabnum">--:--</div><div class="mp-timesub"></div></div>';
+    list.appendChild(row);
+    return { sub: row.querySelector('.mp-citysub'), time: row.querySelector('.mp-time'), tsub: row.querySelector('.mp-timesub'), city: c };
+  });
+  var timeFmt = function (tz) {
+    return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(new Date());
+  };
+  function dayStr(shift) {
+    return new Date(Date.now() + shift * 86400000).toLocaleDateString('en-US');
+  }
+  function hourIn(tz) {
+    var p = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: tz }).formatToParts(new Date());
+    var h = 0; p.forEach(function (x) { if (x.type === 'hour') h = parseInt(x.value, 10) % 24; });
+    return h;
+  }
+  function tickWorld() {
+    var nowH = new Date().getHours();
+    document.getElementById('mpStatusClock').textContent =
+      new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+    rows.forEach(function (r) {
+      r.time.textContent = timeFmt(r.city.tz);
+      var today = dayStr(0), cityDay = new Date().toLocaleDateString('en-US', { timeZone: r.city.tz });
+      var dayWord = cityDay === today ? 'сегодня' : (cityDay === dayStr(1) ? 'завтра' : 'вчера');
+      var d = (hourIn(r.city.tz) - nowH + 24) % 24; if (d > 12) d -= 24;
+      var sign = d > 0 ? '+' : (d < 0 ? '−' : '');
+      var delta = d === 0 ? '' : ', ' + sign + Math.abs(d) + ' ' + (Math.abs(d) === 1 ? 'час' : 'ч');
+      r.sub.textContent = dayWord + delta;
+      r.tsub.textContent = dayWord === 'сегодня' ? '' : dayWord;
+      r.tsub.style.display = dayWord === 'сегодня' ? 'none' : 'block';
+    });
+  }
+  tickWorld();
+  setInterval(tickWorld, 1000);
+
+  // тумблеры
+  Array.prototype.forEach.call(root.querySelectorAll('.mp-toggle'), function (t) {
+    t.addEventListener('click', function () {
+      t.classList.toggle('on');
+      t.setAttribute('aria-pressed', t.classList.contains('on') ? 'true' : 'false');
+    });
+  });
+
+  // секундомер
+  var swRunning = false, swStart = 0, swAcc = 0, swLapMark = 0, lapN = 0;
+  var swDigits = document.getElementById('mpSwDigits'), swLaps = document.getElementById('mpSwLaps');
+  function swFmt(ms) {
+    var m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000), d = Math.floor(ms % 1000 / 100);
+    return m + ':' + (s < 10 ? '0' : '') + s + '.' + d;
+  }
+  function swTick() {
+    if (!swRunning) return;
+    swDigits.textContent = swFmt(swAcc + (performance.now() - swStart));
+    requestAnimationFrame(swTick);
+  }
+  function swLapLabel() {
+    document.getElementById('mpSwLapBtn').textContent = swRunning ? 'круг' : 'сброс';
+  }
+  document.getElementById('mpSwGo').addEventListener('click', function () {
+    if (!swRunning) {
+      swRunning = true; swStart = performance.now();
+      this.textContent = 'стоп';
+      swLapLabel();
+      requestAnimationFrame(swTick);
+    } else {
+      swAcc += performance.now() - swStart; swRunning = false;
+      this.textContent = 'старт';
+      swLapLabel();
+      swDigits.textContent = swFmt(swAcc);
+    }
+  });
+  document.getElementById('mpSwLapBtn').addEventListener('click', function () {
+    if (swRunning) {
+      var cur = swAcc + (performance.now() - swStart);
+      var lapMs = cur - swLapMark; swLapMark = cur; lapN++;
+      var row = document.createElement('div'); row.className = 'mp-lap';
+      row.innerHTML = '<span>Круг ' + lapN + '</span><span>' + swFmt(lapMs) + '</span>';
+      swLaps.insertBefore(row, swLaps.firstChild);
+    } else if (swAcc > 0) {
+      swAcc = 0; swLapMark = 0; lapN = 0;
+      swDigits.textContent = '0:00.0'; swLaps.innerHTML = '';
+      document.getElementById('mpSwGo').textContent = 'старт';
+      swLapLabel();
+    }
+  });
+
+  // таймер: пикер «−/+» до старта, кольцо прогресса при отсчёте
+  var tm = { h: 0, m: 5, s: 0 }, tmTotal = 0, tmLeft = 0, tmRunning = false, tmTimer = null;
+  var RING = 2 * Math.PI * 72;
+  var tmDigits = document.getElementById('mpTmDigits');
+  var tmRing = document.getElementById('mpTmRing');
+  tmRing.style.strokeDasharray = RING;
+  tmRing.style.strokeDashoffset = 0;
+  function tmFmt(s) {
+    var m = Math.floor(s / 60), sec = s % 60;
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+  function tmShowPicker() {
+    document.getElementById('mpHrVal').textContent = tm.h;
+    document.getElementById('mpMinVal').textContent = tm.m;
+    document.getElementById('mpSecVal').textContent = tm.s;
+  }
+  function tmBindStep(idMinus, idPlus, key, max) {
+    document.getElementById(idMinus).addEventListener('click', function () {
+      if (tmRunning || tmLeft > 0) return;
+      tm[key] = Math.max(0, tm[key] - 1); tmShowPicker();
+    });
+    document.getElementById(idPlus).addEventListener('click', function () {
+      if (tmRunning || tmLeft > 0) return;
+      tm[key] = Math.min(max, tm[key] + 1); tmShowPicker();
+    });
+  }
+  tmBindStep('mpHrMinus', 'mpHrPlus', 'h', 23);
+  tmBindStep('mpMinMinus', 'mpMinPlus', 'm', 59);
+  tmBindStep('mpSecMinus', 'mpSecPlus', 's', 59);
+  document.getElementById('mpTmGo').addEventListener('click', function () {
+    if (!tmRunning) {
+      if (tmLeft === 0) {
+        tmTotal = tm.h * 3600 + tm.m * 60 + tm.s;
+        if (tmTotal === 0) return;
+        tmLeft = tmTotal;
+      }
+      tmRunning = true;
+      this.textContent = 'пауза';
+      document.getElementById('mpTmPicker').classList.add('hidden');
+      document.getElementById('mpTmRunning').classList.remove('hidden');
+      tmDigits.classList.remove('done');
+      tmDigits.textContent = tmFmt(tmLeft);
+      tmRing.style.strokeDashoffset = RING * (1 - tmLeft / tmTotal);
+      tmTimer = setInterval(function () {
+        tmLeft = Math.max(0, tmLeft - 1);
+        tmDigits.textContent = tmFmt(tmLeft);
+        tmRing.style.strokeDashoffset = RING * (1 - tmLeft / tmTotal);
+        if (tmLeft <= 0) {
+          clearInterval(tmTimer); tmRunning = false;
+          document.getElementById('mpTmGo').textContent = 'старт';
+          tmDigits.classList.add('done');
+        }
+      }, 1000);
+    } else {
+      clearInterval(tmTimer); tmRunning = false;
+      this.textContent = 'старт';
+    }
+  });
+  document.getElementById('mpTmCancel').addEventListener('click', function () {
+    clearInterval(tmTimer); tmRunning = false; tmLeft = 0;
+    document.getElementById('mpTmGo').textContent = 'старт';
+    document.getElementById('mpTmPicker').classList.remove('hidden');
+    document.getElementById('mpTmRunning').classList.add('hidden');
+    tmDigits.classList.remove('done');
+    tmRing.style.strokeDashoffset = 0;
+  });
+
+  apply();
+  requestAnimationFrame(apply); // пересчёт сдвигов заголовков после раскладки
+})();
+</script>
+</div>
+
+</body></html>

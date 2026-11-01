@@ -318,6 +318,12 @@ static const CFTimeInterval MPDsAppsCacheTTL = 2.0;
     }
 }
 
+// Проверка перед Turnstile-анимацией: не играть выезд ради несуществующего приложения
+- (BOOL)canLaunchWithBundleID:(NSString *)bundleID {
+    if (bundleID.length == 0) return NO;
+    return MPDsFindIcon(bundleID) != nil;
+}
+
 @end
 
 // Поиск иконки по bundleID (обход всех листовых). Нужен для запуска приложения

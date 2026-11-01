@@ -128,6 +128,8 @@ static NSString *MPFirstLetterOf(NSString *name) {
 @implementation MPAppListPageView {
     UITextField *_searchField;
     UITableView *_table;
+    UILabel     *_headerLabel;    // заголовок «Поиск»
+    UIView      *_headerWrapper;  // обёртка заголовка — tableHeaderView таблицы
     NSArray     *_allEntries;     // все приложения (отсортированы)
     NSArray     *_sections;       // NSArray<NSDictionary{title, items}>
     UIColor     *_appliedAccent;  // под каким акцентом собрана таблица (см. applyStyle)
@@ -143,6 +145,20 @@ static NSString *MPFirstLetterOf(NSString *name) {
     if (self) {
         self.backgroundColor = [UIColor blackColor];
         _topInset = 20.0f;
+
+        // заголовок страницы — tableHeaderView таблицы: уезжает при прокрутке,
+        // как большая шапка в «Настройках»; лейбл касания не перехватывает
+        _headerLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+        _headerLabel.backgroundColor = [UIColor clearColor];
+        _headerLabel.textColor = [UIColor whiteColor];
+        _headerLabel.font = [MPMetroStyle lightFont:38.0f];
+        _headerLabel.text = @"Поиск";
+        _headerLabel.userInteractionEnabled = NO;
+        CGFloat hh = [MPMetroStyle pageHeaderHeight];
+        _headerWrapper = [[UIView alloc] initWithFrame:
+                          CGRectMake(0.0f, 0.0f, frame.size.width > 0.0f ? frame.size.width : 320.0f, hh)];
+        _headerWrapper.backgroundColor = [UIColor blackColor];
+        [_headerWrapper addSubview:_headerLabel];
 
         _searchField = [[UITextField alloc] initWithFrame:CGRectZero];
         _searchField.backgroundColor = [UIColor colorWithWhite:0.15f alpha:1.0f];
@@ -168,6 +184,7 @@ static NSString *MPFirstLetterOf(NSString *name) {
         _table.rowHeight = 44.0f;
         _table.dataSource = self;
         _table.delegate = self;
+        _table.tableHeaderView = _headerWrapper;   // уезжающий заголовок «Поиск»
         // WP8: долгое нажатие на строке — контекстное меню закрепления плитки
         UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc]
             initWithTarget:self action:@selector(rowLongPressed:)];
@@ -192,12 +209,23 @@ static NSString *MPFirstLetterOf(NSString *name) {
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width, h = self.bounds.size.height;
+    CGFloat inset = [MPMetroStyle pageInset];
+    CGFloat hh = [MPMetroStyle pageHeaderHeight];
     CGFloat g = 6.0f;
     CGFloat rowH = 36.0f;
     CGFloat y = _topInset + g;
     _searchField.frame = CGRectMake(g, y, w - g * 2.0f, rowH);   // поле на всю ширину
     CGFloat ty = y + rowH + g;
     _table.frame = CGRectMake(0.0f, ty, w, h - ty);
+    // ширина шапки-заголовка следует за таблицей (переустановка заставляет
+    // таблицу перечитать фрейм headerView)
+    if (_headerWrapper.bounds.size.width != w) {
+        _headerWrapper.frame = CGRectMake(0.0f, 0.0f, w, hh);
+        _table.tableHeaderView = _headerWrapper;
+    }
+    _headerLabel.frame = CGRectMake(inset, [MPMetroStyle pageHeaderPadTop],
+                                    w - inset * 2.0f,
+                                    hh - [MPMetroStyle pageHeaderPadTop] - [MPMetroStyle pageHeaderPadBottom]);
 }
 
 #pragma mark - Данные

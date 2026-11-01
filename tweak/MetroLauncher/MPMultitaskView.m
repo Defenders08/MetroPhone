@@ -195,7 +195,10 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
         [MPMetroStyle reloadPreferences];
         self.backgroundColor = [MPMetroStyle accentColor];
         MPLog(@"свитчер: открытие, приложений %lu", (unsigned long)appIDs.count);
+        CFAbsoluteTime rebuildStart = CFAbsoluteTimeGetCurrent();
         [self rebuildWithAppIDs:appIDs];
+        // по журналу видно, что даёт прогрев кэша (см. хук Home в Tweak.xm)
+        MPLog(@"свитчер: сборка %.0f мс", (CFAbsoluteTimeGetCurrent() - rebuildStart) * 1000.0);
 
         _open = YES;
         self.hidden = NO;
@@ -436,19 +439,22 @@ static UIImage *MPSnapshotForBundleID(NSString *bid) {
     if (bid.length == 0) return nil;
     @try {
         NSString *dir = [@"/var/mobile/Library/Caches/Snapshots" stringByAppendingPathComponent:bid];
-        NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:nil];
-        if (files.count == 0) return nil;
+        // Один проход по каталогу: дату изменения отдаёт сам перечислитель,
+        // без отдельных stat-ов на файл (раньше их было по два на каждое
+        // сравнение сортировки — а это выполняется при каждом открытии).
+        NSMutableDictionary *dateByPath = [NSMutableDictionary dictionary];
+        NSDirectoryEnumerator *e = [[NSFileManager defaultManager] enumeratorAtPath:dir];
+        NSString *f;
+        while ((f = [e nextObject]) != nil) {
+            dateByPath[[dir stringByAppendingPathComponent:f]] =
+                e.fileAttributes[NSFileModificationDate] ?: [NSDate distantPast];
+        }
+        if (dateByPath.count == 0) return nil;
 
-        NSMutableArray *paths = [NSMutableArray array];
-        for (NSString *f in files) [paths addObject:[dir stringByAppendingPathComponent:f]];
+        NSMutableArray *paths = [NSMutableArray arrayWithArray:dateByPath.allKeys];
         [paths sortUsingComparator:^NSComparisonResult(NSString *a, NSString *b) {
-            NSFileManager *fm = [NSFileManager defaultManager];
-            NSDictionary *attrA = [fm attributesOfItemAtPath:a error:nil];
-            NSDictionary *attrB = [fm attributesOfItemAtPath:b error:nil];
-            NSDate *da = attrA[NSFileModificationDate] ?: [NSDate distantPast];
-            NSDate *db = attrB[NSFileModificationDate] ?: [NSDate distantPast];
-            return [db compare:da]; // свежие первыми
-        }];
+            return [(dateByPath[b] ?: [NSDate distantPast]) compare:(dateByPath[a] ?: [NSDate distantPast])];
+        }]; // свежие первыми
 
         NSDictionary *cached = [MPSnapshotMemCache() objectForKey:bid];
         if (cached != nil && [cached[@"path"] isEqualToString:paths[0]]) return cached[@"img"];
@@ -457,7 +463,10 @@ static UIImage *MPSnapshotForBundleID(NSString *bid) {
             UIImage *raw = [UIImage imageWithContentsOfFile:paths[i]];
             if (raw == nil) continue;
             UIImage *decoded = MPDecodeAndFit(raw);
-            [MPSnapshotMemCache() setObject:@{@"path": paths[0], @"img": decoded}
+            // в кэш — путь того файла, что реально декодирован: если свежий
+            // не читается и сработал фолбэк на соседа, запись «свежий путь +
+            // старая картинка» навсегда закрывала бы доступ к новому снимку
+            [MPSnapshotMemCache() setObject:@{@"path": paths[i], @"img": decoded}
                                      forKey:bid];
             return decoded;
         }

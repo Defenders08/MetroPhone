@@ -1,9 +1,11 @@
 // MetroPhone — вьюха Metro-локскрина (WP 8.1). iOS 6.1, экран 320×480.
 //
 // Структура снизу вверх: UIImageView с обоями → подписи (часы/день/дата) →
-// статусные строки (батарея + уведомления). Пан-жест уносит вьюху вверх
-// (механика iOS 7), за порогом — колбэк разблокировки, иначе пружина назад.
-// Замеры текста — только iOS 6 API (sizeWithFont:), метки — UILabel.
+// статусные строки (батарея + уведомления). Пан-жест: вверх уносит вьюху
+// (разблокировка, механика iOS 7), влево — запускает камеру, как в оригинале:
+// вьюха следует за пальцем, иконка камеры наливается и растёт, за порогом
+// экран уезжает за левый край и зовётся колбэк камеры; недотянутый жест —
+// пружина назад. Замеры текста — только iOS 6 API (sizeWithFont:), метки — UILabel.
 
 #import "MPLockScreenView.h"
 #import "../MetroLauncher/MPMetroStyle.h"
@@ -20,6 +22,18 @@ static const CGFloat MPLSDateSize    = 24.0;  // кегль дня недели 
 static const CGFloat MPLSRowSize     = 15.0;  // кегль строк батареи и уведомлений
 static const CGFloat MPLSUnlockDistance = 140.0; // порог свайпа (pt вверх)
 static const CGFloat MPLSUnlockVelocity = 700.0; // либо резкий флик вверх (pt/с)
+static const CGFloat MPLSAxisLockDelta  = 12.0;  // смещение, после которого фиксируется ось жеста
+static const CGFloat MPLSCameraDistance = 90.0;  // порог свайпа влево для камеры (pt)
+static const CGFloat MPLSCameraVelocity = 600.0; // либо резкий флик влево (pt/с)
+static const CGFloat MPLSIconIdleAlpha  = 0.60;  // прозрачность иконки камеры в покое (при свайпе — до 1)
+
+// Ось пан-жеста: фиксируется по первому заметному движению и не меняется до
+// конца жеста — диагональный свайп не должен дёргать обе анимации сразу
+typedef enum {
+    MPLSPanAxisNone = 0,
+    MPLSPanAxisVertical,   // вверх — разблокировка
+    MPLSPanAxisHorizontal, // влево — камера
+} MPLSPanAxis;
 
 #pragma mark - Батарея (IOPS через dlsym — без линковки IOKit, чтобы не трогать tbd)
 
@@ -202,12 +216,13 @@ static NSArray *MPLSBadgeRows(void) {
 	path.lineWidth = line;
 	path.lineJoinStyle = kCGLineJoinMiter;
 
-	// Полупрозрачный белый — иконка-подсказка; тень едва заметная, только чтобы
-	// контур не терялся на светлых обоях
+	// Почти непрозрачный белый: итоговую прозрачность задаёт alpha самой вьюхи
+	// (0.6 в покое, при свайпе влево наливается до 1.0). Тень едва заметная,
+	// только чтобы контур не терялся на светлых обоях
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
 	CGContextSetShadowWithColor(ctx, CGSizeMake(0, 1), 0.5,
 	                            [UIColor colorWithWhite:0.0 alpha:0.25].CGColor);
-	[[UIColor colorWithWhite:1.0 alpha:0.55] setStroke];
+	[[UIColor colorWithWhite:1.0 alpha:0.9] setStroke];
 	[path stroke];
 }
 
@@ -222,6 +237,9 @@ static NSArray *MPLSBadgeRows(void) {
 @property (nonatomic, strong) UIView *cameraIcon;    // камера WP внизу справа
 @property (nonatomic, strong) dispatch_source_t clockSource;
 @property (nonatomic, assign) CGFloat homeY;         // «домашний» center.y до жеста
+@property (nonatomic, assign) CGFloat homeX;         // «домашний» center.x до жеста
+@property (nonatomic, assign) MPLSPanAxis panAxis;   // выбранная ось текущего жеста
+@property (nonatomic, assign) BOOL cameraBusy;       // камера уже запускается (тап/свайп)
 @end
 
 @implementation MPLockScreenView
@@ -273,6 +291,7 @@ static NSArray *MPLSBadgeRows(void) {
 	[self addSubview:_statusStack];
 
 	_cameraIcon = [[MPLSCameraIconView alloc] initWithFrame:CGRectMake(0, 0, 22, 17)];
+	_cameraIcon.alpha = MPLSIconIdleAlpha;
 	[self addSubview:_cameraIcon];
 	UITapGestureRecognizer *cameraTap =
 	    [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleCameraTap:)];
@@ -285,8 +304,29 @@ static NSArray *MPLSBadgeRows(void) {
 }
 
 - (void)handleCameraTap:(UITapGestureRecognizer *)gr {
-	// Тап мог прийтись, пока экран уезжает после разблокировки — не дублируем
-	if (self.onCameraBlock != nil) self.onCameraBlock();
+	// Повторный тап и тап во время перетаскивания не дублируем
+	if (self.cameraBusy || self.panAxis != MPLSPanAxisNone) return;
+	self.cameraBusy = YES;
+	// Отклик кнопки: глиф вспыхивает и растёт, затем весь экран тает — и только
+	// после этого запускаем камеру (разблокировка и запуск — в контроллере)
+	[UIView animateWithDuration:0.12
+	                      delay:0.0
+	                    options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState
+	                 animations:^{
+		self.cameraIcon.alpha = 1.0;
+		self.cameraIcon.transform = CGAffineTransformMakeScale(1.4, 1.4);
+	}
+	                 completion:^(BOOL finished) {
+		[UIView animateWithDuration:0.22
+		                      delay:0.0
+		                    options:UIViewAnimationOptionCurveEaseIn | UIViewAnimationOptionBeginFromCurrentState
+		                 animations:^{
+			self.alpha = 0.0;
+		}
+		                 completion:^(BOOL finished2) {
+			if (self.onCameraBlock != nil) self.onCameraBlock();
+		}];
+	}];
 }
 
 #pragma mark Обои и положение
@@ -304,7 +344,11 @@ static NSArray *MPLSBadgeRows(void) {
 	self.transform = CGAffineTransformIdentity;
 	self.alpha = 1.0;
 	self.center = CGPointMake(x, y);
+	self.homeX = x;
 	self.homeY = y;
+	self.panAxis = MPLSPanAxisNone;
+	self.cameraBusy = NO;
+	[self resetCameraHint];
 }
 
 #pragma mark Формат времени (12/24ч из локали устройства)
@@ -500,24 +544,88 @@ static NSArray *MPLSBadgeRows(void) {
 	                                   22.0, 17.0);
 }
 
-#pragma mark Жест разблокировки (механика iOS 7)
+#pragma mark Жесты: вверх — разблокировка (iOS 7), влево — камера (WP 8.1)
 
 - (void)handlePan:(UIPanGestureRecognizer *)gr {
 	CGPoint translation = [gr translationInView:self];
+
 	if (gr.state == UIGestureRecognizerStateChanged) {
-		CGFloat dy = translation.y;
-		if (dy > 0) dy *= 0.08; // вниз экран не тянется — только лёгкая резинка
-		self.center = CGPointMake(self.superview.bounds.size.width / 2.0, self.homeY + dy);
-	} else if (gr.state == UIGestureRecognizerStateEnded ||
-	           gr.state == UIGestureRecognizerStateCancelled) {
-		CGPoint velocity = [gr velocityInView:self];
-		CGFloat dy = self.center.y - self.homeY;
-		if (-dy > MPLSUnlockDistance || velocity.y < -MPLSUnlockVelocity) {
-			[self slideAwayAndUnlock];
+		// Ось фиксируем по первому заметному движению; накопленный до порога
+		// сдвиг обнуляем, чтобы вьюха не дёрнулась скачком
+		if (self.panAxis == MPLSPanAxisNone) {
+			if (fabs(translation.x) < MPLSAxisLockDelta &&
+			    fabs(translation.y) < MPLSAxisLockDelta) return;
+			self.panAxis = (fabs(translation.x) > fabs(translation.y))
+			    ? MPLSPanAxisHorizontal : MPLSPanAxisVertical;
+			[gr setTranslation:CGPointZero inView:self];
+			return;
+		}
+
+		if (self.panAxis == MPLSPanAxisVertical) {
+			CGFloat dy = translation.y;
+			if (dy > 0) dy *= 0.08; // вниз экран не тянется — только лёгкая резинка
+			self.center = CGPointMake(self.superview.bounds.size.width / 2.0, self.homeY + dy);
 		} else {
-			[self springBack];
+			// Влево вьюха следует за пальцем с сопротивлением, вправо — резинка
+			CGFloat dx = translation.x;
+			dx = (dx < 0) ? dx * 0.75 : dx * 0.08;
+			self.center = CGPointMake(self.homeX + dx, self.homeY);
+			[self updateCameraHint:translation.x];
+		}
+		return;
+	}
+
+	if (gr.state == UIGestureRecognizerStateEnded ||
+	    gr.state == UIGestureRecognizerStateCancelled) {
+		MPLSPanAxis axis = self.panAxis;
+		self.panAxis = MPLSPanAxisNone;
+
+		if (axis == MPLSPanAxisHorizontal) {
+			CGPoint velocity = [gr velocityInView:self];
+			CGFloat dx = self.center.x - self.homeX;
+			if (-dx > MPLSCameraDistance || velocity.x < -MPLSCameraVelocity) {
+				[self slideAwayAndCamera];
+			} else {
+				[self springBack];
+			}
+		} else if (axis == MPLSPanAxisVertical) {
+			CGPoint velocity = [gr velocityInView:self];
+			CGFloat dy = self.center.y - self.homeY;
+			if (-dy > MPLSUnlockDistance || velocity.y < -MPLSUnlockVelocity) {
+				[self slideAwayAndUnlock];
+			} else {
+				[self springBack];
+			}
 		}
 	}
+}
+
+// Иконка камеры как индикатор свайпа: по мере утягивания влево глиф наливается,
+// растёт и слегка уходит за палец — подсказка «отпустишь = камера»
+- (void)updateCameraHint:(CGFloat)rawDx {
+	CGFloat progress = MIN(MAX(-rawDx / MPLSCameraDistance, 0.0), 1.0);
+	CGFloat scale = 1.0 + 0.4 * progress;
+	CGAffineTransform t = CGAffineTransformMakeTranslation(-8.0 * progress, 0.0);
+	self.cameraIcon.transform = CGAffineTransformScale(t, scale, scale);
+	self.cameraIcon.alpha = MPLSIconIdleAlpha + (1.0 - MPLSIconIdleAlpha) * progress;
+}
+
+- (void)resetCameraHint {
+	self.cameraIcon.transform = CGAffineTransformIdentity;
+	self.cameraIcon.alpha = MPLSIconIdleAlpha;
+}
+
+- (void)slideAwayAndCamera {
+	self.cameraBusy = YES;
+	[UIView animateWithDuration:0.25
+	                      delay:0.0
+	                    options:UIViewAnimationOptionCurveEaseIn
+	                 animations:^{
+		self.center = CGPointMake(-self.bounds.size.width / 2.0, self.homeY);
+	}
+	                 completion:^(BOOL finished) {
+		if (self.onCameraBlock != nil) self.onCameraBlock();
+	}];
 }
 
 - (void)slideAwayAndUnlock {
@@ -540,7 +648,9 @@ static NSArray *MPLSBadgeRows(void) {
 	                      delay:0.0
 	                    options:UIViewAnimationOptionCurveEaseOut
 	                 animations:^{
-		self.center = CGPointMake(self.superview.bounds.size.width / 2.0, self.homeY);
+		self.alpha = 1.0; // мог таять после тапа по камере
+		self.center = CGPointMake(self.homeX, self.homeY);
+		[self resetCameraHint];
 	}
 	                 completion:NULL];
 }

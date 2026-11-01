@@ -20,6 +20,7 @@ static const NSInteger      MPLiveBackoffShiftCap = 4;      // интервал 
 @property (nonatomic, assign) NSInteger failureStreak;
 @property (nonatomic, assign) BOOL inFlight;
 @property (nonatomic, assign) NSInteger generation;          // отсекает поздние ответы провайдера
+@property (nonatomic, assign) BOOL loggedFirstFetch;         // диагностика: первый фетч после регистрации
 @end
 
 @implementation MPLiveTileRun
@@ -29,6 +30,7 @@ static const NSInteger      MPLiveBackoffShiftCap = 4;      // интервал 
     dispatch_source_t   _tick;          // 1 с, главный поток; ссылку держим — иначе источник умрёт
     BOOL                _tickSuspended;
     BOOL                _displayOn;
+    BOOL                _animPaused;    // пауза на время Turnstile/приложения (setAnimPaused:)
     NSMutableDictionary *_runs;         // tileID → MPLiveTileRun
     dispatch_queue_t    _fetchQueue;    // серийная фоновая: тяжёлое — вне главного потока
 }
@@ -107,10 +109,17 @@ static const NSInteger      MPLiveBackoffShiftCap = 4;      // интервал 
     if (on && _tickSuspended)  { dispatch_resume(_tick);  _tickSuspended = NO; }
 }
 
+// Пауза на время Turnstile/приложения: тик ходит (дешёвый no-op), обновлений нет
+- (void)setAnimPaused:(BOOL)paused {
+    if (_animPaused == paused) return;
+    _animPaused = paused;
+    MPLog(@"живые плитки: %@", paused ? @"пауза (переход/приложение)" : @"продолжение");
+}
+
 #pragma mark - Тик (главный поток)
 
 - (void)tick {
-    if (!_displayOn || _runs.count == 0) return;
+    if (!_displayOn || _animPaused || _runs.count == 0) return;
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
     for (MPLiveTileRun *run in [_runs allValues]) {
         if (run.inFlight || now < run.nextDue) continue;
@@ -129,6 +138,10 @@ static const NSInteger      MPLiveBackoffShiftCap = 4;      // интервал 
 
 - (void)launchFetchForRun:(MPLiveTileRun *)run {
     run.inFlight = YES;
+    if (!run.loggedFirstFetch) {
+        run.loggedFirstFetch = YES;
+        MPLog(@"живая плитка %@: первый фетч (видима, размер %ld)", run.tileID, (long)run.size);
+    }
     NSInteger generation = ++run.generation;
     MPLiveTileRun *captured = run;
     dispatch_queue_t fetchQueue = _fetchQueue;

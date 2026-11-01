@@ -6,9 +6,11 @@ typedef enum {
     MPTileSizeMedium = 1,   // 2×2 — квадрат с 4 маленькие плитки
     MPTileSizeWide   = 2,   // cols×2 — во всю ширину сетки, высотой с Medium
     MPTileSizeHalf   = 3,   // 2×1 — только живые плитки (виджеты), приложениям не даётся
+    MPTileSizeTiny   = 4,   // 0.5×0.5 — «очень маленькие», четверть ячейки; 4 штуки в одной Small
 } MPTileSize;
 
-// Пролёты плитки по сетке (в ячейках): ширина (зависит от числа колонок) и высота
+// Пролёты плитки по сетке в ПОЛУЯЧЕЙКАХ (полуячейка = половина ячейки базовой сетки):
+// ширина (зависит от числа колонок) и высота. Точки привязки row/col — тоже в полуячейках.
 NSUInteger MPTileSpanX(MPTileSize size, NSInteger columns);
 NSUInteger MPTileSpanY(MPTileSize size);
 
@@ -38,11 +40,12 @@ NSUInteger MPTileSpanY(MPTileSize size);
 // Возвращает YES, если состав тайлов изменился. Пустой список apps игнорируется (защита от затирания).
 - (BOOL)syncWithApps:(NSArray *)apps;
 
-// «Первое подходящее место», мозаика без наложений: small 1×1, medium 2×2, wide cols×2.
+// «Первое подходящее место», мозаика без наложений (сетка в полуячейках):
+// tiny 1×1, small 2×2, medium 4×4, wide 2·cols×4.
 - (void)packWithColumns:(NSInteger)columns;
 
 - (void)moveItemFromIndex:(NSInteger)from toIndex:(NSInteger)to;   // + перепаковка
-- (BOOL)cycleSizeAtIndex:(NSInteger)index;                          // small → medium → wide → small (+ перепаковка)
+- (BOOL)cycleSizeAtIndex:(NSInteger)index;                          // small → tiny → medium → wide → small (+ перепаковка)
 - (BOOL)setSize:(MPTileSize)size atIndex:(NSInteger)index;          // для виджетов: размер из их списка (+ перепаковка)
 
 // Сверка виджетов с конфигурацией центра (список @{ id, size } в порядке конфига):

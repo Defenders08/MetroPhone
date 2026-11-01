@@ -28,10 +28,16 @@
 #import "MetroLauncher/MPMetroStyle.h"
 #import "MetroLauncher/MPIconTheme.h"
 #import "MetroLauncher/MPTileView.h"
+#import "MetroLauncher/MPHomeController.h"
+#import "MetroLauncher/MPAnimationConstants.h"
 #import "MetroWidgets/MPLiveTileCenter.h"
 #import "MetroLockScreen/MPLockScreen.h"
+#import "AppDesigns/Settings/MPSettingsTheme.h"
 
-#define MP_VERSION @"0.22.3"
+// Используется хуком UIWindow в группе MPUikit (определение в разделе «Инициализация»)
+static BOOL MPProcessIsPreferences(void);
+
+#define MP_VERSION @"0.22.31"
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
 #pragma mark - Журналирование
@@ -573,6 +579,21 @@ static void MPConfigureAppearanceIfNeeded(void) {
 }
 %end
 
+// Раннее окрашивание окна «Настроек»: белый прямоугольник между launch() и первой
+// стилизацией (первый viewDidLoad позже на ~1–2 с) — это окно приложения до покраски.
+// Красим в момент makeKeyAndVisible — раньше любого viewDidLoad (критерий этапа C).
+%hook UIWindow
+- (void)makeKeyAndVisible {
+	%orig;
+	if (!MPProcessIsPreferences()) return;
+	static BOOL MPSettingsWindowPainted = NO;
+	if (MPSettingsWindowPainted) return;
+	MPSettingsWindowPainted = YES;
+	MPLog(@"диаг Settings: окно makeKeyAndVisible t=%.3f → ранняя покраска окна", CACurrentMediaTime());
+	[MPSettingsTheme styleWindows];
+}
+%end
+
 %hook UIToolbar
 - (void)drawRect:(CGRect)rect {
 	if (MPFlatPanels()) {
@@ -877,6 +898,13 @@ static void MPConfigureAppearanceIfNeeded(void) {
 	%orig;
 	MPLockScreenRaise();
 }
+
+// Окно приложения: сигнал Turnstile-возврата (если setHidden: вообще приходит —
+// на iOS 6 при закрытии приложения может молчать, см. noteAppWindowHidden:)
+- (void)setHidden:(BOOL)hidden {
+	%orig;
+	[[MPHomeController sharedController] noteAppWindowHidden:hidden];
+}
 %end
 
 // Контент локскрина появляется в СВОЁМ окне (выше главного) — из его вьюхи
@@ -929,6 +957,7 @@ static void MPConfigureAppearanceIfNeeded(void) {
 
 #import "MetroLauncher/MPAppDataSource.h"
 #import "MetroLauncher/MPHomeController.h"
+#import "MetroLauncher/MPAnimationConstants.h"
 #import "MetroLauncher/MPMultitaskView.h"
 
 static MPHomeController *MPLauncher = nil;
@@ -1075,7 +1104,6 @@ static void MPShowMultitask(void) {
             [host addSubview:MPMultitask];
             MPLog(@"свитчер установлен в %@", NSStringFromClass([host class]));
         }
-        [MPMultitask.superview bringSubviewToFront:MPMultitask];
         [MPMultitask openAnimated:YES withAppIDs:MPRunningAppIDs()];
     } @catch (NSException *e) {
         MPLog(@"!! показ свитчера: %@ (%@)", e.name, e.reason);
@@ -1097,8 +1125,12 @@ static void MPLockStateChanged(CFNotificationCenterRef center, void *observer,
         if (MPMultitask != nil && [MPMultitask isOpen]) [MPMultitask closeAnimated:NO];
         MPEnsureLauncher();
         BOOL locked = [[objc_getClass("SBAwayController") sharedAwayController] isLocked];
-        if (locked) [MPLauncher hideMetroAnimated:NO];
-        else [MPLauncher showMetroAnimated:NO];
+        // лок/анлок — Turnstile (въезд/выезд лаунчера), не мгновенное скрытие.
+        // Анлок: подготовка сразу, въезд — по факту скрытия локскрина (не по таймеру)
+        MPLog(@"диаг lockstate t=%.3f locked=%d → %@",
+              CACurrentMediaTime(), locked, locked ? @"hideMetro" : @"showMetroAfterLockscreen");
+        if (locked) [MPLauncher hideMetroAnimated:YES];
+        else [MPLauncher showMetroAfterLockscreen];
     });
 }
 
@@ -1155,6 +1187,7 @@ static void MPEnsureLauncher(void) {
 	if (MPLauncher != nil) return;
 	MPLauncher = [[MPHomeController alloc] init];
 	[MPLauncher installLauncherView];
+	[MPHomeController setSharedController:MPLauncher];   // для тапов плиток (MPTilesPageView)
 
 	id away = [objc_getClass("SBAwayController") sharedAwayController];
 	BOOL locked = (away != nil && [away respondsToSelector:@selector(isLocked)]) ? [away isLocked] : YES;
@@ -1169,6 +1202,19 @@ struct __GSEvent;
 
 static NSTimeInterval MPLastMenuDownAt = 0;
 static BOOL MPConsumeNextMenuUp = NO;
+static BOOL MPWarmAfterReturn = NO;   // прогрев кэша приложений отложен до completion въезда
+
+// Прогрев кэша приложений после завершения Turnstile-въезда (см. MPWarmAfterReturn).
+// Пересборка списка на main thread в окне анимации сдвигала её финал на сотни мс
+// (замер 0.22.14: до 248 мс) — теперь только после того, как въезд доиграл.
+static void MPWarmCacheAfterEnter(void) {
+    if (!MPWarmAfterReturn) return;
+    MPWarmAfterReturn = NO;
+    CFAbsoluteTime t0 = CFAbsoluteTimeGetCurrent();
+    [[MPAppDataSource sharedDataSource] allApps];
+    MPLog(@"Home: прогрев кэша приложений после въезда за %.0f мс",
+          (CFAbsoluteTimeGetCurrent() - t0) * 1000.0);
+}
 
 %group MPLauncherHooks
 
@@ -1205,6 +1251,35 @@ static BOOL MPConsumeNextMenuUp = NO;
     if (MPLauncher != nil && [MPLauncher isMetroVisible]) {
         [MPLauncher homeButtonPressed];
         MPLog(@"Home: выход из режима правки");
+    }
+
+    // 3б) Выход из приложения: лаунчер спрятан под окном приложения. Основной сигнал
+    // возврата: SBAppWindow setHidden: на iOS 6 при закрытии молчит (проверено
+    // журналом 0.22.6). Въезд играем по факту ухода окна приложения (frontmost-опрос
+    // в scheduleReturnFromApp), а не по фиксированной задержке — иначе двойная
+    // экспозиция: Start проступает поверх ещё гаснущего приложения.
+    if (MPLauncher != nil && [MPLauncher wantsReturnFromApp]) {
+        MPWarmAfterReturn = YES;       // прогрев кэша поедет из completion въезда
+        MPLog(@"диаг Home: возврат ЗАПУЩЕН (следим за окном), t=%.3f", CACurrentMediaTime());
+        [MPLauncher scheduleReturnFromApp];
+    }
+
+    // 4) Прогрев кэша приложений для свитчера: первое из двойного нажатия
+    // — почти всегда одиночное нажатие за долю секунды до него. Если сейчас поедет
+    // Turnstile-въезд, прогрев переносим в его completion (MPTurnstileInDidFinish):
+    // пересборка списка на main thread посреди анимации сдвигала её финал на сотни мс.
+    if (MPTaskSwitcherOn()) {
+        id away = [objc_getClass("SBAwayController") sharedAwayController];
+        BOOL locked = (away != nil && [away respondsToSelector:@selector(isLocked)]) ? [away isLocked] : NO;
+        if (!locked && !MPWarmAfterReturn) {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{
+                CFAbsoluteTime t0 = CFAbsoluteTimeGetCurrent();
+                [[MPAppDataSource sharedDataSource] allApps];
+                MPLog(@"Home: прогрев кэша приложений за %.0f мс",
+                      (CFAbsoluteTimeGetCurrent() - t0) * 1000.0);
+            });
+        }
     }
 }
 
@@ -1474,6 +1549,14 @@ static BOOL MPPushSpecifierByIndex(id ds, NSInteger flat) {
 	return YES;
 }
 
+extern "C" void MPClockDebugScroll(float fraction);   // отладка: прокрутка страницы часов
+extern "C" void MPClockDebugCities(int add);          // отладка: тестовые города
+extern "C" void MPClockDebugGoTo(NSInteger page, CGFloat dur);   // отладка: медленный переход
+extern "C" void MPClockDebugBurst(void);              // отладка: переход + 6 снимков
+extern "C" void MPClockDebugFinger(void);             // отладка: программный палец
+// команды cal* (calslow/caldate/calburst/calfinger/calshot) обрабатываются
+// в MPCalendarHooks через префы + Darwin — extern'ов здесь больше нет
+
 // Команда из файла запроса: "shot" (только снимок), "metro", "ios", "page0"/"page1".
 // После действия снимок делается сам — одна команда = один кадр.
 static void MPDebugRunCommand(NSString *cmd) {
@@ -1485,6 +1568,51 @@ static void MPDebugRunCommand(NSString *cmd) {
 		                 [NSCharacterSet whitespaceAndNewlineCharacterSet]];
 		MPLog(@"отладка: открываю %@", url);
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+		return;
+	}
+	// open <bundleID> — запустить приложение (только SpringBoard): сначала
+	// механизм лаунчера, при промахе — SBSLaunchApplicationWithIdentifier
+	// (калшоу:// не выводит suspended-Календарь из фона)
+	if (cmd.length > 5 &&
+	    [cmd compare:@"open " options:NSCaseInsensitiveSearch range:NSMakeRange(0, 5)] == NSOrderedSame) {
+		NSString *bid = [[cmd substringFromIndex:5] stringByTrimmingCharactersInSet:
+		                 [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		// ТОЛЬКО механизм лаунчера (SBApplicationIcon launch): SBSLaunch-вариант
+		// с main-потока SB повесил runloop — watchdog убил SpringBoard.
+		MPLog(@"отладка: запуск %@", bid);
+		[[MPAppDataSource sharedDataSource] launchAppWithBundleID:bid];
+		return;
+	}
+	if ([cmd hasPrefix:@"cscroll"]) {
+		MPClockDebugScroll([[cmd substringFromIndex:7] floatValue]);
+		return;
+	}
+	if ([cmd hasPrefix:@"cslow"]) {
+		NSArray *parts = [cmd componentsSeparatedByString:@" "];
+		NSInteger page = [parts.count > 1 ? parts[1] : @0 integerValue];
+		CGFloat dur = parts.count > 2 ? [parts[2] floatValue] : 2.5;
+		MPClockDebugGoTo(page, dur);
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"cadd"] == NSOrderedSame) {
+		MPClockDebugCities(1);
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"cdel"] == NSOrderedSame) {
+		MPClockDebugCities(0);
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"cfinger"] == NSOrderedSame) {
+		MPClockDebugFinger();
+		return;
+	}
+	if ([cmd caseInsensitiveCompare:@"cburst"] == NSOrderedSame) {
+		MPClockDebugBurst();
+		return;
+	}
+	// ── Календарь: команды cal* уходят в процесс Календаря через префы
+	// + Darwin (см. блок адресации выше) — здесь их не обрабатываем ──
+	if ([cmd hasPrefix:@"cal"]) {
 		return;
 	}
 	if ([cmd caseInsensitiveCompare:@"dump"] == NSOrderedSame) {
@@ -2081,12 +2209,35 @@ static void MPDebugShotWatch(void) {
 			struct stat st;
 			if (stat(MP_SHOT_REQUEST, &st) != 0 || st.st_size == 0) return;
 
-			NSString *cmd = [[NSString stringWithContentsOfFile:@MP_SHOT_REQUEST
-			                                              encoding:NSUTF8StringEncoding
-			                                                 error:NULL]
-			                 stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			cmd = [cmd stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			ftruncate(fd, 0);          // гасим запрос, чтобы не сработал повторно
+		NSString *cmd = [[NSString stringWithContentsOfFile:@MP_SHOT_REQUEST
+		                                              encoding:NSUTF8StringEncoding
+		                                                 error:NULL]
+		                 stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		cmd = [cmd stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+		// АДРЕСАЦИЯ: у Календаря жёсткий sandbox — открытие файла канала в его
+		// процессе убивает приложение (Sandbox report, bug_type 187). Поэтому
+		// команды «cal*» в чужих процессах не читают файл-канал, а переправляют
+		// команду через префы + Darwin-уведомление (чтение префов Календарю
+		// разрешено — так работают kill-switchи).
+		BOOL mpIsCalendarProcess = [[NSBundle mainBundle].bundleIdentifier
+		                            isEqualToString:@"com.apple.mobilecal"];
+		BOOL forCalendar = (cmd.length > 2 &&
+		                    [cmd compare:@"cal" options:NSCaseInsensitiveSearch
+		                              range:NSMakeRange(0, 3)] == NSOrderedSame);
+		if (forCalendar && !mpIsCalendarProcess) {
+			CFPreferencesSetAppValue((CFStringRef)@"caldebugCmd",
+			                        (__bridge CFStringRef)cmd,
+			                        CFSTR("ru.ash.metrophone"));
+			CFPreferencesAppSynchronize(CFSTR("ru.ash.metrophone"));
+			CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+			                                     CFSTR("ru.ash.metrophone.caldebug"),
+			                                     NULL, NULL, TRUE);
+			MPLog(@"отладка: %@ → в Календарь через префы", cmd);
+			return;
+		}
+
+		ftruncate(fd, 0);          // гасим запрос, чтобы не сработал повторно
 
 			if (cmd.length > 0 && [cmd caseInsensitiveCompare:@"shot"] != NSOrderedSame) {
 				MPDebugRunCommand(cmd);
@@ -2113,11 +2264,35 @@ static void MPDebugShotWatch(void) {
 // Перекраска «Настроек» в WP 8.1 — инициализация только в com.apple.Preferences
 extern void MPSettingsInitIfNeeded(void);
 
+// WP-pivot «Часов» — инициализация только в com.apple.mobiletimer
+extern void MPClockInitIfNeeded(void);
+extern "C" void MPClockDebugScroll(float fraction);   // отладка: прокрутка страницы часов
+
+// WP-pivot «Календаря» — инициализация только в com.apple.mobilecal
+extern void MPCalendarInitIfNeeded(void);
+extern "C" void MPCalendarDebugScroll(float fraction);          // прокрутка страницы календаря
+extern "C" void MPCalendarDebugGoTo(NSInteger page, CGFloat dur); // медленный переход
+extern "C" void MPCalendarDebugBurst(void);                     // переход + 6 снимков
+extern "C" void MPCalendarDebugFinger(void);                    // программный палец
+extern "C" void MPCalendarDebugDate(NSString *dateStr);         // ленты на дату YYYY-MM-DD
+
 // Metro-стиль живёт ТОЛЬКО в SpringBoard (лаунчер и тема стола) и в «Настройках».
 // Все остальные приложения не получают ни одного хука — оригинальный дизайн iOS.
 static BOOL MPProcessIsPreferences(void) {
 	CFStringRef bid = CFBundleGetIdentifier(CFBundleGetMainBundle());
 	return (bid != nil && CFStringCompare(bid, CFSTR("com.apple.Preferences"), 0) == kCFCompareEqualTo);
+}
+
+// Приложение «Часы»: второй дизайн по ветке «чужое приложение» (AppDesigns/Clock/)
+static BOOL MPProcessIsClock(void) {
+	CFStringRef bid = CFBundleGetIdentifier(CFBundleGetMainBundle());
+	return (bid != nil && CFStringCompare(bid, CFSTR("com.apple.mobiletimer"), 0) == kCFCompareEqualTo);
+}
+
+// Приложение «Календарь»: третий дизайн (AppDesigns/Calendar/)
+static BOOL MPProcessIsCalendar(void) {
+	CFStringRef bid = CFBundleGetIdentifier(CFBundleGetMainBundle());
+	return (bid != nil && CFStringCompare(bid, CFSTR("com.apple.mobilecal"), 0) == kCFCompareEqualTo);
 }
 
 static void MPCleanupOldLog(void) {
@@ -2164,6 +2339,20 @@ static void MPUncaughtExceptionHandler(NSException *exception) {
 		} @catch (NSException *e) {
 			MPLog(@"!! ctor UIKit: %@ (%@)", e.name, e.reason);
 		}
+	} else if (MPProcessIsClock()) {
+		// Дизайн «Часов» (AppDesigns/Clock/): свой WP-pivot вместо нативного
+		// таб-бара. UIKit-базу сюда не ставим — pivot самодостаточен.
+		MPLog(@"ctor: Часы — установка pivot-дизайна");
+		MPClockInitIfNeeded();
+		MPDebugShotWatch();   // снимки «Часов» по отладочному каналу
+	} else if (MPProcessIsCalendar()) {
+		// Дизайн «Календаря» (AppDesigns/Calendar/): свой WP-pivot поверх
+		// нативного UI MobileCal; данные — напрямую через EventKit.
+		// ВАЖНО: файловый канал снимков здесь НЕ включать — sandbox MobileCal
+		// убивает процесс за open() чужого файла (bug_type 187). Команды идут
+		// через Darwin-уведомление + префы (MPCalendarInitIfNeeded).
+		MPLog(@"ctor: Календарь — установка pivot-дизайна");
+		MPCalendarInitIfNeeded();
 	} else {
 		MPLog(@"ctor: стороннее приложение — хуки не устанавливаются, оригинальный дизайн");
 		// ТОЧКА ВХОДА будущих сторонних дизайнов приложений: здесь будет скан
@@ -2240,6 +2429,14 @@ static void MPUncaughtExceptionHandler(NSException *exception) {
 			CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
 				&MPIconsChangedSB, CFSTR(MP_ICONS_CHANGED_NOTIFICATION), NULL,
 				CFNotificationSuspensionBehaviorDeliverImmediately);
+
+			// прогрев кэша приложений по завершении Turnstile-въезда (возврат из приложения)
+			[[NSNotificationCenter defaultCenter] addObserverForName:MPTurnstileInDidFinishNotification
+				object:nil queue:nil
+				usingBlock:^(NSNotification *note) {
+					if ([NSThread isMainThread]) MPWarmCacheAfterEnter();
+					else dispatch_async(dispatch_get_main_queue(), ^{ MPWarmCacheAfterEnter(); });
+				}];
 
 			// лаунчер — через 60 с после старта, когда окно вотчдога пройдено
 			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(60 * NSEC_PER_SEC)),

@@ -10,6 +10,8 @@
   MetroWidgets/MPLiveTile.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h \
   MetroWidgets/MPLiveTileCenter.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAnimationConstants.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPHomeController.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h
 /Users/ash/theos/Prefix.pch:
 /Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
@@ -22,4 +24,6 @@ MetroWidgets/MPLiveTileView.h:
 MetroWidgets/MPLiveTile.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h:
 MetroWidgets/MPLiveTileCenter.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAnimationConstants.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPHomeController.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h:

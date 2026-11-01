@@ -11,6 +11,8 @@
 | `SETTINGS-AUDIT.md` | аудит страницы настроек |
 | `AUDIT-QUESTIONS.md`, `AUDIT-QUESTIONS-2.md` | опросники для аудита |
 | `MetroPhone-плитки.html` и соседние | HTML-прототипы плиток/иконок (визуальные референсы) |
+| `MetroPhone-анимации.html` | демо WP-анимаций на мокапе 480×800 (параметры из исходников тулкита) |
+| `WP-ANIMATIONS.md` | разбор анимаций Windows Phone: точные параметры, маппинг на iOS 6, оценка для A4, план внедрения |
 | `audit-survey.html` | HTML-опросник аудита |
 | `references/` | PNG-референсы иконок iOS и Windows Phone (бывшая `assets/`) |
 

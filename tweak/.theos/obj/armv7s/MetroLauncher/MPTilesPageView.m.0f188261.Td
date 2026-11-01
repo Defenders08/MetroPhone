@@ -7,6 +7,7 @@
   MetroLauncher/MPTilesPageView.h MetroLauncher/MPTileView.h \
   MetroLauncher/MPAppDataSource.h MetroLauncher/MPLayoutModel.h \
   MetroLauncher/MPTileEditor.h MetroLauncher/MPMetroStyle.h \
+  MetroLauncher/MPHomeController.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileView.h \
@@ -24,6 +25,7 @@ MetroLauncher/MPAppDataSource.h:
 MetroLauncher/MPLayoutModel.h:
 MetroLauncher/MPTileEditor.h:
 MetroLauncher/MPMetroStyle.h:
+MetroLauncher/MPHomeController.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileView.h:

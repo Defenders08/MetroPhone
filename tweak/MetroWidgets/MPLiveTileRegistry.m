@@ -43,7 +43,9 @@ static NSMutableArray *MPInstaces = nil;   // id<MPLiveTileProvider>, парал
     if (tileID.length == 0) return nil;
     @synchronized (MPRegistryLock) {
         for (id<MPLiveTileProvider> p in MPInstaces) {
-            if ([[p tileID] isEqualToString:tileID]) return p;
+            // tileID — метод класса (см. протокол): у экземпляра зовём через class,
+            // иначе -tileID не находится и реестр падает с unrecognized selector
+            if ([[[p class] tileID] isEqualToString:tileID]) return p;
         }
     }
     return nil;
@@ -52,7 +54,7 @@ static NSMutableArray *MPInstaces = nil;   // id<MPLiveTileProvider>, парал
 + (NSArray *)supportedSizesForTileID:(NSString *)tileID {
     id<MPLiveTileProvider> p = [self providerForID:tileID];
     if (p == nil) return @[];
-    NSArray *sizes = [p supportedSizes] ?: @[];
+    NSArray *sizes = [[p class] supportedSizes] ?: @[];   // классовый метод — см. протокол
     NSMutableArray *out = [NSMutableArray arrayWithCapacity:sizes.count];
     for (NSNumber *n in sizes) {
         if (![n isKindOfClass:[NSNumber class]]) continue;

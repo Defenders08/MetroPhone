@@ -5,6 +5,8 @@
 
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
+NSString * const MPMetroLockscreenDidHideNotification = @"ru.ash.metrophone.lockscreen-did-hide";
+
 // Свои горячие пути больше не пишут в syslog: на iOS 6 каждый NSLog уходит
 // через ASL-демон и в хуках иконок стоит миллисекунды. Файл-журнал остаётся
 // всегда, а дублирование в syslog включается ключом verboseLog в настройках.
@@ -236,15 +238,47 @@ static UIColor *MPAccentForName(NSString *name) {
     return (width - (CGFloat)(cols - 1) * MPMetroGap) / (CGFloat)cols;
 }
 
-// Размеры по пролётам сетки: Small = cell×cell; Medium = 2×2 ячейки; Half (виджеты) = 2×1;
-// Wide = во всю ширину сетки, высотой с Medium. Пролёты даёт MPLayoutModel.
+// Полуячейка — единица сетки под «очень маленькие» плитки. Два пролёта полуячейки
+// с зазором дают ровно базовую ячейку (2·halfCell + gap = cell), поэтому прежним
+// размерам (small/medium/wide/half) полуячеечная сетка не меняет ни пикселя.
++ (CGFloat)halfCellForContainerWidth:(CGFloat)width {
+    NSInteger cols = [self columns];
+    return (width - (CGFloat)(cols * 2 - 1) * MPMetroGap) / (CGFloat)(cols * 2);
+}
+
+// Размеры по пролётам сетки (в полуячейках, их даёт MPLayoutModel):
+// Tiny = 1×1; Small = 2×2 (=1 ячейка); Medium = 4×4; Half (виджеты) = 4×2;
+// Wide = 2·cols×4 (вся ширина сетки, высота Medium).
 + (CGSize)tilePixelSize:(MPTileSize)size containerWidth:(CGFloat)width {
-    CGFloat cell = [self cellForContainerWidth:width];
+    CGFloat unit = [self halfCellForContainerWidth:width];
     CGFloat g = MPMetroGap;
     NSUInteger sx = MPTileSpanX(size, [self columns]), sy = MPTileSpanY(size);
-    CGFloat w = (CGFloat)sx * cell + (CGFloat)(sx - 1) * g;
-    CGFloat h = (CGFloat)sy * cell + (CGFloat)(sy - 1) * g;
+    CGFloat w = (CGFloat)sx * unit + (CGFloat)(sx - 1) * g;
+    CGFloat h = (CGFloat)sy * unit + (CGFloat)(sy - 1) * g;
     return CGSizeMake(w, h);
+}
+
++ (CGFloat)pageInset {
+    // Внешние поля страницы: сетка и заголовок отступают от краёв на 12 pt.
+    // Прежняя сетка была вплотную по ТЗ — на свайпе страницы слипались краями,
+    // а дробная полуячейка оставляла справа щель ~1 px, которой слева не было.
+    return 12.0f;
+}
+
+#pragma mark - Шапка страницы
+
++ (CGFloat)pageHeaderHeight {
+    // Полоса шапки в контенте страницы; заголовок light 38 сидит между
+    // подушками — сверху воздух больше, чем снизу, как в «Настройках».
+    return 60.0f;
+}
+
++ (CGFloat)pageHeaderPadTop {
+    return 8.0f;    // воздух над заголовком
+}
+
++ (CGFloat)pageHeaderPadBottom {
+    return 4.0f;    // воздух под заголовком — вдвое меньше верхнего
 }
 
 + (CGFloat)statusBarInset {

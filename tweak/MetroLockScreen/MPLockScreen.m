@@ -162,6 +162,9 @@ static void MLSHideNow(NSString *reason) {
 	// Нативный возвращаем строго после скрытия нашего: хук setHidden: смотрит
 	// на флаг и не станет тут же гасить его обратно
 	MLSNativeHidden(NO, reason);
+	// Сигнал лаунчеру: анлок играет Turnstile-въезд только теперь (не по lockstate)
+	[[NSNotificationCenter defaultCenter] postNotificationName:MPMetroLockscreenDidHideNotification
+	                                                        object:nil];
 }
 
 static void MLSShowNow(void) {
@@ -246,12 +249,13 @@ void MPLockScreenRaise(void) {
 
 #pragma mark - Разблокировка
 
-// Тап по иконке камеры (как в WP 8.1 — камера открывается с локскрина).
-// Разблокировку отправляем сразу, запуск камеры — следом через полсекунды:
-// пока устройство залочено, SpringBoard может придушить [icon launch].
-// Если разблокировка не прошла или появился код-пароль — камеру не открываем.
+// Запуск камеры с локскрина: тап по иконке внизу справа или свайп влево
+// (как в оригинале). Разблокировку отправляем сразу, запуск камеры — следом
+// через полсекунды: пока устройство залочено, SpringBoard может придушить
+// [icon launch]. Если разблокировка не прошла или появился код-пароль —
+// камеру не открываем.
 static void MLSCameraTap(void) {
-	MPLog(@"локскрин: тап — камера");
+	MPLog(@"локскрин: камера (тап/свайп)");
 	MLSUnlock();
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
 	               dispatch_get_main_queue(), ^{

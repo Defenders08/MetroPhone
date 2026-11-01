@@ -11,8 +11,8 @@
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h \
   MetroWidgets/MPLiveTileScheduler.h MetroWidgets/MPLiveTileRegistry.h \
   MetroWidgets/MPTileClock.h MetroWidgets/MPTileBattery.h \
-  MetroWidgets/MPTileNowPlaying.h MetroWidgets/MPTileTestCounter.h \
-  MetroWidgets/MPTileTestStates.h \
+  MetroWidgets/MPTileNowPlaying.h MetroWidgets/MPTileCalendar.h \
+  MetroWidgets/MPTileTestCounter.h MetroWidgets/MPTileTestStates.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroPhoneCommon.h
 /Users/ash/theos/Prefix.pch:
@@ -31,6 +31,7 @@ MetroWidgets/MPLiveTileRegistry.h:
 MetroWidgets/MPTileClock.h:
 MetroWidgets/MPTileBattery.h:
 MetroWidgets/MPTileNowPlaying.h:
+MetroWidgets/MPTileCalendar.h:
 MetroWidgets/MPTileTestCounter.h:
 MetroWidgets/MPTileTestStates.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h:

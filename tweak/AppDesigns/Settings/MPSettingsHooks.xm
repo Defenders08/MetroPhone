@@ -589,6 +589,12 @@ static void MPStyleUsageHeader(UITableView *table) {
 static void MPApplyPageStyle(UIViewController *controller, UITableView *table) {
     if (MPStyleInProgress) return;      // вложенный вызов (изнутри reloadData) — выходим
     if (![MPSettingsTheme restyleEnabled]) return;
+    static BOOL MPStyleFirstMark = NO;  // ДИАГНОСТИКА: когда наша стилизация дошла до экрана
+    if (!MPStyleFirstMark) {
+        MPStyleFirstMark = YES;
+        MPLog(@"диаг Settings: первая стилизация страницы t=%.3f (контроллер %@)",
+              CACurrentMediaTime(), NSStringFromClass(controller.class));
+    }
 
     // Стилизуем ТОЛЬКО системные страницы Настроек. Признак — ОТКУДА загружен класс:
     // системные контроллеры (включая подклассы Wi-Fi и др.) живут в /System/,
@@ -792,6 +798,12 @@ static void MPApplyPageStyle(UIViewController *controller, UITableView *table) {
 
 - (void)viewDidLoad {
     %orig;
+    static BOOL MPFirstListLog = NO;            // ДИАГНОСТИКА: первый экран «Настроек»
+    if (!MPFirstListLog) {
+        MPFirstListLog = YES;
+        MPLog(@"диаг Settings: первый PSListController viewDidLoad t=%.3f (фон=%@)",
+              CACurrentMediaTime(), self.view.backgroundColor);
+    }
     [MPSettingsTheme setupAppearanceOnce];      // лениво, один раз, после запуска приложения
     // ВНИМАНИЕ: в viewDidLoad таблицы ещё нет (спецификаторы грузятся лениво) —
     // ранний вызов MPApplyPageStyle валил Настройки в белый экран

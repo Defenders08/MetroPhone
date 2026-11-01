@@ -29,4 +29,13 @@
 - (void)applyStyle;                               // перечитать цвет плитки
 - (void)startFloating;                            // парение WP8.1: боб с рандомной фазой (режим правки)
 - (void)stopFloating;
+
+- (void)pressTiltAtPoint:(CGPoint)pointInTile;    // tilt-нажатие WP: наклон к пальцу (3D, живой)
+- (void)releaseTilt;                              // плавный возврат из наклона (0.2 с)
+
+// Диагностика/сплэш запуска: текущая иконка плитки (nil — заглушка-буква)
+- (UIImage *)mpIconImage;
+// ДИАГНОСТИКА (временная): строка про фон RGBA, картинку и fill-режим —
+// охота на «белые плитки» при въезде (снимается вместе с дампом в MPHomeController)
+- (NSString *)mpLayerDiag;
 @end

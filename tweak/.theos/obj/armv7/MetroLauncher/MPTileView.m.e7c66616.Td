@@ -5,7 +5,8 @@
   /Users/ash/theos/vendor/include/HBLog.h \
   /Users/ash/theos/vendor/include/CoreFoundation/CFLogUtilities.h \
   MetroLauncher/MPTileView.h MetroLauncher/MPAppDataSource.h \
-  MetroLauncher/MPMetroStyle.h MetroLauncher/MPLayoutModel.h
+  MetroLauncher/MPMetroStyle.h MetroLauncher/MPLayoutModel.h \
+  MetroLauncher/MPAnimationConstants.h
 /Users/ash/theos/Prefix.pch:
 /Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
 /Users/ash/theos/vendor/include/theos/IOSMacros.h:
@@ -15,3 +16,4 @@ MetroLauncher/MPTileView.h:
 MetroLauncher/MPAppDataSource.h:
 MetroLauncher/MPMetroStyle.h:
 MetroLauncher/MPLayoutModel.h:
+MetroLauncher/MPAnimationConstants.h:

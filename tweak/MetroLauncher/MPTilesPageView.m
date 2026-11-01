@@ -4,12 +4,12 @@
 #import "MPTileEditor.h"
 #import "MPMetroStyle.h"
 #import "MPAppDataSource.h"
+#import "MPHomeController.h"
 #import "MetroWidgets/MPLiveTile.h"
 #import "MetroWidgets/MPLiveTileView.h"
 #import "MetroWidgets/MPLiveTileCenter.h"
 #import "MetroWidgets/MPLiveTileRegistry.h"
 
-static const CGFloat MPTilesHeaderH = 30.0f;          // шапка под статус-баром (отступ сетки под статус-бар)
 static const NSTimeInterval MPLongPressDelay = 0.6;   // долгое нажатие
 static const CGFloat MPTapSlop = 10.0f;               // допуск смещения для тапа/долгого нажатия
 static const NSInteger MPBuildBatch = 8;              // плиток за один проход главного потока
@@ -57,6 +57,7 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     MPTileEditor      *_editor;
     NSMutableArray    *_tiles;          // MPTileView, параллельно _model.items
     NSDictionary      *_entriesByID;    // bundleID → MPAppEntry
+    UILabel           *_headerLabel;    // мини-заголовок «Start» в шапке
 
     BOOL      _loaded;
     BOOL      _building;
@@ -91,6 +92,16 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
         _scrollView.multipleTouchEnabled = NO;
         [self addSubview:_scrollView];
 
+        // мини-заголовок; лежит В КОНТЕНТЕ скролла — уезжает при прокрутке,
+        // касания не перехватывает
+        _headerLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+        _headerLabel.backgroundColor = [UIColor clearColor];
+        _headerLabel.textColor = [UIColor whiteColor];
+        _headerLabel.font = [MPMetroStyle lightFont:38.0f];
+        _headerLabel.text = @"Start";
+        _headerLabel.userInteractionEnabled = NO;
+        [_scrollView addSubview:_headerLabel];
+
         // состав виджетов на стартовом экране меняется из Настроек и страницы виджетов
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(widgetsChanged:)
@@ -113,8 +124,13 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width, h = self.bounds.size.height;
-    CGFloat y = _topInset + MPTilesHeaderH;
-    _scrollView.frame = CGRectMake(0.0f, y, w, h - y);
+    CGFloat inset = [MPMetroStyle pageInset];
+    CGFloat hh = [MPMetroStyle pageHeaderHeight];
+    _scrollView.frame = CGRectMake(0.0f, _topInset, w, h - _topInset);
+    // лейбл в контентных координатах скролла — прокручивается вместе с плитками
+    _headerLabel.frame = CGRectMake(inset, [MPMetroStyle pageHeaderPadTop],
+                                    w - inset * 2.0f,
+                                    hh - [MPMetroStyle pageHeaderPadTop] - [MPMetroStyle pageHeaderPadBottom]);
 }
 
 - (BOOL)isLoaded { return _loaded; }
@@ -123,23 +139,25 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 #pragma mark - Геометрия
 
 - (CGRect)frameForItem:(MPTileItem *)it {
-    // Сетка WP8: cell = (W − 3·gap)/4; позиции кратно ячейкам, размеры по пролётам.
-    // Внешних полей нет — gap только МЕЖДУ плитками (по ТЗ).
-    CGFloat W = self.bounds.size.width;
-    CGFloat cell = [MPMetroStyle cellForContainerWidth:W];
+    // Сетка WP8: row/col — в полуячейках (половина ячейки), размеры по пролётам.
+    // Сетка живёт между внешними полями страницы (pageInset с обеих сторон)
+    // и начинается под шапкой-заголовком (она в том же контенте и уезжает).
+    CGFloat inset = [MPMetroStyle pageInset];
+    CGFloat W = self.bounds.size.width - inset * 2.0f;
+    CGFloat unit = [MPMetroStyle halfCellForContainerWidth:W];
     CGFloat g = MPMetroGap;
     CGSize sz = [MPMetroStyle tilePixelSize:it.tileSize containerWidth:W];
-    CGFloat x = (CGFloat)it.col * (cell + g);
-    CGFloat y = (CGFloat)it.row * (cell + g);
+    CGFloat x = inset + (CGFloat)it.col * (unit + g);
+    CGFloat y = [MPMetroStyle pageHeaderHeight] + (CGFloat)it.row * (unit + g);
     return CGRectMake(x, y, sz.width, sz.height);
 }
 
 - (void)updateContentSize {
-    // Высота контента: ряды занятости × ячейка + gap + нижнее поле.
-    // Смешанные ряды учитываются через rowCount модели (в ячейках 1×1).
-    CGFloat cell = [MPMetroStyle cellForContainerWidth:self.bounds.size.width];
+    // Высота контента: шапка + ряды занятости (в полуячейках) × полуячейка + gap + нижнее поле.
+    CGFloat W = self.bounds.size.width - [MPMetroStyle pageInset] * 2.0f;
+    CGFloat unit = [MPMetroStyle halfCellForContainerWidth:W];
     CGFloat g = MPMetroGap;
-    CGFloat h = _model.rowCount * (cell + g) + 20.0f;
+    CGFloat h = [MPMetroStyle pageHeaderHeight] + _model.rowCount * (unit + g) + 20.0f;
     _scrollView.contentSize = CGSizeMake(_scrollView.bounds.size.width, MAX(h, 1.0f));
 }
 
@@ -331,6 +349,9 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 
 - (void)exitEditingIfNeeded {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(longPressFired) object:nil];
+    if (_pressIndex >= 0 && _pressIndex < (NSInteger)_tiles.count) {
+        [[_tiles objectAtIndex:_pressIndex] releaseTilt];
+    }
     _pressIndex = -1;
     if (_editor.editing) [_editor endEditingAndSave];
 }
@@ -346,8 +367,31 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 }
 
 - (void)cancelPress {
+    MPLog(@"диаг cancelPress t=%.3f (скролл/отмена, pressIndex=%ld)",
+          CACurrentMediaTime(), (long)_pressIndex);
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(longPressFired) object:nil];
+    if (_pressIndex >= 0 && _pressIndex < (NSInteger)_tiles.count) {
+        [[_tiles objectAtIndex:_pressIndex] releaseTilt];   // плавный возврат из наклона
+    }
     _pressIndex = -1;
+}
+
+// Элементы для feather-стаггера Turnstile: заголовок + плитки видимого скролла,
+// отсортированные сверху вниз. Скрытые (вне экрана) не участвуют — TurnstileFeather
+// в WP анимирует только видимые элементы.
+- (NSArray *)featherElements {
+    NSMutableArray *els = [NSMutableArray array];
+    for (UIView *v in _scrollView.subviews) {
+        if (v.hidden || v.alpha < 0.01f) continue;
+        if ([v isKindOfClass:[MPTileView class]] || [v isKindOfClass:[UILabel class]]) {
+            [els addObject:v];
+        }
+    }
+    [els sortUsingComparator:^NSComparisonResult(UIView *a, UIView *b) {
+        CGFloat ya = a.frame.origin.y, yb = b.frame.origin.y;
+        return (ya < yb) ? NSOrderedAscending : ((ya > yb) ? NSOrderedDescending : NSOrderedSame);
+    }];
+    return els;
 }
 
 - (void)tilesScrollTouchesBegan:(NSSet *)touches {
@@ -360,6 +404,8 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     _pressIndex = [self indexOfTileAtPoint:p excluding:-1];
     _pressStart = p;
     if (_pressIndex >= 0) {
+        MPTileView *tv = [_tiles objectAtIndex:_pressIndex];
+        [tv pressTiltAtPoint:[tv convertPoint:p fromView:_scrollView]];   // наклон к пальцу
         [self performSelector:@selector(longPressFired) withObject:nil afterDelay:MPLongPressDelay];
     }
 }
@@ -370,9 +416,13 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     _lastPoint = p;
     if (_editor.editing) { [_editor touchMovedToPoint:p]; return; }
 
-    if (_pressIndex >= 0 &&
-        (fabsf(p.x - _pressStart.x) > MPTapSlop || fabsf(p.y - _pressStart.y) > MPTapSlop)) {
-        [self cancelPress];              // палец поехал — это скролл, а не тап/долгое нажатие
+    if (_pressIndex >= 0) {
+        if (fabsf(p.x - _pressStart.x) > MPTapSlop || fabsf(p.y - _pressStart.y) > MPTapSlop) {
+            [self cancelPress];          // палец поехал — это скролл, а не тап/долгое нажатие
+        } else {
+            MPTileView *tv = [_tiles objectAtIndex:_pressIndex];
+            [tv pressTiltAtPoint:[tv convertPoint:p fromView:_scrollView]];   // наклон следует за пальцем
+        }
     }
 }
 
@@ -388,10 +438,23 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
         if ([tv isKindOfClass:[MPLiveTileView class]]) {
             // виджет: тап открывает его launchTarget (приложение/prefs-URL)
             MPLog(@"виджет: тап %@", tv.bundleID);
-            [[MPLiveTileCenter sharedCenter] launchTileView:(MPLiveTileView *)tv];
+            MPLiveTileView *lv = (MPLiveTileView *)tv;
+            void (^launch)(void) = ^{ [[MPLiveTileCenter sharedCenter] launchTileView:lv]; };
+            // bundleID не передаём: цель виджета может не сводиться к приложению
+            if (![[MPHomeController sharedController] playAppOpenAnimationForBundleID:nil
+                                                                          pressedTile:tv
+                                                                               launch:launch]) launch();
         } else {
             MPLog(@"запуск %@", tv.bundleID);
-            [[MPAppDataSource sharedDataSource] launchAppWithBundleID:tv.bundleID];
+            // Нет иконки — не играть выезд ради пустого запуска (ничего не мигает)
+            if (![[MPAppDataSource sharedDataSource] canLaunchWithBundleID:tv.bundleID]) {
+                MPLog(@"запуск %@: иконки нет — анимация и запуск отменены", tv.bundleID);
+                return;
+            }
+            void (^launch)(void) = ^{ [[MPAppDataSource sharedDataSource] launchAppWithBundleID:tv.bundleID]; };
+            if (![[MPHomeController sharedController] playAppOpenAnimationForBundleID:tv.bundleID
+                                                                          pressedTile:tv
+                                                                               launch:launch]) launch();
         }
     }
 }
@@ -406,6 +469,7 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
     if (_pressIndex < 0 || _editor.editing || !_loaded) return;
     NSInteger idx = _pressIndex;
     _pressIndex = -1;                    // тап после долгого нажатия приложение не запускает
+    [[_tiles objectAtIndex:idx] releaseTilt];   // редактор ставит свои трансформы; вернуть яркость
     [_editor beginEditingSelectingTileAtIndex:idx point:_lastPoint];
 }
 

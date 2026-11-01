@@ -1,6 +1,9 @@
 #import "MPLiveTileView.h"
 #import "MPLiveTileCenter.h"
+#import "MetroLauncher/MPAnimationConstants.h"
+#import "MetroLauncher/MPHomeController.h"
 #import "MetroLauncher/MPMetroStyle.h"
+#import <QuartzCore/QuartzCore.h>
 
 // Reduce Motion на iOS 6 в системе нет (тумблер появился в iOS 8), но ключ
 // com.apple.Accessibility/ReduceMotionEnabled читаем честно: на новых
@@ -27,6 +30,7 @@ static BOOL MPLiveReduceMotion(void) {
     UILabel               *_overlay;           // «!» при ошибке / подпись Empty
     CGFloat                _renderedCellH;     // высота ячейки, под которую отрисован контент
     CGFloat                _lastRenderedW;     // и ширина (широкая плитка ≠ квадратная)
+    BOOL                   _flipInFlight;      // идёт флип-обновление — новый контент без анимации
 }
 
 - (instancetype)initWithTileID:(NSString *)tileID size:(MPLiveTileSize)size {
@@ -73,8 +77,17 @@ static BOOL MPLiveReduceMotion(void) {
     if (provider == nil || c == nil) return;
     @try {
         [provider renderContent:c inTileView:self];
-        _renderedCellH = [self cellHeightForBounds];
-        _lastRenderedW = self.bounds.size.width;
+        // Метка «отрисовано» — только при валидных границах контейнера: провайдер
+        // при нулевых границах выходит, ничего не нарисовав, и если запомнить
+        // метку сейчас, layoutSubviews сочтёт плитку отрисованной — она навсегда
+        // останется пустой (реальный случай: контент пришёл до первого layout).
+        UIView *container = _content;
+        if (container.bounds.size.width > 8.0f && container.bounds.size.height > 8.0f) {
+            _renderedCellH = [self cellHeightForBounds];
+            _lastRenderedW = self.bounds.size.width;
+        } else {
+            MPLog(@"живая плитка %@: контейнер нулевой — отрисовка отложена до layout", _tileID);
+        }
     } @catch (NSException *e) {
         // сбой отрисовки не должен выносить ни сетку, ни SpringBoard
         _state = MPLiveTileStateError;
@@ -82,9 +95,56 @@ static BOOL MPLiveReduceMotion(void) {
     }
 }
 
+// Одновременные флипы на весь экран: бюджет A4 — не больше MPAnimFlipMaxConcurrent.
+// Храним моменты старта (не голый счётчик): если вьюху пересобрали посреди флипа
+// и completion не сработал, просроченные записи вычищаются сами — счётчик не
+// «утекает» и не блокирует флипы навсегда.
+static NSMutableArray *MPLiveFlipStarts = nil;
+
+static NSInteger MPLiveFlipsInFlight(void) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ MPLiveFlipStarts = [NSMutableArray array]; });
+    NSTimeInterval now = CACurrentMediaTime();
+    NSUInteger i = 0;
+    while (i < MPLiveFlipStarts.count) {
+        if (now - [MPLiveFlipStarts[i] doubleValue] > 1.0) {   // флип живёт 0.4 с, 1.0 с — с запасом
+            [MPLiveFlipStarts removeObjectAtIndex:i];
+        } else {
+            i++;
+        }
+    }
+    return (NSInteger)MPLiveFlipStarts.count;
+}
+
 - (void)applyContent:(MPLiveTileContent *)content provider:(id<MPLiveTileProvider>)provider {
     if (content == nil) return;
     _provider = provider;
+
+    // Контент не изменился — кроссфейд и пересборка вьюх не нужны (часы так
+    // обновляются 3 раза из 4: текст реально меняется раз в минуту).
+    if (content.state == MPLiveTileStateReady && _state == MPLiveTileStateReady &&
+        _lastContent != nil &&
+        [content.primaryText isEqualToString:_lastContent.primaryText] &&
+        [content.secondaryText isEqualToString:_lastContent.secondaryText] &&
+        [content.footerText isEqualToString:_lastContent.footerText]) {
+        _lastContent = content;
+        return;
+    }
+
+    // Лимит одновременных флипов: лишние откладываются на случайные 0.3–1.0 с.
+    // Проверка ДО запоминания контента — иначе повторный вызов примет его
+    // за «без изменений» и отложенный пройдёт вхолостую.
+    if (!MPLiveReduceMotion() && !_flipInFlight &&
+        ![MPHomeController metroTransitionActive] &&
+        MPLiveFlipsInFlight() >= MPAnimFlipMaxConcurrent) {
+        double d = MPAnimFlipRetryMin + (arc4random() % 700) / 1000.0;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(d * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+                           [self applyContent:content provider:provider];
+                       });
+        return;
+    }
+
     _lastContent = content;
 
     switch (content.state) {
@@ -92,15 +152,50 @@ static BOOL MPLiveReduceMotion(void) {
             _state = MPLiveTileStateReady;
             _overlay.hidden = YES;
             _content.alpha = 1.0f;
-            if (MPLiveReduceMotion()) {
+            // Плитка нажата (tilt пишет в тот же layer.transform) — флип затёр бы наклон
+            BOOL pressed = !_flipInFlight &&
+                !CATransform3DEqualToTransform(self.layer.transform, CATransform3DIdentity);
+            if (MPLiveReduceMotion() || _flipInFlight || pressed ||
+                [MPHomeController metroTransitionActive]) {
+                // Без анимации: идёт Turnstile/приложение на переднем плане/нажатие
                 [self renderReady];
             } else {
-                // кроссфейд WP: старый контент растворяется, новый проявляется
-                [UIView transitionWithView:self
-                                  duration:0.25
-                                   options:UIViewAnimationOptionTransitionCrossDissolve
-                                animations:^{ [self renderReady]; }
-                                completion:NULL];
+                MPLog(@"диаг флип: начало t=%.3f (одновременно %ld)",
+                      CACurrentMediaTime(), (long)(MPLiveFlipsInFlight() + 1));
+                // флип WP (HubTile): поворот к ребру 90°, смена контента, возврат из −90°.
+                // Дешевле двухгранного preserve-3d, выглядит так же.
+                _flipInFlight = YES;
+                [MPLiveFlipStarts addObject:@(CACurrentMediaTime())];
+                CATransform3D edge = CATransform3DIdentity;
+                edge.m34 = MPAnimPerspective;
+                edge = CATransform3DRotate(edge, (CGFloat)M_PI / 2.0f, 0.0f, 1.0f, 0.0f);
+                CATransform3D back = CATransform3DIdentity;
+                back.m34 = MPAnimPerspective;
+                back = CATransform3DRotate(back, -(CGFloat)M_PI / 2.0f, 0.0f, 1.0f, 0.0f);
+                [UIView animateWithDuration:MPAnimFlipHalfDur delay:0
+                                    options:UIViewAnimationOptionCurveEaseIn
+                                 animations:^{ self.layer.transform = edge; }
+                                 completion:^(BOOL finished) {
+                                     [self renderReady];          // смена на невидимом ребре
+                                     // модель мгновенно в −90° (без имплицитной анимации
+                                     // через 0° — иначе новый контент мелькнёт лицом)
+                                     [CATransaction begin];
+                                     [CATransaction setDisableActions:YES];
+                                     self.layer.transform = back;
+                                     [CATransaction commit];
+                                     [UIView animateWithDuration:MPAnimFlipHalfDur delay:0
+                                                       options:UIViewAnimationOptionCurveEaseOut
+                                                    animations:^{ self.layer.transform = CATransform3DIdentity; }
+                                                    completion:^(BOOL done) {
+                                                        // завершение обеих половин в ЛЮБОЙ ветке:
+                                                        // счётчик и флаг не живут дольше анимации
+                                                        self->_flipInFlight = NO;
+                                                        if (MPLiveFlipStarts.count > 0)
+                                                            [MPLiveFlipStarts removeObjectAtIndex:0];
+                                                        MPLog(@"диаг флип: конец t=%.3f (одновременно %ld)",
+                                                              CACurrentMediaTime(), (long)MPLiveFlipsInFlight());
+                                                    }];
+                                 }];
             }
             break;
         }
@@ -184,6 +279,16 @@ static BOOL MPLiveReduceMotion(void) {
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     [[MPLiveTileCenter sharedCenter] registerView:self];
+}
+
+// ДИАГНОСТИКА (временная): расширение дампа базовой плитки про живое состояние —
+// охота на «белые плитки» при въезде (снимается вместе с дампом в MPHomeController)
+- (NSString *)mpLayerDiag {
+    NSString *base = [super mpLayerDiag];
+    return [NSString stringWithFormat:@"%@ виджет=%@ state=%ld контент=%@ subs=%lu flip=%d",
+            base, _tileID, (long)_state,
+            _content.backgroundColor == nil ? @"clear" : @"цвет",
+            (unsigned long)_content.subviews.count, _flipInFlight];
 }
 
 @end

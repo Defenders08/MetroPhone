@@ -24,7 +24,7 @@ TOTAL_DEB=$(wc -c < "$DEB" | tr -d ' ')
 
 base64 -i "$DEB" -o "$B64"
 rm -f /tmp/thc_
-split -b $CHUNK "$B64" /tmp/thc_
+split -b $CHUNK -a 4 "$B64" /tmp/thc_   # -a 4: deb 7+ МБ > 676 чанков (лимит двухсимвольных суффиксов)
 CHUNKS=(/tmp/thc_*)
 echo "чанков: ${#CHUNKS[@]}, base64: $(wc -c < "$B64") байт"
 

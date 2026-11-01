@@ -1,6 +1,7 @@
 #import "MPTileView.h"
 #import "MPMetroStyle.h"
 #import <QuartzCore/QuartzCore.h>
+#import "MPAnimationConstants.h"
 
 #pragma mark - MPIconLoader
 
@@ -284,6 +285,11 @@ static NSString *MPFirstLetter(NSString *name) {
     if (!CGAffineTransformEqualToTransform(_badge.transform, t)) _badge.transform = t;
     _badge.bounds = CGRectMake(0.0f, 0.0f, bs.width, bs.height);
     _badge.center = CGPointMake(w - 4.0f - bs.width * s / 2.0f, 4.0f + bs.height * s / 2.0f);
+    // «Очень маленькая» плитка (четверть ячейки, ~35 pt на 4 колонках): бейджу
+    // нет места — прячем; при укрупнении возвращаем по счёту (setCount меняет
+    // hidden только когда изменился сам счёт, поэтому тут страхуем размер)
+    if (w < 40.0f) _badge.hidden = YES;
+    else if (_badge.count > 0) _badge.hidden = NO;
 }
 
 #pragma mark - Парение (WP8.1: медленный вертикальный боб)
@@ -307,6 +313,75 @@ static NSString *MPFirstLetter(NSString *name) {
 
 - (void)stopFloating {
     [self.layer removeAnimationForKey:@"mpFloat"];
+}
+
+#pragma mark - Tilt-нажатие (WP: плитка наклоняется к пальцу)
+
+// Reduce Motion: на iOS 6 тумблера нет, ключа нет → анимации включены (см. MPLiveTileView)
+static BOOL MPTiltMotionAllowed(void) {
+    static BOOL value = NO;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        id v = CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("ReduceMotionEnabled"),
+                                                           CFSTR("com.apple.Accessibility")));
+        value = !([v isKindOfClass:[NSNumber class]] && [(NSNumber *)v boolValue]);
+    });
+    return value;
+}
+
+// Наклон к точке касания: живой отклик, без анимационных блоков на каждый кадр —
+// доворот через короткий CATransaction. Один слой под пальцем, дешевле парения.
+- (void)pressTiltAtPoint:(CGPoint)pointInTile {
+    if (!MPTiltMotionAllowed()) return;
+    CGRect b = self.bounds;
+    if (b.size.width < 1.0f || b.size.height < 1.0f) return;
+    // ДИАГНОСТИКА: начало помечаем один раз — на переходе из покоя в наклон
+    BOOL wasIdle = CATransform3DEqualToTransform(self.layer.transform, CATransform3DIdentity);
+    CGFloat dx = ((pointInTile.x / b.size.width)  - 0.5f) * 2.0f;    // −1…1 от центра
+    CGFloat dy = ((pointInTile.y / b.size.height) - 0.5f) * 2.0f;
+    dx = MAX(-1.0f, MIN(1.0f, dx));
+    dy = MAX(-1.0f, MIN(1.0f, dy));
+
+    CGFloat maxRad = MPAnimTiltMaxDegrees * (CGFloat)M_PI / 180.0f;                  // ≤6° — как WP8.1 Start
+    CATransform3D t = CATransform3DIdentity;
+    t.m34 = MPAnimPerspective;                                          // перспектива
+    t = CATransform3DRotate(t, dx * maxRad, 0.0f, 1.0f, 0.0f);
+    t = CATransform3DRotate(t, -dy * maxRad, 1.0f, 0.0f, 0.0f);
+    t = CATransform3DScale(t, MPAnimTiltScale, MPAnimTiltScale, 1.0f);                   // лёгкое сжатие
+
+    [CATransaction begin];
+    [CATransaction setAnimationDuration:MPAnimTiltPressDur];
+    self.layer.transform = t;
+    self.layer.opacity = 0.92f;                                      // лёгкое затемнение
+    [CATransaction commit];
+    if (wasIdle) MPLog(@"диаг tilt: начало t=%.3f", CACurrentMediaTime());
+}
+
+- (void)releaseTilt {
+    if (CATransform3DEqualToTransform(self.layer.transform, CATransform3DIdentity) &&
+        self.layer.opacity == 1.0f) return;                          // не нажата — ничего не делать
+    MPLog(@"диаг tilt: возврат t=%.3f", CACurrentMediaTime());
+    [CATransaction begin];
+    [CATransaction setAnimationDuration:MPAnimTiltReleaseDur];
+    self.layer.transform = CATransform3DIdentity;
+    self.layer.opacity = 1.0f;
+    [CATransaction commit];
+}
+
+#pragma mark - Диагностика / сплэш запуска
+
+- (UIImage *)mpIconImage {
+    return _iconView.image;
+}
+
+- (NSString *)mpLayerDiag {
+    CGFloat r = 0, g = 0, b = 0, a = 0;
+    [self.backgroundColor getRed:&r green:&g blue:&b alpha:&a];
+    UIImage *img = _iconView.image;
+    return [NSString stringWithFormat:@"%@ frame=%@ bg=(%.2f,%.2f,%.2f,%.2f) alpha=%.2f icon=%@ fills=%d",
+            self.bundleID ?: @"?", NSStringFromCGRect(self.frame), r, g, b, a, self.alpha,
+            img ? [NSString stringWithFormat:@"%dx%d@%.0f", (int)img.size.width, (int)img.size.height, (double)img.scale] : @"nil",
+            _fillsIcon];
 }
 
 @end

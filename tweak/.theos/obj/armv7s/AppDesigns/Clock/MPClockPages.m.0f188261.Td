@@ -1,0 +1,23 @@
+/Users/ash/Documents/Проекты/MetroPhone/tweak/.theos/obj/armv7s/AppDesigns/Clock/MPClockPages.m.0f188261.o: \
+  AppDesigns/Clock/MPClockPages.m /Users/ash/theos/Prefix.pch \
+  /Users/ash/theos/vendor/include/theos/BackwardsCompat.h \
+  /Users/ash/theos/vendor/include/theos/IOSMacros.h \
+  /Users/ash/theos/vendor/include/HBLog.h \
+  /Users/ash/theos/vendor/include/CoreFoundation/CFLogUtilities.h \
+  AppDesigns/Clock/MPClockPages.h AppDesigns/Clock/MPClockTheme.h \
+  AppDesigns/Clock/MPClockData.h AppDesigns/Clock/MPClockEditor.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAnimationConstants.h
+/Users/ash/theos/Prefix.pch:
+/Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
+/Users/ash/theos/vendor/include/theos/IOSMacros.h:
+/Users/ash/theos/vendor/include/HBLog.h:
+/Users/ash/theos/vendor/include/CoreFoundation/CFLogUtilities.h:
+AppDesigns/Clock/MPClockPages.h:
+AppDesigns/Clock/MPClockTheme.h:
+AppDesigns/Clock/MPClockData.h:
+AppDesigns/Clock/MPClockEditor.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMetroStyle.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAnimationConstants.h:

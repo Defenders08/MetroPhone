@@ -11,6 +11,11 @@ void MPLog(NSString *format, ...) NS_FORMAT_FUNCTION(1, 2);
 // окно запоминается из хука SBWallpaperView (см. Tweak.xm).
 void MPSetHostWindow(UIWindow *window);
 UIWindow *MPSharedHostWindow(void);
+
+// «Локскрин скрылся» — постится из MLSHideNow (все пути скрытия локскрина).
+// Слушатель — MPHomeController: анлок играет Turnstile-въезд по этому сигналу,
+// а не по таймеру lockstate (иначе анимация играет под локскрином).
+extern NSString * const MPMetroLockscreenDidHideNotification;
 #ifdef __cplusplus
 }
 #endif
@@ -44,7 +49,12 @@ UIWindow *MPSharedHostWindow(void);
 + (UIFont *)mediumFont:(CGFloat)size;
 
 + (CGFloat)cellForContainerWidth:(CGFloat)width;   // cell = (width − (cols−1)·gap) / cols
-+ (CGSize)tilePixelSize:(MPTileSize)size containerWidth:(CGFloat)width; // Small/Medium/Wide по формулам WP8
++ (CGFloat)halfCellForContainerWidth:(CGFloat)width;   // полуячейка = (width − (2·cols−1)·gap) / (2·cols)
++ (CGSize)tilePixelSize:(MPTileSize)size containerWidth:(CGFloat)width; // размеры по пролётам в полуячейках
++ (CGFloat)pageInset;              // внешние поля страницы: сетка и заголовок от краёв экрана (12)
++ (CGFloat)pageHeaderHeight;       // высота полосы шапки в контенте страницы (60)
++ (CGFloat)pageHeaderPadTop;       // воздух над заголовком (8)
++ (CGFloat)pageHeaderPadBottom;    // воздух под заголовком (4)
 + (CGFloat)statusBarInset;         // верхний отступ под статус-бар (applicationFrame.origin.y)
 
 @end

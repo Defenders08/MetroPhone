@@ -8,15 +8,22 @@ static NSString *const MPLayoutFilePath = @"/var/mobile/Library/Preferences/metr
 @implementation MPTileItem
 @end
 
+// Пролёты в полуячейках (полуячейка = половина ячейки): tiny 1×1, small 2×2,
+// medium 4×4, half 4×2 (виджеты), wide — 2·cols×4 (вся ширина сетки).
 NSUInteger MPTileSpanX(MPTileSize size, NSInteger columns) {
-    if (size == MPTileSizeSmall) return 1;
-    if (size == MPTileSizeMedium) return 2;
-    if (size == MPTileSizeHalf) return 2;   // 2×1 — виджеты
-    return (columns < 1) ? 1 : (NSUInteger)columns;   // Wide — во всю ширину сетки
+    if (size == MPTileSizeTiny) return 1;
+    if (size == MPTileSizeSmall) return 2;
+    if (size == MPTileSizeMedium) return 4;
+    if (size == MPTileSizeHalf) return 4;   // 2×1 ячейки — виджеты
+    return (columns < 1) ? 2 : (NSUInteger)(columns * 2);   // Wide — во всю ширину сетки
 }
-NSUInteger MPTileSpanY(MPTileSize size) { return (size == MPTileSizeSmall || size == MPTileSizeHalf) ? 1 : 2; }
+NSUInteger MPTileSpanY(MPTileSize size) {
+    if (size == MPTileSizeTiny) return 1;
+    return (size == MPTileSizeSmall || size == MPTileSizeHalf) ? 2 : 4;
+}
 
-// ---- Сетка занятости: массив рядов, каждый ряд — NSMutableData из `cols` байт ----
+// ---- Сетка занятости: массив рядов, каждый ряд — NSMutableData из `cols` байт.
+// Единица сетки — полуячейка, поэтому ширина сетки = 2·cols. ----
 static BOOL MPCellsFree(NSArray *rows, NSInteger r, NSInteger c, NSInteger sx, NSInteger sy, NSInteger cols) {
     for (NSInteger rr = r; rr < r + sy; rr++) {
         if (rr >= (NSInteger)rows.count) continue;          // ряды за пределами — пустые
@@ -95,6 +102,7 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
         it.tileSize = ([size isEqualToString:@"medium"]) ? MPTileSizeMedium
                     : ([size isEqualToString:@"wide"]) ? MPTileSizeWide
                     : ([size isEqualToString:@"half"]) ? MPTileSizeHalf
+                    : ([size isEqualToString:@"tiny"]) ? MPTileSizeTiny
                     : MPTileSizeSmall;
         it.isWidget = [[d objectForKey:@"w"] boolValue];   // виджеты отсутствуют в старых раскладках
         [_items addObject:it];
@@ -108,7 +116,8 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
     for (MPTileItem *it in _items) {
         NSString *sz = (it.tileSize == MPTileSizeMedium) ? @"medium"
                      : (it.tileSize == MPTileSizeWide) ? @"wide"
-                     : (it.tileSize == MPTileSizeHalf) ? @"half" : @"small";
+                     : (it.tileSize == MPTileSizeHalf) ? @"half"
+                     : (it.tileSize == MPTileSizeTiny) ? @"tiny" : @"small";
         NSMutableDictionary *d = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                   it.bundleID, @"bid", sz, @"size", nil];
         if (it.isWidget) d[@"w"] = @YES;
@@ -160,16 +169,17 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
 
 - (void)packWithColumns:(NSInteger)cols {
     if (cols < 1) cols = 1;
+    NSInteger gc = cols * 2;              // ширина сетки занятости в полуячейках
     NSMutableArray *rows = [NSMutableArray array];
     for (MPTileItem *it in _items) {
         NSInteger sx = (NSInteger)MPTileSpanX(it.tileSize, cols);
         NSInteger sy = (NSInteger)MPTileSpanY(it.tileSize);
-        if (sx > cols) sx = cols;                     // узкий контейнер — деградация ширины
+        if (sx > gc) sx = gc;                     // узкий контейнер — деградация ширины
         BOOL placed = NO;
         for (NSInteger r = 0; !placed; r++) {
-            for (NSInteger c = 0; c + sx <= cols; c++) {
-                if (MPCellsFree(rows, r, c, sx, sy, cols)) {
-                    MPMarkCells(rows, r, c, sx, sy, cols);
+            for (NSInteger c = 0; c + sx <= gc; c++) {
+                if (MPCellsFree(rows, r, c, sx, sy, gc)) {
+                    MPMarkCells(rows, r, c, sx, sy, gc);
                     it.row = r;
                     it.col = c;
                     placed = YES;
@@ -295,8 +305,9 @@ static void MPMarkCells(NSMutableArray *rows, NSInteger r, NSInteger c, NSIntege
 - (BOOL)cycleSizeAtIndex:(NSInteger)index {
     if (index < 0 || index >= (NSInteger)_items.count) return NO;
     MPTileItem *it = [_items objectAtIndex:index];
-    // small → medium → wide → small (виджеты циклятся по своему списку через setSize:)
-    it.tileSize = (it.tileSize == MPTileSizeSmall) ? MPTileSizeMedium
+    // small → tiny → medium → wide → small (виджеты циклятся по своему списку через setSize:)
+    it.tileSize = (it.tileSize == MPTileSizeSmall)  ? MPTileSizeTiny
+               : (it.tileSize == MPTileSizeTiny)   ? MPTileSizeMedium
                : (it.tileSize == MPTileSizeMedium) ? MPTileSizeWide
                : MPTileSizeSmall;
     [self packWithColumns:[MPMetroStyle columns]];

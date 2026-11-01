@@ -12,7 +12,7 @@
 + (MPLiveTileSize)defaultSize { return MPLiveTileSizeLarge; }
 
 - (NSTimeInterval)refreshIntervalForSize:(MPLiveTileSize)size {
-    return 5.0;   // частые обновления — кроссфейд видно невооружённым глазом
+    return 30.0;   // кроссфейд видно и так; 5 с на A4 — лишние просадки кадров
 }
 
 - (NSString *)launchTarget { return nil; }   // тап обрабатывает handleTap

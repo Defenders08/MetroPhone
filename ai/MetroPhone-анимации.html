@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetroPhone · анимации</title>
+<style>
+  :root{
+    --bg:#0a0a0b; --ink:#fff;
+    --dim:rgba(255,255,255,.7); --faint:rgba(255,255,255,.5);
+    --line:rgba(255,255,255,.13);
+    --accent:#1BA1E2;
+    --s:.78;                /* масштаб устройства */
+    --tile:71.5px;          /* сторона малой плитки */
+    --gap:7px;
+    --font:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+    /* кривые: аппроксимации ExponentialEase из тулкита (см. WP-ANIMATIONS.md §3.2) */
+    --expOut6:cubic-bezier(.17,.62,.31,1);
+    --expIn6:cubic-bezier(.69,0,.83,.38);
+    --expOut3:cubic-bezier(.24,.57,.45,1);
+    --expIn3:cubic-bezier(.55,0,.76,.43);
+    --expOut1:cubic-bezier(.36,.5,.55,1);
+    --sineOut:cubic-bezier(.39,.58,.57,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);font-weight:300;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+  a{color:inherit}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:.92em;background:rgba(255,255,255,.07);padding:1px 5px}
+
+  /* ---------- шапка ---------- */
+  .head{padding:60px 0 30px;border-bottom:1px solid var(--line)}
+  .meta{margin:0 0 16px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  h1{margin:0 0 16px;font-size:clamp(42px,7vw,78px);font-weight:200;line-height:.92;letter-spacing:-.025em}
+  .lede{margin:0;max-width:58ch;font-size:17px;line-height:1.55;color:var(--dim)}
+
+  /* ---------- лаборатория ---------- */
+  .lab{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:44px;padding:40px 0 10px;align-items:start}
+
+  /* меню слева */
+  .menu h2{margin:0 0 14px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:400}
+  .group{margin:0 0 26px}
+  .menu button{display:block;width:100%;appearance:none;border:0;border-left:3px solid transparent;background:transparent;
+    color:var(--dim);font:inherit;font-size:14.5px;font-weight:300;text-align:left;padding:8px 10px;cursor:pointer}
+  .menu button:hover{color:#fff;background:rgba(255,255,255,.04)}
+  .menu button[aria-pressed="true"]{border-left-color:var(--accent);background:rgba(255,255,255,.07);color:#fff}
+  .menu button small{display:block;font-size:11px;color:var(--faint);margin-top:1px}
+
+  /* сцена */
+  .stage{position:relative}
+  .deviceWrap{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.18);
+    width:calc(482px * var(--s));height:calc(802px * var(--s));background:#000}
+  .device{position:absolute;top:0;left:0;width:480px;height:800px;background:#000;overflow:hidden;
+    transform:scale(var(--s));transform-origin:0 0}
+  .status{position:absolute;top:0;left:0;right:0;height:22px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 10px;font-size:9px;z-index:50;pointer-events:none}
+  .battery{display:flex;align-items:center;gap:4px}
+  .battery i{display:block;width:20px;height:10px;border:1px solid #fff;position:relative}
+  .battery i::after{content:"";position:absolute;inset:1px;background:#fff}
+
+  .sceneHost{position:absolute;inset:0;perspective:900px}  /* перспектива для 3D-переходов */
+  .scene{position:absolute;inset:0;background:#000;display:none;overflow:hidden}
+  .scene.on{display:block}
+
+  /* ---------- сцена: старт (плитки) ---------- */
+  .startHead{height:64px;display:flex;align-items:flex-end;padding:0 12px 6px;font-size:22px;font-weight:200;color:#fff}
+  .startHead .arr{margin-left:auto;color:var(--faint);font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--gap);padding:2px 8px;
+    grid-auto-rows:var(--tile);grid-auto-flow:row dense;transform-style:preserve-3d;perspective:800px}
+  .tile{position:relative;overflow:hidden;border:0;padding:0;margin:0;color:#fff;font:inherit;text-align:left;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;will-change:transform;perspective:700px}
+  .tile .glyph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46%;height:46%;
+    display:flex;align-items:center;justify-content:center;font-size:calc(var(--tile) * .48);font-weight:400}
+  .tile.w2 .glyph,.tile.w4 .glyph{justify-content:flex-start;padding-left:10%;width:auto;height:42%;font-size:40px}
+  .tile .cap{position:absolute;left:7%;right:7%;bottom:4%;font-size:11px;line-height:1.15;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+  .tile .count{position:absolute;right:6%;top:4%;font-size:15px;font-weight:400;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+  .tile.s1 .cap{display:none}
+  .w2{grid-column:span 2;grid-row:span 2}
+  .w4{grid-column:span 4;grid-row:span 2}
+  /* флип: две грани */
+  .tile .faces{position:absolute;inset:0;transform-style:preserve-3d}
+  .tile .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+  .tile .face.back{transform:rotateY(180deg)}
+  .back-inner{position:absolute;inset:0;padding:8% 9%}
+  .back-lines{margin:0;font-size:11.5px;line-height:1.3;font-weight:400;display:-webkit-box;-webkit-line-clamp:4;
+    -webkit-box-orient:vertical;overflow:hidden}
+  .back-lines b{display:block;font-weight:600;margin-bottom:2px}
+
+  /* ---------- сцена: настройки ---------- */
+  .setHead{padding:26px 14px 18px;font-size:44px;font-weight:200;color:var(--faint);letter-spacing:-.02em}
+  .setGroup{padding:8px 14px 4px;font-size:15px;color:var(--faint);opacity:.85}
+  .row{display:flex;align-items:center;height:56px;padding:0 14px;border-top:1px solid rgba(255,255,255,.10);
+    font-size:17px;font-weight:300}
+  .row .chev{margin-left:auto;color:var(--faint)}
+  .setList{position:absolute;inset:0}
+  .setScroll{position:relative}  /* в потоке после заголовка — не перекрывать шапку */
+
+  /* ---------- сцена: локскрин ---------- */
+  .lockTime{position:absolute;top:120px;left:0;right:0;text-align:center;font-size:96px;font-weight:200;letter-spacing:-.02em}
+  .lockDate{position:absolute;top:236px;left:0;right:0;text-align:center;font-size:20px;font-weight:300;color:var(--dim)}
+  .lockBottom{position:absolute;bottom:26px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+    padding:0 26px;color:var(--faint);font-size:12px}
+  .lockBottom .cam{font-size:26px}
+
+  /* ---------- панель запуска ---------- */
+  .stagebar{display:flex;align-items:center;gap:14px;margin:18px 0 6px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;font:inherit;
+    font-size:13.5px;padding:9px 22px;cursor:pointer;letter-spacing:.02em}
+  .btn:hover{background:rgba(255,255,255,.1)}
+  .btn:active{background:rgba(255,255,255,.2)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .hint{font-size:12.5px;color:var(--faint)}
+
+  /* ---------- паспорт ---------- */
+  .passport{border-top:1px solid var(--line);margin-top:20px;padding-top:16px}
+  .passport h2{margin:0 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:400}
+  .passport dl{display:grid;grid-template-columns:minmax(140px,auto) 1fr;gap:7px 18px;margin:0}
+  .passport dt{font-size:12px;color:var(--faint)}
+  .passport dd{margin:0;font-size:13px;color:rgba(255,255,255,.92)}
+  .passport .note{margin:14px 0 0;font-size:13px;line-height:1.55;color:var(--dim);max-width:64ch}
+  .passport .src{margin:10px 0 0;font-size:11.5px;color:var(--faint)}
+
+  .lab-note{margin:26px 0 0;font-size:12.5px;line-height:1.6;color:var(--faint);max-width:52ch}
+
+  /* ---------- разделы-справка ---------- */
+  section.block{padding:56px 0 6px;border-top:1px solid var(--line);margin-top:46px}
+  section.block h2{margin:0 0 18px;font-size:26px;font-weight:200}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+  th{font-weight:400;color:var(--faint);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  td b{font-weight:600}
+  .curves{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:14px}
+  .curve{border:1px solid var(--line);padding:12px 14px;font-size:12px;color:var(--dim)}
+  .curve b{display:block;color:#fff;font-weight:400;font-size:13px;margin-bottom:6px}
+  footer{margin-top:60px;border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--faint)}
+
+  @media (max-width:900px){
+    .lab{grid-template-columns:1fr}
+    .menu button{padding:6px 10px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <p class="meta">MetroPhone · инженерный референс движения</p>
+    <h1>Анимации<br>Windows Phone</h1>
+    <p class="lede">Точные параметры взяты из исходников Windows Phone Toolkit (Ms-PL) —
+      углы, длительности и easing совпадают с XAML-сторибордами. Демо крутятся на мокапе
+      480×800; справа под сценой — «паспорт» выбранной анимации. Разбор и маппинг на iOS 6 —
+      в <a href="WP-ANIMATIONS.md"><b>WP-ANIMATIONS.md</b></a>.</p>
+  </header>
+
+  <div class="lab">
+    <aside class="menu">
+      <h2>Демо</h2>
+      <div class="group">
+        <button data-demo="turnstile-fwd" aria-pressed="true">Turnstile вперёд<small>−80° → 0° · 0.35 с · шарнир слева</small></button>
+        <button data-demo="turnstile-back">Turnstile назад<small>+50° → 0° · 0.35 с</small></button>
+        <button data-demo="continuum">Continuum<small>0.15 с · герой-заголовок</small></button>
+        <button data-demo="slide">Slide<small>Y 200→0 + фейд · 0.35 с</small></button>
+        <button data-demo="swivel">Swivel<small>ось X · −45° → 0°</small></button>
+        <button data-demo="rotate">Rotate<small>90° → 0° в плоскости · 0.25 с</small></button>
+        <button data-demo="roll">Roll<small>0→45→90° · 0.6 с</small></button>
+        <button data-demo="native-push">Нативный iOS push<small>для сравнения (сейчас в Настройках)</small></button>
+      </div>
+      <div class="group">
+        <h2>Плитки</h2>
+        <button data-demo="tilt">Tilt-нажатие<small>наклон к точке касания · интерактивно</small></button>
+        <button data-demo="feather">Feather-въезд<small>стаггер 40 мс · RotationY −80°</small></button>
+        <button data-demo="flip">Флип живой плитки<small>rotateY 180° · 0.6 с</small></button>
+      </div>
+      <div class="group">
+        <h2>Лаунчер и локскрин</h2>
+        <button data-demo="launcher-fade">Показ лаунчера: фейд<small>как сейчас · 0.25 с</small></button>
+        <button data-demo="launcher-feather">Показ лаунчера: feather<small>вариант WP8</small></button>
+        <button data-demo="lock-unlock">Локскрин: разблокировка<small>уезд вверх · 0.25 с</small></button>
+        <button data-demo="lock-camera">Локскрин: камера<small>уезд влево · 0.25 с</small></button>
+        <button data-demo="lock-show">Локскрин: появление<small>оценочно: Y −40→0 + фейд</small></button>
+      </div>
+    </aside>
+
+    <div class="stagecol">
+      <div class="stage">
+        <div class="deviceWrap">
+          <div class="device">
+            <div class="status"><span>metrophone</span><span class="battery"><i></i></span></div>
+            <div class="sceneHost">
+              <section id="sc-tiles" class="scene on">
+                <div class="startHead">начало<span class="arr">»</span></div>
+                <div class="grid" id="grid"></div>
+              </section>
+              <section id="sc-settings" class="scene">
+                <div class="setList">
+                  <div class="setHead">настройки</div>
+                  <div class="setScroll">
+                    <div class="setGroup">система</div>
+                    <div class="row">мелодии и звуки<span class="chev">›</span></div>
+                    <div class="row">тема<span class="chev">›</span></div>
+                    <div class="row">блокировка + обои<span class="chev">›</span></div>
+                    <div class="row">учётные записи<span class="chev">›</span></div>
+                    <div class="setGroup">приложения</div>
+                    <div class="row">фон + камера<span class="chev">›</span></div>
+                    <div class="row">почта<span class="chev">›</span></div>
+                    <div class="row">IE<span class="chev">›</span></div>
+                  </div>
+                </div>
+              </section>
+              <section id="sc-lock" class="scene">
+                <div class="lockTime">21:47</div>
+                <div class="lockDate">вторник, 29 октября</div>
+                <div class="lockBottom"><span class="cam">📷</span><span>стрелка вверх — разблокировать</span><span>🔊 87%</span></div>
+              </section>
+            </div>
+          </div>
+        </div>
+        <div class="stagebar">
+          <button class="btn" id="runBtn">Запустить</button>
+          <span class="hint" id="stageHint">переход: плитки → настройки</span>
+        </div>
+      </div>
+
+      <div class="passport">
+        <h2>Паспорт анимации</h2>
+        <dl id="passDl"></dl>
+        <p class="note" id="passNote"></p>
+        <p class="src" id="passSrc"></p>
+      </div>
+
+      <p class="lab-note">Кривые в демо — кубические аппроксимации фирменного ExponentialEase(6)
+        тулкита; точные формулы и таблица значений для CAKeyframeAnimation — в WP-ANIMATIONS.md §3.2.
+        В демо фазы идут последовательно, как в TransitionFrame: выезд 0.25 с, затем въезд 0.35 с.</p>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Кривые</h2>
+    <table>
+      <tr><th>Кривая тулкита</th><th>Формула</th><th>Аппроксимация (CSS / CAMediaTimingFunction)</th><th>Где встречается</th></tr>
+      <tr><td>ExponentialEase Out, exp 6</td><td><code>y = (1 − 2^(−6t)) / 0.984375</code></td><td><code>cubic-bezier(.17,.62,.31,1)</code></td><td>все «въезды» (turnstile, feather, slide, swivel)</td></tr>
+      <tr><td>ExponentialEase In, exp 6</td><td><code>y = (2^(6t) − 1) / 63</code></td><td><code>cubic-bezier(.69,0,.83,.38)</code></td><td>все «выезды»</td></tr>
+      <tr><td>ExponentialEase, exp 3</td><td>то же с 3 вместо 6</td><td>out <code>(.24,.57,.45,1)</code> · in <code>(.55,0,.76,.43)</code></td><td>Continuum</td></tr>
+      <tr><td>ExponentialEase, exp 1</td><td>то же с 1 вместо 6</td><td>out <code>(.36,.5,.55,1)</code></td><td>Rotate, первая фаза Roll</td></tr>
+      <tr><td>SineEase Out</td><td><code>y = sin(πt/2)</code></td><td><code>cubic-bezier(.39,.58,.57,1)</code></td><td>фейд в Rotate</td></tr>
+    </table>
+    <div class="curves">
+      <div class="curve"><b>expOut6</b>cubic-bezier(.17,.62,.31,1)</div>
+      <div class="curve"><b>expIn6</b>cubic-bezier(.69,0,.83,.38)</div>
+      <div class="curve"><b>expOut3</b>cubic-bezier(.24,.57,.45,1)</div>
+      <div class="curve"><b>expIn3</b>cubic-bezier(.55,0,.76,.43)</div>
+      <div class="curve"><b>expOut1</b>cubic-bezier(.36,.5,.55,1)</div>
+      <div class="curve"><b>sineOut</b>cubic-bezier(.39,.58,.57,1)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Сводка параметров</h2>
+    <table>
+      <tr><th>Анимация</th><th>Трансформ</th><th>Время</th><th>Easing</th><th>Шарнир / детали</th></tr>
+      <tr><td>Turnstile In</td><td>rotateY −80° → 0°</td><td>0.35 с</td><td>expOut6</td><td>левый край (0, 0.5); opacity 0→1 за 0.01 с</td></tr>
+      <tr><td>Turnstile Out fwd</td><td>rotateY 0° → +50°</td><td>0.25 с</td><td>expIn6</td><td>opacity 1→0 на последних 0.01 с</td></tr>
+      <tr><td>Turnstile Out back</td><td>rotateY 0° → −80°</td><td>0.25 с</td><td>expIn6</td><td>то же</td></tr>
+      <tr><td>Feather (плитки)</td><td>как Turnstile, по элементам</td><td>0.35 / 0.25 с</td><td>expOut6 / expIn6</td><td>шарнир (−0.2, 0.5); стаггер 40 мс (in) / 50 мс (out)</td></tr>
+      <tr><td>Swivel</td><td>rotateX −45° → 0°</td><td>0.35 / 0.25 с</td><td>exp6</td><td>центр по вертикали (0.5)</td></tr>
+      <tr><td>Slide</td><td>Y 200 → 0</td><td>0.35 / 0.25 с</td><td>exp6</td><td>+ фейд той же кривой</td></tr>
+      <tr><td>Rotate</td><td>rotateZ 90° → 0°</td><td>0.25 с</td><td>expOut1 + sineOut-фейд</td><td>центр (0.5, 0.5)</td></tr>
+      <tr><td>Roll</td><td>rotateZ 0 → 45° → 90°</td><td>0.6 с</td><td>expIn1 → expOut6 → линейно</td><td>центр (0.5, 0.5)</td></tr>
+      <tr><td>Continuum Out</td><td>контент Y 0→70 + фейд; герой → (X+225, Y+73)</td><td>0.15 с</td><td>expIn3</td><td>герой = заголовок страницы</td></tr>
+      <tr><td>Continuum In</td><td>контент Y 50→0 + фейд; герой (130, −70) → 0</td><td>0.15 с</td><td>expOut3 (фейд exp6)</td><td>то же</td></tr>
+      <tr><td>Флип живой плитки</td><td>rotateY 0 → 180°</td><td>~0.6–1 с</td><td>ease-in-out</td><td>оценочно (XAML шаблона HubTile в архиве нет); бэк пред-повёрнут на 180°</td></tr>
+      <tr><td>Tilt-нажатие</td><td>rotateX/Y ≤ 6° к точке касания + scale .97</td><td>0.1 / 0.2 с</td><td>ease-out / ease-out</td><td>оценочно (Microsoft не публиковала); + затемнение ~6–8 %</td></tr>
+    </table>
+  </section>
+
+  <footer>
+    Параметры — из исходников <a href="https://github.com/microsoftarchive/WindowsPhoneToolkit">microsoftarchive/WindowsPhoneToolkit</a>
+    (Ms-PL): Transitions/Storyboards/*.xaml, Effects/TurnstileFeatherEffect.cs; Continuum — по
+    <a href="https://gist.github.com/bjcull/1345156">gist Бена Калла</a>. Флип и tilt помечены как оценочные.
+    Разбор и план внедрения — WP-ANIMATIONS.md. В твик ничего не перенесено.
+  </footer>
+</div>
+
+<script>
+'use strict';
+/* ========= утилиты ========= */
+const $ = s => document.querySelector(s);
+const E = {
+  expOut6:'cubic-bezier(.17,.62,.31,1)', expIn6:'cubic-bezier(.69,0,.83,.38)',
+  expOut3:'cubic-bezier(.24,.57,.45,1)', expIn3:'cubic-bezier(.55,0,.76,.43)',
+  expOut1:'cubic-bezier(.36,.5,.55,1)',  sineOut:'cubic-bezier(.39,.58,.57,1)',
+  iOS:'cubic-bezier(.4,0,.2,1)', lin:'linear'
+};
+const scenes = { tiles:$('#sc-tiles'), settings:$('#sc-settings'), lock:$('#sc-lock') };
+let current = null, busy = false;
+
+function showScene(name){
+  for (const k in scenes) scenes[k].classList.toggle('on', k === name);
+}
+/* последовательные фазы, как в TransitionFrame: out → in.
+   Завершение — по таймеру: .finished у WAAPI в части движков зависает. */
+const anim = (el, kf, opt) => {
+  try { el.animate(kf, opt); } catch (e) { /* без WAAPI просто ждём таймер */ }
+  return new Promise(r => setTimeout(r, opt.duration || 0));
+};
+
+/* ========= плитки ========= */
+const ACCENTS = ['#1BA1E2','#008A00','#E51400','#F09609','#A200FF','#00ABA9','#8EBC00','#E3008C'];
+const TILES = [
+  {c:2,r:2,a:0,g:'✉',cap:'почта',count:4},
+  {c:1,r:1,a:1,g:'☎'}, {c:1,r:1,a:2,g:'👤'}, {c:1,r:1,a:3,g:'☁',count:2},
+  {c:2,r:1,a:4,g:'♫',cap:'музыка'}, {c:1,r:1,a:5,g:'⚙'},
+  {c:2,r:2,a:6,g:'◎',cap:'фотопоток'},
+  {c:1,r:1,a:7,g:'⌕'}, {c:2,r:1,a:0,g:'▶',cap:'видео'}, {c:1,r:1,a:2,g:'✎'},
+  {c:1,r:1,a:3,g:'⚑'}, {c:1,r:1,a:1,g:'⊞'},
+  {c:4,r:2,a:4,g:'🗺',cap:'карты',live:true},
+  {c:2,r:1,a:5,g:'▤',cap:'лента',live:true}, {c:1,r:1,a:6,g:'◔'}, {c:1,r:1,a:7,g:'✚'}
+];
+const grid = $('#grid');
+TILES.forEach((t,i)=>{
+  const el = document.createElement('button');
+  el.className = 'tile' + (t.c===2?' w2':t.c===4?' w4':'');
+  el.style.background = ACCENTS[t.a];
+  el.style.gridColumn = 'span ' + t.c; el.style.gridRow = 'span ' + t.r;
+  if (t.live){
+    el.innerHTML =
+      '<span class="faces">' +
+        '<span class="face"><span class="glyph">'+t.g+'</span><span class="cap">'+t.cap+'</span></span>' +
+        '<span class="face back"><span class="back-inner"><span class="back-lines"><b>'+t.cap+'</b>' +
+        'сводка обновилась — обратная сторона плитки показывает контент вместо иконки</span></span></span>' +
+      '</span>';
+  } else {
+    el.innerHTML = '<span class="glyph">'+t.g+'</span>' +
+      (t.cap?'<span class="cap">'+t.cap+'</span>':'') +
+      (t.count?'<span class="count">'+t.count+'</span>':'');
+  }
+  el.dataset.i = i; el.dataset.w = t.c;
+  grid.appendChild(el);
+});
+const tileEls = [...grid.children];
+
+/* ========= tilt-нажатие (интерактивно всегда) ========= */
+tileEls.forEach(el=>{
+  const tilt = e => {
+    const r = el.getBoundingClientRect();
+    const dx = ((e.clientX - r.left)/r.width - .5)*2;   /* −1…1 от центра */
+    const dy = ((e.clientY - r.top)/r.height - .5)*2;
+    el.style.transformOrigin = '50% 50%';
+    el.style.transition = 'transform .1s ease-out, filter .1s ease-out';
+    el.style.transform = 'perspective(500px) rotateY('+(dx*6)+'deg) rotateX('+(-dy*6)+'deg) scale(.97)';
+    el.style.filter = 'brightness(.92)';
+  };
+  const untilt = () => {
+    el.style.transition = 'transform .2s ease-out, filter .2s ease-out';
+    el.style.transform = 'none'; el.style.filter = 'none';
+  };
+  el.addEventListener('pointerdown', e=>{ if(!busy) tilt(e); });
+  el.addEventListener('pointerup', untilt);
+  el.addEventListener('pointerleave', untilt);
+  el.addEventListener('pointercancel', untilt);
+});
+
+/* ========= флип живых плиток ========= */
+let flipTimer = null;
+function flipLive(){
+  tileEls.filter(el=>el.dataset.live).forEach(el=>{
+    const f = el.querySelector('.faces'); if(!f) return;
+    f.style.transition = 'transform .6s cubic-bezier(.45,.05,.55,.95)';
+    f.style.transform = f.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+  });
+}
+function setFlipAuto(on){
+  clearInterval(flipTimer); flipTimer = null;
+  if (on) flipTimer = setInterval(flipLive, 3000);
+}
+tileEls.forEach(el=>{ if (el.innerHTML.includes('face back')) el.dataset.live = '1'; });
+
+/* ========= feather-въезд видимых плиток ========= */
+function feather(){
+  tileEls.forEach((el,i)=>{
+    el.style.transformOrigin = '-20% 50%';
+    el.animate([
+      {transform:'rotateY(-80deg)', opacity:0, offset:0},
+      {transform:'rotateY(-80deg)', opacity:1, offset:.03},
+      {transform:'rotateY(0deg)',   opacity:1, offset:1}
+    ], {duration:350, delay:40*i, easing:E.expOut6, fill:'backwards'});
+    setTimeout(()=>{ el.style.transformOrigin=''; }, 350 + 40*i);
+  });
+  return 350 + 40*tileEls.length;
+}
+
+/* ========= переходы страниц ========= */
+function outIn(outEl, outKf, outOpt, inEl, inKf, inOpt){
+  outEl.style.transformOrigin = outEl.dataset.origin || '0% 50%';
+  inEl.style.transformOrigin  = inEl.dataset.origin  || '0% 50%';
+  return anim(outEl, outKf, outOpt).then(()=>{
+    outEl.classList.remove('on'); outEl.style.transform=''; outEl.style.opacity='';
+    inEl.classList.add('on');
+    return anim(inEl, inKf, inOpt);
+  }).then(()=>{
+    inEl.style.transform=''; inEl.style.opacity='';
+    outEl.style.transformOrigin=''; inEl.style.transformOrigin='';
+  });
+}
+const kfTurnOutFwd = [{transform:'rotateY(0deg)',opacity:1,easing:E.expIn6},
+  {transform:'rotateY(50deg)',opacity:1,offset:.96},{transform:'rotateY(50deg)',opacity:0,offset:1}];
+const kfTurnOutBack= [{transform:'rotateY(0deg)',opacity:1,easing:E.expIn6},
+  {transform:'rotateY(-80deg)',opacity:1,offset:.96},{transform:'rotateY(-80deg)',opacity:0,offset:1}];
+const kfTurnInFwd  = [{transform:'rotateY(-80deg)',opacity:1},{transform:'rotateY(0deg)',opacity:1}];
+const kfTurnInBack = [{transform:'rotateY(50deg)',opacity:1},{transform:'rotateY(0deg)',opacity:1}];
+const kfSlideIn = [{transform:'translateY(200px)',opacity:0},{transform:'translateY(0)',opacity:1}];
+const kfSlideOut= [{transform:'translateY(0)',opacity:1},{transform:'translateY(-120px)',opacity:0}];
+const kfSwivIn  = [{transform:'rotateX(-45deg)',opacity:1},{transform:'rotateX(0deg)',opacity:1}];
+const kfSwivOut = [{transform:'rotateX(0deg)',opacity:1,easing:E.expIn6},
+  {transform:'rotateX(45deg)',opacity:.4,offset:.96},{transform:'rotateX(45deg)',opacity:0,offset:1}];
+const kfRotIn   = [{transform:'rotate(90deg)',opacity:0},{transform:'rotate(0deg)',opacity:1}];
+
+function pageTransition(type, dir){ /* dir: 'fwd' | 'back' */
+  const from = dir==='fwd' ? scenes.tiles : scenes.settings;
+  const to   = dir==='fwd' ? scenes.settings : scenes.tiles;
+  if (dir==='fwd') to.classList.remove('on');
+  switch(type){
+    case 'turnstile':
+      return outIn(from, dir==='fwd'?kfTurnOutFwd:kfTurnOutBack, {duration:250},
+                   to,   dir==='fwd'?kfTurnInFwd :kfTurnInBack,  {duration:350});
+    case 'slide':
+      return outIn(from, kfSlideOut, {duration:250, easing:E.expIn6},
+                   to,   kfSlideIn,  {duration:350, easing:E.expOut6});
+    case 'swivel':
+      from.dataset.origin='50% 50%'; to.dataset.origin='50% 50%';
+      return outIn(from, kfSwivOut, {duration:250},
+                   to,   kfSwivIn,  {duration:350, easing:E.expOut6});
+    case 'rotate': {
+      from.dataset.origin='50% 50%'; to.dataset.origin='50% 50%';
+      return anim(from, [{transform:'rotate(0deg)',opacity:1},{transform:'rotate(90deg)',opacity:0}],
+        {duration:250, easing:E.expOut1}).then(()=>{
+          from.classList.remove('on'); from.style.transform=''; from.style.opacity='';
+          to.classList.add('on');
+          return Promise.all([
+            anim(to, [{transform:'rotate(90deg)'},{transform:'rotate(0deg)'}], {duration:250, easing:E.expOut1}),
+            anim(to, [{opacity:0},{opacity:1}], {duration:250, easing:E.sineOut})
+          ]);
+        }).then(()=>{ to.style.transform=''; to.style.opacity='';
+          from.dataset.origin=''; to.dataset.origin=''; });
+    }
+    case 'roll': {
+      to.dataset.origin='50% 50%'; from.dataset.origin='50% 50%';
+      return anim(from, [{opacity:1},{opacity:0}], {duration:150, easing:'ease-out'}).then(()=>{
+        from.classList.remove('on'); from.style.opacity='';
+        to.classList.add('on');
+        return anim(to, [
+          {transform:'rotate(0deg)',  offset:0,   easing:E.expIn6},
+          {transform:'rotate(45deg)', offset:.5,  easing:E.expOut6},
+          {transform:'rotate(90deg)', offset:1}
+        ], {duration:600});
+      }).then(()=>{ to.style.transform=''; from.dataset.origin=''; to.dataset.origin=''; });
+    }
+    case 'continuum': {
+      /* герой = заголовок страницы; числа из gist Бена Калла (0.15 с) */
+      const heroOut = dir==='fwd' ? from.querySelector('.startHead') : from.querySelector('.setHead');
+      const heroIn  = dir==='fwd' ? to.querySelector('.setHead')    : to.querySelector('.startHead');
+      const contOut = from.querySelector('.grid, .setList');
+      const contIn  = to.querySelector('.grid, .setList');
+      if (dir==='fwd') to.classList.remove('on');
+      const outOps = [
+        anim(contOut, [{transform:'translateY(0)',opacity:1},{transform:'translateY(70px)',opacity:0}],
+             {duration:150, easing:E.expIn3}),
+        anim(heroOut, [{transform:'translate(0,0)',opacity:1},
+                       {transform:'translate(225px,73px)',opacity:.9,offset:.93},
+                       {transform:'translate(225px,73px)',opacity:0,offset:1}],
+             {duration:150, easing:E.expIn3})
+      ];
+      return Promise.all(outOps).then(()=>{
+        from.classList.remove('on');
+        [contOut,heroOut].forEach(el=>{el.style.transform='';el.style.opacity='';});
+        to.classList.add('on');
+        const cont = anim(contIn, [{transform:'translateY(50px)',opacity:0},{transform:'translateY(0)',opacity:1}],
+                          {duration:150, easing:E.expOut3});
+        const hero = anim(heroIn, [{transform:'translate(130px,-70px)'},{transform:'translate(0,0)'}],
+                          {duration:150, easing:E.expOut3});
+        return Promise.all([cont, hero]);
+      }).then(()=>{ [contIn,heroIn].forEach(el=>{el.style.transform='';el.style.opacity='';}); });
+    }
+    case 'native': { /* нативный iOS push — для сравнения */
+      if (dir==='fwd') to.classList.remove('on');
+      return Promise.all([
+        anim(from, [{transform:'translateX(0)'},{transform:'translateX(-30%)'}], {duration:350, easing:E.iOS}),
+        anim(to,   [{transform:'translateX(480px)'},{transform:'translateX(0)'}], {duration:350, easing:E.iOS})
+      ]).then(()=>{
+        from.classList.remove('on');
+        [from,to].forEach(el=>{el.style.transform='';el.style.opacity='';});
+      });
+    }
+  }
+}
+
+/* ========= локскрин ========= */
+function lockRun(kind){
+  const lock = scenes.lock;
+  showScene('lock');
+  if (kind==='unlock')
+    return anim(lock, [{transform:'translateY(0)'},{transform:'translateY(-800px)'}],
+      {duration:250, easing:E.expIn6}).then(()=>{
+        lock.style.transform=''; showScene('tiles');
+      });
+  if (kind==='camera')
+    return anim(lock, [{transform:'translateX(0)'},{transform:'translateX(-480px)'}],
+      {duration:250, easing:E.expIn6}).then(()=>{
+        lock.style.transform=''; showScene('tiles');
+      });
+  /* show: оценочный въезд (в WP и у нас — мгновенно) */
+  return anim(lock, [{transform:'translateY(-40px)',opacity:0},{transform:'translateY(0)',opacity:1}],
+    {duration:300, easing:E.expOut6}).then(()=>{ lock.style.transform=''; lock.style.opacity=''; });
+}
+
+/* ========= показ лаунчера ========= */
+function launcherRun(mode){
+  showScene('tiles');
+  const sc = scenes.tiles;
+  if (mode==='fade')
+    return anim(sc, [{opacity:0},{opacity:1}], {duration:250, easing:'ease-out'})
+      .then(()=>{ sc.style.opacity=''; });
+  if (mode==='feather'){ const t = feather(); return new Promise(r=>setTimeout(r,t)); }
+  /* turnstile: вся страница въезжает из-за левого края */
+  sc.dataset.origin = '0% 50%';
+  return anim(sc, kfTurnInFwd, {duration:350}).then(()=>{ sc.style.transform=''; sc.dataset.origin=''; });
+}
+
+/* ========= паспорта демо ========= */
+const PASS = {
+  'turnstile-fwd':{rows:[
+    ['Трансформ','rotateY −80° → 0° (въезд), 0° → +50° (выезд)'],
+    ['Время','0.35 с (in) → 0.25 с (out), последовательно'],
+    ['Easing','ExponentialEase exp6: out (in-фаза), in (out-фаза)'],
+    ['Шарнир','CenterOfRotationX = 0 — левый край; opacity в границах 0.01 с']],
+    note:'Фирменный переход WP. На iOS 6: CATransform3D + m34=−1/500, anchorPoint (0, .5), анимировать снимок страницы, не живую иерархию.',
+    src:'Storyboards/TurnstileForward{In,Out}.xaml · Transitions.cs'},
+  'turnstile-back':{rows:[
+    ['Трансформ','rotateY +50° → 0° (въезд), 0° → −80° (выезд)'],
+    ['Время','0.35 с → 0.25 с'],['Easing','expOut6 / expIn6'],
+    ['Шарнир','тот же, левый край — «назад» зеркально по знаку углов']],
+    note:'Кнопка «назад» в WP крутит страницу в обратную сторону — не как iOS (слайд вправо).',
+    src:'Storyboards/TurnstileBackward{In,Out}.xaml'},
+  'continuum':{rows:[
+    ['Общий контент','Out: Y 0→70 + фейд · In: Y 50→0 + фейд'],
+    ['Герой-заголовок','Out: → (X+225, Y+73) · In: (130, −70) → 0'],
+    ['Время','0.15 с на фазу'],['Easing','exp3 (фейды — exp6)']],
+    note:'Дешёвый вариант «метро»-перехода: только translate/opacity, без 3D. Герой = заголовок страницы. Хороший кандидат для лаунчера.',
+    src:'gist.github.com/bjcull/1345156 (основа официального Continuum)'},
+  'slide':{rows:[
+    ['Трансформ','Y 200 → 0 (in), Y 0 → −120 (out, оценка)'],
+    ['Время','0.35 с → 0.25 с'],['Easing','expOut6 / expIn6, фейд той же кривой']],
+    note:'Прямая замена нативному push в Настройках — совпадает с рекомендацией FIX-PLAN «слайд 0.25 с». out-числа в тулките не смотрел — in точный.',
+    src:'Storyboards/SlideUpFadeIn.xaml'},
+  'swivel':{rows:[
+    ['Трансформ','rotateX −45° → 0° (in), 0° → +45° (out)'],
+    ['Время','0.35 с → 0.25 с'],['Easing','exp6'],
+    ['Центр','по вертикали 0.5 (середина)']],
+    note:'Декоративный; в WP использовался для диалогов и полноэкранных режимов.',
+    src:'Storyboards/SwivelForwardIn.xaml'},
+  'rotate':{rows:[
+    ['Трансформ','rotateZ 90° → 0° + фейд 0→1'],
+    ['Время','0.25 с'],['Easing','expOut1 для поворота, SineEase out для фейда'],
+    ['Центр','(0.5, 0.5)']],
+    note:'Вращение в плоскости — дешевле 3D (без перспективы), но выглядит проще.',
+    src:'Storyboards/RotateIn90Clockwise.xaml'},
+  'roll':{rows:[
+    ['Трансформ','rotateZ 0 → 45° → 90°, центр (0.5, 0.5)'],
+    ['Время','0.6 с (0.3 + 0.3)'],['Easing','expIn1 → expOut6 → линейно']],
+    note:'Декоративный «сверток». Не рекомендую для твика.',
+    src:'Storyboards/Roll.xaml'},
+  'native-push':{rows:[
+    ['Трансформ','въезд справа X 480→0, старая страница −30 %'],
+    ['Время','0.35 с'],['Easing','iOS-кривая (не Metro)']],
+    note:'Так выглядит текущий переход в Настройках твика (нативный push со спрятанным навбаром) — для сравнения с WP-вариантами.',
+    src:'сравнение, не WP'},
+  'tilt':{rows:[
+    ['Трансформ','rotateX/rotateY ≤ 6° в сторону пальца + scale 0.97'],
+    ['Время','0.1 с (нажатие) · 0.2 с (отпускание)'],
+    ['Затемнение','brightness ≈ 0.92'],['Параметры','оценочные — Microsoft не публиковала']],
+    note:'Самое узнаваемое WP-движение. Нажми и держи любую плитку. В твике: MPTileView не получает касания (userInteractionEnabled=NO) — драйвер через tilesScrollTouchesBegan/Moved/Ended, влия directly на layer.transform.',
+    src:'наблюдение WP8.1 Start'},
+  'feather':{rows:[
+    ['Трансформ','rotateY −80° → 0° по каждой видимой плитке'],
+    ['Время','0.35 с + стаггер 40 мс × индекс'],
+    ['Easing','expOut6'],['Шарнир','CenterOfRotationX = −0.2 (левее плитки)'],
+    ['Opacity','0 до своего BeginTime, затем 1 мгновенно']],
+    note:'Тот самый въезд плиток WP8. Тулкит федерит только видимые элементы — то же правило у нас уже в коде (MPTilesPageView: 45 анимаций = рывки). На A4 ограничить первыми 12–16 плитками, остальным общий фейд.',
+    src:'Effects/TurnstileFeatherEffect.cs'},
+  'flip':{rows:[
+    ['Трансформ','rotateY 0 → 180°, обратная сторона пред-повёрнута'],
+    ['Время','0.6 с здесь; в WP8 HubTile ~1 с (точно не найдено)'],
+    ['Easing','ease-in-out'],['Повтор','раз в ~3 с в демо (в WP — по таймеру обновления)']],
+    note:'Живые плитки у нас уже умеют кроссфейд (applyContent:) — flip ложится на то же место, ReduceMotion-гейт уже готов. Флипать только видимые плитки.',
+    src:'оценка (XAML шаблона HubTile в архиве нет)'},
+  'launcher-fade':{rows:[
+    ['Трансформ','opacity 0 → 1'],['Время','0.25 с'],['Easing','ease-out']],
+    note:'Как сейчас в твике (showMetroAnimated:). Нейтрально, но не «метро».',
+    src:'MPHomeController.m:152–154 (текущее поведение)'},
+  'launcher-feather':{rows:[
+    ['Трансформ','feather по плиткам (см. паспорт feather)'],
+    ['Время','0.35 с + 40 мс × индекс']],
+    note:'Кандидат на замену фейда при показе лаунчера: раз в respring, лимит по числу плиток. Внизу страницы плитки можно добить общим фейдом.',
+    src:'Effects/TurnstileFeatherEffect.cs'},
+  'lock-unlock':{rows:[
+    ['Трансформ','translateY 0 → −высота экрана'],
+    ['Время','0.25 с'],['Easing','expIn6']],
+    note:'Уже реализовано в твике (slideAwayAndUnlock, 0.25 с EaseIn) — совпадает с духом WP.',
+    src:'MPLockScreenView.m:635–643 (текущее поведение)'},
+  'lock-camera':{rows:[
+    ['Трансформ','translateX 0 → −ширина экрана'],
+    ['Время','0.25 с'],['Easing','expIn6']],
+    note:'Тоже уже в твике (slideAwayAndCamera).',
+    src:'MPLockScreenView.m:620–628 (текущее поведение)'},
+  'lock-show':{rows:[
+    ['Трансформ','Y −40 → 0 + фейд'],['Время','0.3 с (оценка)'],
+    ['Easing','expOut6']],
+    note:'Красивый вариант появления при блокировке. НО: MLSShowNow сейчас сознательно мгновенный ради скорости пробуждения на A4 — менять только с гейтом по типу пробуждения.',
+    src:'оценка; текущее поведение — MPLockScreen.m:167–178'}
+};
+
+const DEMOS = {
+  'turnstile-fwd': {label:'Turnstile вперёд', hint:'переход: плитки → настройки',
+    run(){ showScene('tiles'); return pageTransition('turnstile','fwd'); }},
+  'turnstile-back': {label:'Turnstile назад', hint:'переход: настройки → плитки',
+    run(){ showScene('settings'); return pageTransition('turnstile','back'); }},
+  'continuum': {label:'Continuum', hint:'переход: плитки → настройки (герой = заголовок)',
+    run(){ showScene('tiles'); return pageTransition('continuum','fwd'); }},
+  'slide': {label:'Slide', hint:'переход: плитки → настройки',
+    run(){ showScene('tiles'); return pageTransition('slide','fwd'); }},
+  'swivel': {label:'Swivel', hint:'переход: плитки → настройки',
+    run(){ showScene('tiles'); return pageTransition('swivel','fwd'); }},
+  'rotate': {label:'Rotate', hint:'переход: плитки → настройки',
+    run(){ showScene('tiles'); return pageTransition('rotate','fwd'); }},
+  'roll': {label:'Roll', hint:'переход: плитки → настройки',
+    run(){ showScene('tiles'); return pageTransition('roll','fwd'); }},
+  'native-push': {label:'Нативный iOS push', hint:'сравнение: так выглядит текущий переход в Настройках',
+    run(){ showScene('tiles'); return pageTransition('native','fwd'); }},
+  'tilt': {label:'Tilt-нажатие', hint:'нажми и держи плитку на экране',
+    run(){ const el = tileEls[Math.floor(Math.random()*tileEls.length)];
+      const r = el.getBoundingClientRect();
+      const fake = {clientX:r.left+r.width*(.2+Math.random()*.6), clientY:r.top+r.height*(.2+Math.random()*.6)};
+      el.dispatchEvent(new PointerEvent('pointerdown', fake));
+      setTimeout(()=>{ el.dispatchEvent(new PointerEvent('pointerup')); }, 550);
+      return new Promise(r=>setTimeout(r, 800)); }},
+  'feather': {label:'Feather-въезд', hint:'стаггер 40 мс, шарнир −0.2',
+    run(){ showScene('tiles'); return new Promise(r=>setTimeout(r, feather())); }},
+  'flip': {label:'Флип живой плитки', hint:'карты и лента флипают раз в 3 с',
+    run(){ setFlipAuto(true); flipLive(); return new Promise(r=>setTimeout(r, 700)); }},
+  'launcher-fade': {label:'Показ лаунчера: фейд', hint:'текущее поведение твика',
+    run(){ return launcherRun('fade'); }},
+  'launcher-feather': {label:'Показ лаунчера: feather', hint:'кандидат на внедрение',
+    run(){ return launcherRun('feather'); }},
+  'lock-unlock': {label:'Локскрин: разблокировка', hint:'уезд вверх, 0.25 с',
+    run(){ return lockRun('unlock'); }},
+  'lock-camera': {label:'Локскрин: камера', hint:'уезд влево, 0.25 с',
+    run(){ return lockRun('camera'); }},
+  'lock-show': {label:'Локскрин: появление', hint:'оценочный въезд (у нас пока мгновенно)',
+    run(){ return lockRun('show'); }}
+};
+
+function renderPass(id){
+  const p = PASS[id]; if (!p) return;
+  $('#passDl').innerHTML = p.rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>').join('');
+  $('#passNote').textContent = p.note;
+  $('#passSrc').textContent = 'Источник: ' + p.src;
+}
+
+function runDemo(id){
+  if (busy) return;
+  const d = DEMOS[id]; if (!d) return;
+  if (id !== 'flip') setFlipAuto(false);
+  busy = true; $('#runBtn').disabled = true;
+  $('#stageHint').textContent = d.hint;
+  renderPass(id);
+  /* предохранитель: как бы ни повело себя движение, управление вернётся */
+  Promise.race([
+    Promise.resolve(d.run()).catch(()=>{}),
+    new Promise(r => setTimeout(r, 6000))
+  ]).then(()=>{
+    busy = false; $('#runBtn').disabled = false;
+    setFlipAuto(id === 'flip');
+  });
+}
+
+document.querySelectorAll('.menu button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.menu button').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    runDemo(btn.dataset.demo);
+  });
+});
+$('#runBtn').addEventListener('click', ()=>{
+  const cur = document.querySelector('.menu button[aria-pressed="true"]');
+  runDemo(cur ? cur.dataset.demo : 'turnstile-fwd');
+});
+
+/* старт: сразу показать фирменный turnstile */
+renderPass('turnstile-fwd');
+</script>
+</body>
+</html>

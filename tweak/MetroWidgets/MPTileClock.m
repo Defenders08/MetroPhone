@@ -18,7 +18,7 @@
 + (NSArray *)supportedSizes {
     return @[@(MPLiveTileSizeCell), @(MPLiveTileSizeWide), @(MPLiveTileSizeLarge)];
 }
-+ (MPLiveTileSize)defaultSize { return MPLiveTileSizeLarge; }
++ (MPLiveTileSize)defaultSize { return MPLiveTileSizeWide; }   // 2×1 — как часы на Start в WP8.1; 2×2 включается «↕» в правке
 
 - (NSTimeInterval)refreshIntervalForSize:(MPLiveTileSize)size {
     return 15.0;   // минута никогда не «зависает» дольше 15 с

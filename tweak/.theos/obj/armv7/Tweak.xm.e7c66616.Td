@@ -11,12 +11,14 @@
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPIconTheme.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPTileView.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPHomeController.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAnimationConstants.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileCenter.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLockScreen/MPLockScreen.h \
+  /Users/ash/Documents/Проекты/MetroPhone/tweak/AppDesigns/Settings/MPSettingsTheme.h \
   /Users/ash/theos/vendor/include/substrate.h \
   /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h \
-  /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPHomeController.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMultitaskView.h
 /Users/ash/theos/Prefix.pch:
 /Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
@@ -29,10 +31,12 @@
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPIconTheme.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPTileView.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAppDataSource.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPHomeController.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPAnimationConstants.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileCenter.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLockScreen/MPLockScreen.h:
+/Users/ash/Documents/Проекты/MetroPhone/tweak/AppDesigns/Settings/MPSettingsTheme.h:
 /Users/ash/theos/vendor/include/substrate.h:
 /Users/ash/theos/vendor/lib/CydiaSubstrate.framework/Headers/CydiaSubstrate.h:
-/Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPHomeController.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPMultitaskView.h:
