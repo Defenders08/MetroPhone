@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Контакты — мокап WP8.1 (iPhone 4, 320×480)</title>
+<style>
+  /* фон страницы для комфортного скриншотинга; сами экраны — фиксированно чёрные */
+  body { margin: 0; padding: 24px; background: #171717; }
+</style>
+</head>
+<body>
+<div id="mp-contacts-mockup">
+<style>
+  /* ── WP8.1 продукт: фиксированная тёмная тема, 1px = 1pt iPhone 4 (320×480) ── */
+  #mp-contacts-mockup { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  #mp-contacts-mockup .mp-stage {
+    display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start;
+    padding: 6px 2px 4px;
+  }
+  #mp-contacts-mockup .mp-frame { background: transparent; border: 0; padding: 0; margin: 0; }
+  #mp-contacts-mockup .mp-phone {
+    width: 320px; height: 480px; background: #000; position: relative;
+    overflow: hidden; color: #fff;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    box-shadow: 0 0 0 1px rgba(128,128,128,.35);
+    flex: 0 0 auto;
+  }
+  #mp-contacts-mockup .mp-cap {
+    font-size: 12px; margin: 0 0 6px 2px; letter-spacing: .3px;
+    color: var(--muted-foreground);
+  }
+  /* статус-бар iOS 6: подпись слева, время по центру, блютус+батарея справа */
+  #mp-contacts-mockup .mp-sb {
+    position: absolute; top: 0; left: 0; right: 0; height: 20px;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: 11px; font-weight: 600; color: #fff; pointer-events: none;
+  }
+  #mp-contacts-mockup .mp-sb-l { position: absolute; left: 8px; top: 3px; }
+  #mp-contacts-mockup .mp-sb-t { position: absolute; left: 0; right: 0; top: 3px; text-align: center; }
+  #mp-contacts-mockup .mp-sb-r { position: absolute; right: 8px; top: 2px; display: flex; align-items: center; gap: 4px; }
+  #mp-contacts-mockup .mp-sb-r svg { width: 12px; height: 12px; display: block; }
+  #mp-contacts-mockup .mp-bat {
+    width: 18px; height: 9px; box-sizing: border-box;
+    border: 1px solid #fff; position: relative;
+  }
+  #mp-contacts-mockup .mp-bat::before { content: ""; position: absolute; inset: 1px; right: 3px; background: #fff; }
+  #mp-contacts-mockup .mp-bat::after { content: ""; position: absolute; right: -3px; top: 2px; width: 2px; height: 3px; background: #fff; }
+  /* лупа поиска — чистый CSS: круг + ручка под 45° */
+  #mp-contacts-mockup .mp-lens { position: relative; width: 18px; height: 18px; }
+  #mp-contacts-mockup .mp-lens::before {
+    content: ""; position: absolute; left: 0; top: 0; width: 11px; height: 11px;
+    border: 2px solid rgba(255,255,255,.6); border-radius: 50%; box-sizing: border-box;
+  }
+  #mp-contacts-mockup .mp-lens::after {
+    content: ""; position: absolute; left: 10px; top: 10px; width: 7px; height: 2px;
+    background: rgba(255,255,255,.6); transform: rotate(45deg); transform-origin: 0 50%;
+  }
+</style>
+
+<div class="mp-stage">
+
+  <!-- ═══ ЭКРАН 1: ПИВОТ (управляется контролами) ═══
+       topInset 20 · шапка 96 (вкладки «Все/Избранное» 44 на y=24) · действия на y=110 ·
+       поиск на y=157 (33px, рамка 1px, прозрачный) · список с y=196 · Lead 16 · строка 56 (имя на y+7) -->
+  <div class="mp-frame">
+    <div class="mp-cap">Пивот — параметры справа</div>
+    <div class="mp-phone" id="mpPivot" aria-label="Мокап пивота Контактов">
+      <div class="mp-sb"><span class="mp-sb-l">iPod</span><span class="mp-sb-t">9:08</span><span class="mp-sb-r"><span class="mp-bat"></span></span></div>
+      <div id="mpAppLabel" style="position:absolute;left:16px;right:16px;top:2px;height:32px;font-size:24px;line-height:32px;color:rgba(255,255,255,.6);">Контакты</div>
+      <div id="mpTabs" style="position:absolute;left:16px;white-space:nowrap;">
+        <span id="mpTabAll" style="color:#fff;">Все</span><span id="mpTabFav" style="color:rgba(255,255,255,.26);margin-left:24px;">Избранное</span>
+      </div>
+      <div id="mpAction" style="position:absolute;left:16px;height:30px;font-size:24px;line-height:30px;color:#fff;">добавить</div>
+      <div id="mpSearch" style="position:absolute;left:16px;width:288px;display:flex;align-items:center;box-sizing:border-box;">
+        <span class="mp-lens" style="margin-left:10px;"></span>
+        <span style="margin-left:10px;font-size:24px;font-size:16px;color:rgba(255,255,255,.6);">Поиск</span>
+      </div>
+      <div id="mpList" style="position:absolute;left:0;right:0;bottom:0;overflow:hidden;">
+        <div style="position:absolute;left:16px;right:16px;top:4px;" id="mpSections"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ЭКРАН 2: КАРТОЧКА ═══
+       заголовок 96 (имя на y=24) · действия на y=116 («назад» первый) ·
+       контент с y=166: ава 84 на y=178, организация по её верхней линии,
+       избранное/изменить (34, шаг 40/52), секции «телефон»/«почта» (шапка 30, строка 56) -->
+  <div class="mp-frame">
+    <div class="mp-cap">Карточка контакта</div>
+    <div class="mp-phone" aria-label="Мокап карточки контакта">
+      <div class="mp-sb"><span class="mp-sb-l">iPod</span><span class="mp-sb-t">9:08</span><span class="mp-sb-r"><span class="mp-bat"></span></span></div>
+      <div style="position:absolute;left:16px;top:24px;right:16px;height:62px;font-size:36px;line-height:62px;white-space:nowrap;overflow:hidden;">Алексей Темерязев</div>
+      <div style="position:absolute;left:16px;top:116px;height:30px;font-size:24px;line-height:30px;color:#fff;">назад<span style="margin-left:14px;">позвонить</span><span style="margin-left:14px;">смс</span><span style="margin-left:14px;">почта</span></div>
+
+      <div style="position:absolute;left:16px;top:178px;width:84px;height:84px;background:#A200FF;display:flex;align-items:center;justify-content:center;font-size:32px;">А</div>
+      <div style="position:absolute;left:114px;top:178px;width:190px;font-size:20px;line-height:24px;color:rgba(255,255,255,.6);">Ромашка, ООО<br>снабжение</div>
+
+      <div style="position:absolute;left:16px;top:278px;height:34px;font-size:24px;line-height:34px;color:rgba(255,255,255,.6);">в избранное</div>
+      <div style="position:absolute;left:16px;top:318px;height:34px;font-size:24px;line-height:34px;color:#A200FF;">изменить</div>
+
+      <div style="position:absolute;left:16px;top:370px;width:288px;height:30px;font-size:13px;line-height:22px;color:rgba(255,255,255,.6);">телефон</div>
+      <div style="position:absolute;left:16px;top:400px;width:288px;height:56px;">
+        <div style="position:absolute;left:0;top:7px;height:30px;font-size:24px;line-height:30px;">+7 953 928-47-10</div>
+        <div style="position:absolute;left:0;top:32px;height:16px;font-size:13px;line-height:16px;color:rgba(255,255,255,.6);">мобильный</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ЭКРАН 3: РЕДАКТОР НОВОГО КОНТАКТА ═══
+       заголовок 96 («Новый контакт» на y=24) · действия на y=116 (назад/сохранить) ·
+       поля с y=146: подпись 16 (шаг 18) + поле 40 (шаг 48) → блок 66 · без подчёркиваний -->
+  <div class="mp-frame">
+    <div class="mp-cap">Новый контакт</div>
+    <div class="mp-phone" aria-label="Мокап редактора нового контакта">
+      <div class="mp-sb"><span class="mp-sb-l">iPod</span><span class="mp-sb-t">9:08</span><span class="mp-sb-r"><span class="mp-bat"></span></span></div>
+      <div style="position:absolute;left:16px;top:24px;right:16px;height:62px;font-size:46px;line-height:62px;white-space:nowrap;">Новый контакт</div>
+      <div style="position:absolute;left:16px;top:116px;height:30px;font-size:24px;line-height:30px;color:#fff;">назад<span style="margin-left:14px;color:#A200FF;">сохранить</span></div>
+
+      <div style="position:absolute;left:16px;top:146px;right:16px;">
+        <div style="height:16px;line-height:16px;font-size:13px;color:rgba(255,255,255,.6);">имя</div>
+        <div style="height:2px;"></div>
+        <div style="height:40px;line-height:40px;font-size:24px;">Алексей</div>
+        <div style="height:8px;"></div>
+        <div style="height:16px;line-height:16px;font-size:13px;color:rgba(255,255,255,.6);">фамилия</div>
+        <div style="height:2px;"></div>
+        <div style="height:40px;line-height:40px;font-size:24px;">Темерязев</div>
+        <div style="height:8px;"></div>
+        <div style="height:16px;line-height:16px;font-size:13px;color:rgba(255,255,255,.6);">организация</div>
+        <div style="height:2px;"></div>
+        <div style="height:40px;line-height:40px;font-size:24px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById("mp-contacts-mockup");
+  if (!root) return;
+
+  // Параметры пивота; дефолт — рекомендация: без подписи «Контакты»,
+  // вкладки 44 (обе влезают), поиск 40 с рамкой 2, буквы секций 17
+  var state = { tabSize: 44, appLabel: false, searchH: 33, searchBorder: 1, letterSize: 17 };
+
+  var phone    = root.querySelector("#mpPivot");
+  var label    = root.querySelector("#mpAppLabel");
+  var tabs     = root.querySelector("#mpTabs");
+  var tabAll   = root.querySelector("#mpTabAll");
+  var tabFav   = root.querySelector("#mpTabFav");
+  var action   = root.querySelector("#mpAction");
+  var search   = root.querySelector("#mpSearch");
+  var list     = root.querySelector("#mpList");
+  var sections = root.querySelector("#mpSections");
+
+  var PEOPLE = [
+    { letter: "#", names: ["92"] },
+    { letter: "A", names: ["Aeiou", "Andrey", "Ash"] },
+    { letter: "Д", names: ["Дарья Кузнецова", "Денис Прохоров"] }
+  ];
+
+  function render() {
+    var topInset = 20;
+    // подпись приложения: вкл — над вкладками (y=2), выкл — вкладки сразу на y=24
+    label.style.display = state.appLabel ? "block" : "none";
+    tabs.style.top = (topInset + (state.appLabel ? 14 : 24)) + "px";
+    tabAll.style.fontSize = tabFav.style.fontSize = state.tabSize + "px";
+    var lh = Math.round(state.tabSize * 1.35);
+    tabAll.style.lineHeight = tabFav.style.lineHeight = lh + "px";
+
+    action.style.top = (topInset + 90) + "px";
+
+    search.style.top = (topInset + 137) + "px";
+    search.style.height = state.searchH + "px";
+    search.style.border = state.searchBorder + "px solid #fff";
+
+    // секции как в drawRect: буква в 36-строке (верх 8), имя в 56-строке (верх 7)
+    var html = "";
+    for (var s = 0; s < PEOPLE.length; s++) {
+      html += '<div style="height:36px;padding-top:8px;box-sizing:border-box;font-size:' +
+              state.letterSize + 'px;line-height:18px;color:rgba(255,255,255,.6);">' +
+              PEOPLE[s].letter + '</div>';
+      for (var r = 0; r < PEOPLE[s].names.length; r++) {
+        html += '<div style="height:56px;padding-top:7px;box-sizing:border-box;font-size:24px;line-height:30px;color:#fff;">' +
+                PEOPLE[s].names[r] + '</div>';
+      }
+    }
+    sections.innerHTML = html;
+    list.style.top = (topInset + 176) + "px";
+  }
+  render();
+
+  if (globalThis.Tweak) {
+    var tweak = new Tweak({ container: phone, onChange: render });
+    tweak.addSlider(state, "tabSize",      { label: "Вкладки, кегль", min: 30, max: 56, step: 2, unit: "px" });
+    tweak.addToggle(state, "appLabel",     { label: "Подпись «Контакты»" });
+    tweak.addSlider(state, "searchH",      { label: "Поиск, высота", min: 32, max: 56, step: 2, unit: "px" });
+    tweak.addSlider(state, "searchBorder", { label: "Поиск, рамка", min: 0, max: 4, step: 1, unit: "px" });
+    tweak.addSlider(state, "letterSize",   { label: "Буква секции", min: 13, max: 20, step: 1, unit: "px" });
+  }
+})();
+</script>
+</div>
+
+</body>
+</html>

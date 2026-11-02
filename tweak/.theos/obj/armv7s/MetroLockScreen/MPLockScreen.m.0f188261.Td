@@ -7,6 +7,7 @@
   MetroLockScreen/MPLockScreen.h MetroLockScreen/MPLockScreenView.h \
   MetroLockScreen/../MetroLauncher/MPMetroStyle.h \
   MetroLockScreen/../MetroLauncher/MPLayoutModel.h \
+  MetroLockScreen/../MetroLauncher/MPHomeController.h \
   MetroLockScreen/../MetroPhoneCommon.h
 /Users/ash/theos/Prefix.pch:
 /Users/ash/theos/vendor/include/theos/BackwardsCompat.h:
@@ -17,4 +18,5 @@ MetroLockScreen/MPLockScreen.h:
 MetroLockScreen/MPLockScreenView.h:
 MetroLockScreen/../MetroLauncher/MPMetroStyle.h:
 MetroLockScreen/../MetroLauncher/MPLayoutModel.h:
+MetroLockScreen/../MetroLauncher/MPHomeController.h:
 MetroLockScreen/../MetroPhoneCommon.h:

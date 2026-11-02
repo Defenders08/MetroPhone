@@ -10,6 +10,7 @@
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveWidgetsPageView.h \
   MetroLauncher/MPMetroStyle.h MetroLauncher/MPLayoutModel.h \
   MetroLauncher/MPAnimationConstants.h \
+  MetroLauncher/../MetroLockScreen/MPLockScreen.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileScheduler.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h \
   /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h
@@ -27,6 +28,7 @@ MetroLauncher/MPAppListPageView.h:
 MetroLauncher/MPMetroStyle.h:
 MetroLauncher/MPLayoutModel.h:
 MetroLauncher/MPAnimationConstants.h:
+MetroLauncher/../MetroLockScreen/MPLockScreen.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTileScheduler.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroWidgets/MPLiveTile.h:
 /Users/ash/Documents/Проекты/MetroPhone/tweak/MetroLauncher/MPLayoutModel.h:
