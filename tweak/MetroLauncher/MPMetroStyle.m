@@ -29,24 +29,37 @@ static BOOL MPSyslogWanted(void) {
 }
 
 void MPLog(NSString *format, ...) {
-    va_list args;
-    va_start(args, format);
-    NSString *line = [[NSString alloc] initWithFormat:format arguments:args];
-    va_end(args);
+	va_list args;
+	va_start(args, format);
+	NSString *line = [[NSString alloc] initWithFormat:format arguments:args];
+	va_end(args);
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    struct tm parts;
-    localtime_r(&tv.tv_sec, &parts);
-    char stamp[32];
-    strftime(stamp, sizeof(stamp), "%H:%M:%S", &parts);
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	struct tm parts;
+	localtime_r(&tv.tv_sec, &parts);
+	char stamp[32];
+	strftime(stamp, sizeof(stamp), "%H:%M:%S", &parts);
+	NSString *stamped = [NSString stringWithFormat:@"[%s.%03d] %@\n",
+	                     stamp, (int)(tv.tv_usec / 1000), line];
 
-    FILE *f = fopen(MP_LOG_PATH, "a");
-    if (f != NULL) {
-        fprintf(f, "[%s.%03d] %s\n", stamp, (int)(tv.tv_usec / 1000), line.UTF8String);
-        fclose(f);
-    }
-    if (MPSyslogWanted()) NSLog(@"[MetroPhone] %@", line);
+	// Запись в файл — в фоновую serial-очередь: fopen/fclose на каждый вызов
+	// на главном потоке стоил десятки мс в горячих путях (отпускание свайпа).
+	// Форматирование остаётся на вызывающем потоке (дёшево), очередь хранит
+	// порядок строк.
+	static dispatch_queue_t logQueue = nil;
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		logQueue = dispatch_queue_create("ru.ash.metrophone.log", DISPATCH_QUEUE_SERIAL);
+	});
+	dispatch_async(logQueue, ^{
+		FILE *f = fopen(MP_LOG_PATH, "a");
+		if (f != NULL) {
+			fprintf(f, "%s", stamped.UTF8String);
+			fclose(f);
+		}
+		if (MPSyslogWanted()) NSLog(@"%@", stamped);
+	});
 }
 
 static UIWindow *MPHostWindow = nil;

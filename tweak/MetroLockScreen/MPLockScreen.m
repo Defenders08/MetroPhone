@@ -15,6 +15,7 @@
 #import "MPLockScreen.h"
 #import "MPLockScreenView.h"
 #import "../MetroLauncher/MPMetroStyle.h"
+#import "../MetroLauncher/MPHomeController.h" // MPHomePrepare/Start/CancelUnlockEntry (свайп-анлок)
 #import "../MetroPhoneCommon.h"
 
 #import <objc/runtime.h>
@@ -71,6 +72,9 @@ static MPLockScreenView *MLSView = nil;  // наша вьюха (живёт в �
 static UIView *MLSShield = nil;          // подложка: закрывает нативный локскрин под нами
 static BOOL MLSPasscodeVisible = NO;     // на экране нативный ввод кода
 static BOOL MLSPendingUnlock = NO;       // свайп уже запустил разблокировку
+static BOOL MLSSliding = NO;             // вьюха летит вверх (анлок в слайде)
+static BOOL MLSUnlockReady = NO;         // анлок подтвердился, слайд ещё не доиграл
+static BOOL MLSUnlockDone = NO;          // анлок подтверждён: нативный контент окна не возвращать
 static NSUInteger MLSHideToken = 0;      // отменяет отложенные скрытия
 static BOOL MLSReordering = NO;          // защита от рекурсии при перестановке вьюх
 
@@ -78,6 +82,10 @@ static void MLSUnlock(void);     // определение ниже, нужен 
 static void MLSShieldPlace(void); // подложка ровно под нашей вьюхой
 static void MLSNativeHidden(BOOL hide, NSString *reason); // нативный локскрин
 static void MLSCameraTap(void);  // тап по иконке камеры внизу справа
+static void MLSNotifyDidHide(NSString *reason); // сигнал лаунчеру «локскрин ушёл»
+static void MLSPollUnlock(int attempt);        // опрос состояния после анлока
+static void MLSFinishUnlockSlide(void);        // completion слайда-разблокировки
+static void MLSSlideStartReveal(void);         // снять непрозрачные слои окна при старте слайда
 
 static BOOL MLSIsLocked(void) {
 	id away = [objc_getClass("SBAwayController") sharedAwayController];
@@ -120,7 +128,9 @@ static void MLSShieldPlace(void) {
 		MLSReordering = NO;
 	}
 	if (!CGRectEqualToRect(MLSShield.frame, parent.bounds)) MLSShield.frame = parent.bounds;
-	MLSShield.hidden = MLSView.hidden;
+	// Во время слайда-разблокировки подложка снята (лаунчер виден под вьюхой) —
+	// Raise не должен вернуть её посреди анимации
+	MLSShield.hidden = MLSView.hidden || MLSSliding;
 }
 
 // Родной локскрин — это НЕ одна вьюха: SBAwayView только верхняя зона с часами,
@@ -151,6 +161,19 @@ BOOL MPLockScreenCoversNative(void) {
 	return MLSView != nil && !MLSView.hidden && !MLSPasscodeVisible;
 }
 
+BOOL MPLockScreenNotCovering(void) {
+	return MLSView == nil || MLSView.hidden;
+}
+
+// Сигнал лаунчеру «локскрин ушёл»: Turnstile-въезд играется только теперь
+// (не по lockstate). Постится и при раннем анлоке (вьюха ещё в слайде) —
+// повторный пост из MLSHideNow лаунчер съедает гвардом _deferEnterForLockscreen.
+static void MLSNotifyDidHide(NSString *reason) {
+	[[NSNotificationCenter defaultCenter] postNotificationName:MPMetroLockscreenDidHideNotification
+	                                                        object:nil];
+	MPLog(@"локскрин: сигнал лаунчеру (%@)", reason);
+}
+
 static void MLSHideNow(NSString *reason) {
 	MLSHideToken++;
 	if (MLSView != nil && !MLSView.hidden) {
@@ -159,25 +182,42 @@ static void MLSHideNow(NSString *reason) {
 	}
 	[MLSView stopClockUpdates];
 	if (MLSShield != nil) MLSShield.hidden = YES;
-	// Нативный возвращаем строго после скрытия нашего: хук setHidden: смотрит
-	// на флаг и не станет тут же гасить его обратно
-	MLSNativeHidden(NO, reason);
-	// Сигнал лаунчеру: анлок играет Turnstile-въезд только теперь (не по lockstate)
-	[[NSNotificationCenter defaultCenter] postNotificationName:MPMetroLockscreenDidHideNotification
-	                                                        object:nil];
+	if (MLSUnlockDone) {
+		// Анлок подтверждён: нативный локскрин (с зелёным индикатором зарядки)
+		// НЕ возвращаем — система сейчас уберёт окно блокировки целиком, а
+		// возвращённый контент на эти кадры закрыл бы лаунчер «батарейкой»
+		MPLog(@"локскрин: нативный контент оставлен скрытым (анлок подтверждён)");
+	} else {
+		MLSNativeHidden(NO, reason);
+	}
+	MLSNotifyDidHide(reason);
 }
 
 static void MLSShowNow(void) {
+	MLSUnlockDone = NO; // новый показ = новое состояние блокировки
 	[MLSView setWallpaperImage:MLSWallpaper];
 	[MLSView resetSlide];
 	// Экран зажигаем сразу, контент собираем после показа: refreshContent — это
 	// скан бейджей по всем приложениям и запрос батареи, на A4 это ощутимая
 	// задержка пробуждения. Лейблы дозаполняются в следующем же проходе layout.
+	// Появление мягкое (WP): таем из чёрной подложки. Сдвигом transform не
+	// пользуемся сознательно: MPLockScreenRaise сверяет frame с bounds родителя,
+	// а frame при нетождественном transform в UIKit не определён — Raise в
+	// середине fade сбил бы вьюху. Подложка чёрная и мгновенная, за fade ничего
+	// не просвечивает; гварды setHidden: смотрят на hidden, а не на alpha.
+	MLSView.alpha = 0.0;
 	MLSView.hidden = NO;
 	MPLockScreenRaise(); // подложка встанет ровно под вьюхой и покажется
 	MLSNativeHidden(YES, @"показ"); // родной локскрин не должен просвечивать
 	[MLSView refreshContent];
 	[MLSView startClockUpdates];
+	[UIView animateWithDuration:0.18
+	                      delay:0.0
+	                    options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState
+	                 animations:^{
+		MLSView.alpha = 1.0;
+	}
+	                 completion:NULL];
 }
 
 // Посадка в ОКНО нативного локскрина. Нативный локскрин — в отдельном окне
@@ -204,8 +244,18 @@ void MPLockScreenAttach(UIWindow *lockWindow) {
 		if (MLSView == nil) {
 			MLSView = [[MPLockScreenView alloc] initWithFrame:[UIScreen mainScreen].bounds];
 			MLSView.hidden = YES; // показом управляет только sync
+			MLSView.onDragBeginBlock = ^{
+				MPHomePrepareUnlockEntry(); // прогрев лаунчера: слайд и Turnstile перекроются
+			};
+			MLSView.onDragAbortBlock = ^{
+				MPHomeCancelUnlockEntry(); // свайп не дотянут — прогрев уже не нужен
+			};
 			MLSView.onUnlockBlock = ^{
+				MLSSliding = YES; // анлок идёт параллельно со слайдом
 				MLSUnlock();
+			};
+			MLSView.onSlideDoneBlock = ^{
+				MLSFinishUnlockSlide();
 			};
 			MLSView.onCameraBlock = ^{
 				MLSCameraTap();
@@ -242,7 +292,9 @@ void MPLockScreenRaise(void) {
 	if ([parent.subviews lastObject] != MLSView) {
 		[parent bringSubviewToFront:MLSView];
 	}
-	if (!CGRectEqualToRect(MLSView.frame, parent.bounds)) {
+	// Во время слайда frame уезжает с анимацией center: возврат к bounds родителя
+	// здесь сломал бы анимацию (вьюха прыгнула бы обратно) — пропускаем
+	if (!MLSSliding && !CGRectEqualToRect(MLSView.frame, parent.bounds)) {
 		MLSView.frame = parent.bounds;
 	}
 }
@@ -308,45 +360,129 @@ static BOOL MLSRequestUnlock(void) {
 	return NO;
 }
 
-// Свайп прошёл порог. Свой слайд не играем: окно блокировки уходит вместе с
-// нашей вьюхой, поэтому нативный локскрин не показывается ни в один момент.
-// Если разблокировка не прошла — через полсекунды возвращаем экран на место.
+// Свайп прошёл порог (запрос приходит В НАЧАЛЕ слайда) или тап по камере.
+// Синхронно — только дешёвое: pending-флаг, стоп часов, reveal, старт turnstile.
+// ТЯЖЁЛОЕ (нативный запрос анлока может блокировать главный поток) — в
+// dispatch_after 0.03 с: анимации к этому моменту уже закоммичены (flush во
+// вьюхе) и ушли в рендер-процесс. Опрос подтверждает анлок для закрытия окна
+// в конце слайда (MLSUnlockReady → слайд доиграл). Пасскод и провал отменяют
+// прогретый лаунчер.
 static void MLSUnlock(void) {
 	@try {
 		if (MLSPendingUnlock) return;
 		MLSPendingUnlock = YES;
 		[MLSView stopClockUpdates];
-		MPLog(@"локскрин: свайп — разблокировка");
+		MPLog(@"анлок-хроника: отпускание (слайд=%d) t=%.3f", MLSSliding ? 1 : 0, CACurrentMediaTime());
+		if (MLSSliding) MLSSlideStartReveal(); // дёшево, нужен визуально в первом кадре
+		MPHomeStartUnlockEntry();              // turnstile-анимации в этот же коммит
 
-		if (!MLSRequestUnlock()) {
-			MPLog(@"!! локскрин: ни один селектор разблокировки не найден");
-		}
-
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.6 * NSEC_PER_SEC)),
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.03 * NSEC_PER_SEC)),
 		               dispatch_get_main_queue(), ^{
 			if (!MLSPendingUnlock) return;
-			MLSPendingUnlock = NO;
-
-			// Код: нативный экран ввода уже показан, наша вьюха спрятана
-			if (MLSPasscodeVisible) {
-				MPLog(@"локскрин: разблокировка ждёт код");
-				return;
-			}
-			if (MLSIsLocked()) {
-				MPLog(@"!! локскрин: разблокировка не прошла (locked=1) — экран возвращается");
-				[MLSView springBack];
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)),
-				               dispatch_get_main_queue(), ^{
-					MPLockScreenSync();
-				});
-				return;
-			}
-			MLSHideNow(@"разблокировано");
+			NSTimeInterval t0 = CACurrentMediaTime();
+			BOOL ok = MLSRequestUnlock();
+			MPLog(@"анлок-хроника: MLSRequestUnlock занял %.0f мс (ok=%d)",
+			      (CACurrentMediaTime() - t0) * 1000.0, ok ? 1 : 0);
+			if (!ok) MPLog(@"!! локскрин: ни один селектор разблокировки не найден");
+			MLSPollUnlock(0);
 		});
 	} @catch (NSException *e) {
 		MPLog(@"!! локскрин: unlock — %@ (%@)", e.name, e.reason);
 		MLSPendingUnlock = NO;
 	}
+}
+
+// Потолок ожидания: 12 попыток × 60 мс ≈ 0.72 с (на A4 нативный анлок укладывается)
+#define MLS_UNLOCK_POLL_ATTEMPTS 12
+
+// Старт слайда-разблокировки. Под уезжающей вьюхой в том же окне блокировки
+// остаются непрозрачные слои: чёрная подложка MLSShield, фон самого окна, а
+// после скрытия вьюхи — нативный локскрин с индикатором зарядки. Они закрывали
+// лаунчер (SBAppWindow ниже по уровню): на видео под слайдом «тёмная яма»,
+// после ухода вьюхи — вспышка батарейки. Дампаем иерархию (кто непрозрачный,
+// есть ли вторая копия локскрина) и снимаем подложку + фон окна — наша вьюха
+// остаётся единственным непрозрачным слоем и открывает лаунчер.
+static void MLSSlideStartReveal(void) {
+	if (MLSView == nil) return;
+	UIWindow *w = MLSView.window;
+	if (w == nil) return;
+
+	MPLog(@"анлок-хроника: дамп окна блокировки t=%.3f: %@ level=%.0f opaque=%d bg=%@, вьюх=%lu",
+	      CACurrentMediaTime(), NSStringFromClass([w class]), (double)w.windowLevel,
+	      w.opaque ? 1 : 0,
+	      w.backgroundColor == nil ? @"nil" : @"есть",
+	      (unsigned long)w.subviews.count);
+	int idx = 0;
+	for (UIView *sub in w.subviews) {
+		MPLog(@"анлок-хроника:   [%d] %@ frame=%@ hidden=%d alpha=%.2f bg=%@%@",
+		      idx++, NSStringFromClass([sub class]), NSStringFromCGRect(sub.frame),
+		      sub.hidden ? 1 : 0, sub.alpha,
+		      sub.backgroundColor == nil ? @"nil" : @"цвет",
+		      sub == MLSView ? @" <- наш экран" : (sub == MLSShield ? @" <- подложка" : @""));
+	}
+
+	if (MLSShield != nil && MLSShield.superview == w) MLSShield.hidden = YES;
+	if (![w.backgroundColor isEqual:[UIColor clearColor]]) w.backgroundColor = [UIColor clearColor];
+	MPLog(@"анлок-хроника: лаунчер реально виден (подложка и фон окна сняты) t=%.3f",
+	      CACurrentMediaTime());
+}
+
+static void MLSPollUnlock(int attempt) {
+	if (!MLSPendingUnlock) return;
+
+	// Код: нативный экран ввода уже показан, нашу вьюху прячет sync — ждать нечего
+	if (MLSPasscodeVisible) {
+		MLSPendingUnlock = NO;
+		MPHomeCancelUnlockEntry(); // прогретый лаунчер под экраном кода не нужен
+		MPLog(@"локскрин: разблокировка ждёт код");
+		return;
+	}
+
+	if (!MLSIsLocked()) {
+		MLSPendingUnlock = NO;
+		MLSUnlockDone = YES; // нативный контент окна после скрытия не возвращать
+		MPLog(@"анлок-хроника: анлок подтвердился (попытка %d) t=%.3f", attempt + 1, CACurrentMediaTime());
+		if (MLSSliding) {
+			// Вьюха ещё в слайде: скрытие и возврат нативного контента — по
+			// завершении слайда; въезд лаунчера стартует независимо (по прогрессу)
+			MLSUnlockReady = YES;
+			return;
+		}
+		MLSHideNow(@"разблокировано");
+		return;
+	}
+
+	if (attempt >= MLS_UNLOCK_POLL_ATTEMPTS - 1) {
+		MLSPendingUnlock = NO;
+		MPHomeCancelUnlockEntry(); // въезд по прогрессу мог уже играть — прячем
+		MPLog(@"!! локскрин: разблокировка не прошла (locked=1) — экран возвращается");
+		[MLSView springBack];
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)),
+		               dispatch_get_main_queue(), ^{
+			MPLockScreenSync();
+		});
+		return;
+	}
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.06 * NSEC_PER_SEC)),
+	               dispatch_get_main_queue(), ^{
+		MLSPollUnlock(attempt + 1);
+	});
+}
+
+// Слайд-разблокировка доиграла: вьюха за верхним краем. Анлок уже подтвердился —
+// завершаем скрытие (вьюха, нативный контент); нет — ждём опрос: успех вызовет
+// MLSHideNow сам, провал вернёт вьюху пружиной с верхнего края.
+static void MLSFinishUnlockSlide(void) {
+	MLSSliding = NO;
+	MPLog(@"анлок-хроника: слайд доиграл t=%.3f", CACurrentMediaTime());
+	if (!MLSUnlockReady) {
+		// Пасскод успел показаться, пока вьюха летела: прячемся перед экраном кода
+		if (MLSPasscodeVisible) MLSHideNow(@"экран ввода кода");
+		return;
+	}
+	MLSUnlockReady = NO;
+	MLSHideNow(@"разблокировано (слайд доиграл)");
 }
 
 #pragma mark - Синхронизация с состоянием блокировки
@@ -382,6 +518,13 @@ void MPLockScreenSync(void) {
 			}
 
 			if (MLSView.hidden) return; // и так не видно
+
+			if (MLSSliding) {
+				// Слайд-разблокировка управляет скрытием сама (MLSFinishUnlockSlide):
+				// прятать вьюху посреди слайда нельзя — «срез» анимации и досрочный
+				// сигнал «локскрин скрыт», запускавший въезд раньше времени
+				return;
+			}
 
 			if (MLSPasscodeVisible) {
 				MLSHideNow(@"экран ввода кода");

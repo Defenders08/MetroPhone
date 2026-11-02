@@ -7,6 +7,7 @@
 // Управление:
 //   касание карточки  — переход в приложение (onActivateBlock);
 //   свайп карточки вниз — закрытие приложения (onCloseBlock);
+//   касание фона      — выход из свитчера;
 //   кнопка Home       — выход из свитчера (обрабатывает Tweak.xm).
 //
 // Приватных API SpringBoard класс не использует: список запущенных
@@ -22,6 +23,9 @@
 // вернуть nil — тогда рисуется заглушка с иконкой.
 @property (nonatomic, copy) UIImage *(^livePreviewBlock)(NSString *bundleID);
 
+// frontmostBundleID — приложение, из которого пришли: его карточка
+// открывается по центру (nil или незапущенное — центрируется первая).
+- (void)openAnimated:(BOOL)animated withAppIDs:(NSArray *)appIDs frontmostBundleID:(NSString *)frontmost;
 - (void)openAnimated:(BOOL)animated withAppIDs:(NSArray *)appIDs;
 - (void)closeAnimated:(BOOL)animated;
 - (BOOL)isOpen;

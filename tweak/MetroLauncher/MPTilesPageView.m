@@ -382,7 +382,9 @@ static const NSInteger MPBuildBatch = 8;              // плиток за од�
 - (NSArray *)featherElements {
     NSMutableArray *els = [NSMutableArray array];
     for (UIView *v in _scrollView.subviews) {
-        if (v.hidden || v.alpha < 0.01f) continue;
+        // alpha НЕ фильтруем: старт-поза прогрева ставит плиткам alpha 0 до
+        // въезда — с фильтром набор строк пустел и turnstile уходил в фолбэк
+        if (v.hidden) continue;
         if ([v isKindOfClass:[MPTileView class]] || [v isKindOfClass:[UILabel class]]) {
             [els addObject:v];
         }

@@ -118,6 +118,8 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
 @interface MPMultitaskView ()
 - (void)refreshExistingSnapshots;
 - (void)loadSnapshotIntoCard:(MPCard *)card bundleID:(NSString *)bid;
+- (MPCard *)cardUnderPoint:(CGPoint)point;
+- (void)handleBackgroundTap:(UITapGestureRecognizer *)g;
 @end
 
 @implementation MPMultitaskView {
@@ -132,6 +134,7 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     CGFloat         _panStartOffset;
     MPCard          *_panCard;      // карточка, которую тащим вниз
     NSArray         *_lastAppIDs;   // список прошлого открытия: не меняемый — пересборка не нужна
+    NSString        *_frontmostBundleID; // приложение, из которого пришли — его карточка по центру
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -151,13 +154,19 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
         _pager.showsHorizontalScrollIndicator = NO;
         _pager.showsVerticalScrollIndicator = NO;
         _pager.clipsToBounds = NO;
-        _pager.backgroundColor = nil;
+        _pager.backgroundColor = [UIColor clearColor];
         [self addSubview:_pager];
 
         // единый жест: горизонталь — листание, вертикаль вниз — закрытие
         UIPanGestureRecognizer *pan =
             [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleRootPan:)];
         [self addGestureRecognizer:pan];
+
+        // тап по фону (мимо карточек) — выход из свитчера; тапы по карточкам
+        // обрабатывают сами карточки своим распознавателем
+        UITapGestureRecognizer *bgTap =
+            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBackgroundTap:)];
+        [self addGestureRecognizer:bgTap];
 
         _pages = [[NSMutableArray alloc] init];
         _cards = [[NSMutableArray alloc] init];
@@ -188,10 +197,25 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     return _cards[index];
 }
 
+// индекс карточки переднего приложения (нет такого — 0)
+- (NSInteger)frontmostIndex {
+    if (_frontmostBundleID.length == 0) return 0;
+    for (NSUInteger i = 0; i < _cards.count; i++) {
+        MPCard *c = _cards[i];
+        if (c != nil && [c.bundleID isEqualToString:_frontmostBundleID]) return (NSInteger)i;
+    }
+    return 0;
+}
+
 #pragma mark Показ / закрытие
 
 - (void)openAnimated:(BOOL)animated withAppIDs:(NSArray *)appIDs {
+    [self openAnimated:animated withAppIDs:appIDs frontmostBundleID:nil];
+}
+
+- (void)openAnimated:(BOOL)animated withAppIDs:(NSArray *)appIDs frontmostBundleID:(NSString *)frontmost {
     @try {
+        _frontmostBundleID = [frontmost copy];
         [MPMetroStyle reloadPreferences];
         self.backgroundColor = [MPMetroStyle accentColor];
         MPLog(@"свитчер: открытие, приложений %lu", (unsigned long)appIDs.count);
@@ -207,12 +231,14 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
         if (animated) {
             self.alpha = 0.0;
             [UIView animateWithDuration:0.2 animations:^{ self.alpha = 1.0; }];
-            // карточки въезжают снизу «ступеньками», как в WP8.1
+            // карточки въезжают снизу «ступеньками», первой — та, что по центру
+            // (приложение, из которого пришли)
             for (NSUInteger i = 0; i < _pages.count; i++) {
                 UIView *page = _pages[i];
                 page.transform = CGAffineTransformMakeTranslation(0, 30.0);
                 page.alpha = 0.0;
-                [UIView animateWithDuration:0.32 delay:0.04 * i
+                NSInteger dist = labs((NSInteger)i - _centeredIndex);
+                [UIView animateWithDuration:0.32 delay:0.04 * (NSTimeInterval)dist
                     options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionAllowUserInteraction
                     animations:^{
                         page.transform = CGAffineTransformIdentity;
@@ -256,9 +282,10 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     // Список не менялся с прошлого открытия — страницы уже собраны. Пересборка
     // (десятки вьюх и замеров текста до первого кадра на A4) не нужна: достаточно
     // обновить снимки, дисковый кэш с проверкой mtime делает это дешёвым.
+    // Центр пересчитываем: переднее приложение могло смениться с прошлого раза.
     if (_pages.count > 0 && [appIDs isEqualToArray:_lastAppIDs]) {
-        _centeredIndex = 0;
-        [_pager setContentOffset:CGPointMake([self offsetForIndex:0], 0) animated:NO];
+        _centeredIndex = [self frontmostIndex];
+        [_pager setContentOffset:CGPointMake([self offsetForIndex:_centeredIndex], 0) animated:NO];
         [self refreshExistingSnapshots];
         return;
     }
@@ -290,6 +317,9 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     _pager.contentSize = CGSizeMake(MAX(_pages.count, 1) * MPPageW, MPPagerH);
     MPLog(@"свитчер: страниц собрано %lu", (unsigned long)_pages.count);
 
+    _centeredIndex = [self frontmostIndex];
+    [_pager setContentOffset:CGPointMake([self offsetForIndex:_centeredIndex], 0) animated:NO];
+
     if (_pages.count == 0 && appIDs.count > 0) {
         // все страницы не собрались — показываем пустое состояние вместо тишины
         appIDs = @[];
@@ -303,7 +333,8 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
         _emptyLabel.text = @"НЕТ ЗАПУЩЕННЫХ ПРИЛОЖЕНИЙ";
         _emptyLabel.font = [MPMetroStyle thinFont:21.0];
         _emptyLabel.textColor = [UIColor whiteColor];
-        _emptyLabel.backgroundColor = nil;
+        _emptyLabel.backgroundColor = [UIColor clearColor];
+        _emptyLabel.opaque = NO;
         _emptyLabel.textAlignment = NSTextAlignmentCenter;
         [self addSubview:_emptyLabel];
     }
@@ -311,7 +342,9 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
 
 - (UIView *)buildPageForBundleID:(NSString *)bid index:(NSUInteger)idx card:(MPCard **)outCard {
     UIView *page = [[UIView alloc] initWithFrame:CGRectMake(idx * MPPageW, 0, MPPageW, MPPagerH)];
-    page.backgroundColor = nil;
+    // НЕ nil: на iOS 6 opaque-слой с nil-фоном рисуется чёрным (проявилось
+    // чёрной плашкой за подписью приложения); clearColor — идиома проекта
+    page.backgroundColor = [UIColor clearColor];
 
     MPCard *card = [[MPCard alloc] initWithFrame:
                     CGRectMake((MPPageW - MPCardW) / 2.0, 0, MPCardW, MPCardH)];
@@ -329,6 +362,7 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     placeholder.center = CGPointMake(MPCardW / 2.0, MPCardH / 2.0);
     placeholder.contentMode = UIViewContentModeScaleAspectFill;
     placeholder.clipsToBounds = YES;
+    placeholder.backgroundColor = [UIColor clearColor];
     [card addSubview:placeholder];
 
     NSString *snapBID = [bid copy];
@@ -351,12 +385,16 @@ typedef NS_ENUM(NSInteger, MPPanMode) {
     UIImageView *iconView = [[UIImageView alloc] initWithFrame:CGRectMake(startX, MPCardH + 10.0, 28.0, 28.0)];
     iconView.contentMode = UIViewContentModeScaleAspectFill;
     iconView.clipsToBounds = YES;
+    iconView.backgroundColor = [UIColor clearColor];
+    iconView.opaque = NO;
     [page addSubview:iconView];
 
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(startX + 36.0, MPCardH + 10.0, textW + 4.0, 28.0)];
     label.font = font;
     label.textColor = [UIColor whiteColor];
-    label.backgroundColor = nil;
+    // НЕ nil: чёрная плашка за подписью на iOS 6 (см. комментарий к page)
+    label.backgroundColor = [UIColor clearColor];
+    label.opaque = NO;
     label.text = name;
     [page addSubview:label];
 
@@ -478,6 +516,30 @@ static UIImage *MPSnapshotForBundleID(NSString *bid) {
 
 #pragma mark Единый pan-жест: листание + закрытие
 
+// карточка, на которой лежит точка (координаты свитчера). Страницы живут
+// в скролле, скролл — на MPPagerTop ниже, поэтому фрейм собирается вручную.
+- (MPCard *)cardUnderPoint:(CGPoint)point {
+    for (NSUInteger i = 0; i < _pages.count && i < _cards.count; i++) {
+        UIView *page = _pages[i];
+        MPCard *card = _cards[i];
+        if (page == nil || card == nil || card.superview == nil || card.isClosing) continue;
+        CGRect r = card.frame;
+        r.origin.x += page.frame.origin.x;
+        r.origin.y += _pager.frame.origin.y;
+        if (CGRectContainsPoint(r, point)) return card;
+    }
+    return nil;
+}
+
+- (void)handleBackgroundTap:(UITapGestureRecognizer *)g {
+    if (!_open) return;
+    // точка внутри карточки — у неё свой тап, сюда не лезем (страховка от
+    // одновременного срабатывания обоих распознавателей)
+    if ([self cardUnderPoint:[g locationInView:self]] != nil) return;
+    MPLog(@"свитчер: тап по фону — закрытие");
+    [self closeAnimated:YES];
+}
+
 - (void)handleRootPan:(UIPanGestureRecognizer *)p {
     CGPoint t = [p translationInView:self];
     CGPoint v = [p velocityInView:self];
@@ -495,7 +557,9 @@ static UIImage *MPSnapshotForBundleID(NSString *bid) {
                 if (fabsf(t.x) > fabsf(t.y)) {
                     _panMode = MPPanModePage;          // в стороны — листать
                 } else if (t.y > 0.0) {
-                    _panCard = [self cardForPageIndex:[self indexForOffset:_pager.contentOffset.x]];
+                    // карточка та, на которой начался жест, а не центрированная:
+                    // свайп вниз по соседней не должен убивать соседа по центру
+                    _panCard = [self cardUnderPoint:[p locationInView:self]];
                     _panMode = (_panCard != nil && !_panCard.isClosing) ? MPPanModeClose : MPPanModeIgnore;
                 } else {
                     _panMode = MPPanModeIgnore;        // свайп вверх — ничего
@@ -562,26 +626,25 @@ static UIImage *MPSnapshotForBundleID(NSString *bid) {
     if (!_open || card == nil || card.isClosing) return;
     _open = NO; // свитчер уходит — повторные тапы и жесты силы не имеют
     @try {
-        // WP-переход «карточка раскрывается в приложение»:
-        // 1) прочие страницы гаснут, карточка растёт;
-        [UIView animateWithDuration:0.24
+        // Лёгкий фидбек на тап: прочие страницы гаснут, карточка чуть растёт.
+        // Настоящий переход играется оверлеем лаунчера (onActivateBlock — те же
+        // «двери», что при запуске с плитки).
+        [UIView animateWithDuration:0.12
             animations:^{
                 for (UIView *p in self->_pages) {
                     if (p != card.page) p.alpha = 0.0;
                 }
                 self->_emptyLabel.alpha = 0.0;
-                card.transform = CGAffineTransformMakeScale(1.18, 1.18);
+                card.transform = CGAffineTransformMakeScale(1.06, 1.06);
             }
             completion:^(BOOL finished) {
-                // 2) фон свитчера тает, и только потом запускается приложение
-                [UIView animateWithDuration:0.12
-                    animations:^{ self.alpha = 0.0; }
-                    completion:^(BOOL innerFinished) {
-                        self.hidden = YES;
-                        self.alpha = 1.0;
-                        card.transform = CGAffineTransformIdentity;
-                        if (self.onActivateBlock != nil) self.onActivateBlock(bid);
-                    }];
+                // Оверлей показывается синхронно и приложение уже запущено —
+                // прячемся ПОСЛЕ вызова и без фейда: иначе между свитчером
+                // и оверлеем мигнёт лаунчер.
+                if (self.onActivateBlock != nil) self.onActivateBlock(bid);
+                card.transform = CGAffineTransformIdentity;
+                self.hidden = YES;
+                self.alpha = 1.0;
             }];
     } @catch (NSException *e) {
         // страховка: при любой ошибке просто прячем свитчер и запускаем приложение

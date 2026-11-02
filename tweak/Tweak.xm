@@ -37,7 +37,7 @@
 // Используется хуком UIWindow в группе MPUikit (определение в разделе «Инициализация»)
 static BOOL MPProcessIsPreferences(void);
 
-#define MP_VERSION @"0.22.31"
+#define MP_VERSION @"0.22.44"
 #define MP_LOG_PATH "/var/mobile/Library/Preferences/metrophone.log"
 
 #pragma mark - Журналирование
@@ -480,6 +480,9 @@ static void MPApplyMetroTitle(UIView *view) {
 @interface SBUIController : NSObject
 + (id)sharedInstance;
 - (id)systemGestureSnapshotForApp:(id)app includeStatusBar:(BOOL)includeStatusBar decodeImage:(BOOL)decodeImage;
+// приложение на переднем плане (селектор мог меняться между прошивками —
+// вызов всегда под respondsToSelector)
+- (id)application;
 @end
 
 // Модель родного бара многозадачности: недавние приложения (порядок для свитчера)
@@ -579,20 +582,150 @@ static void MPConfigureAppearanceIfNeeded(void) {
 }
 %end
 
-// Раннее окрашивание окна «Настроек»: белый прямоугольник между launch() и первой
-// стилизацией (первый viewDidLoad позже на ~1–2 с) — это окно приложения до покраски.
-// Красим в момент makeKeyAndVisible — раньше любого viewDidLoad (критерий этапа C).
-%hook UIWindow
-- (void)makeKeyAndVisible {
-	%orig;
-	if (!MPProcessIsPreferences()) return;
-	static BOOL MPSettingsWindowPainted = NO;
-	if (MPSettingsWindowPainted) return;
-	MPSettingsWindowPainted = YES;
-	MPLog(@"диаг Settings: окно makeKeyAndVisible t=%.3f → ранняя покраска окна", CACurrentMediaTime());
-	[MPSettingsTheme styleWindows];
+// WP-сплэш запуска в ЧУЖОМ процессе приложения (0.22.32). Окно приложения живёт
+// в самом приложении — из SpringBoard его не накрыть (хук SBAppWindow туда не
+// достаёт, проверено журналом 0.22.32), а белый Default.png рисуется именно тут.
+// Твик грузится в каждом приложении: на первом makeKeyAndVisible кладём поверх
+// окна панель в цвет плитки с иконкой и именем приложения (как WP-сплэш), снимаем
+// через MPAnimSplashAppHold — первый рендер приложения остаётся под панелью.
+static BOOL MPAppSplashShown = NO;
+static void MPAppShowLaunchSplashIfNeeded(UIWindow *w) {
+	if (MPAppSplashShown) return;
+	if (w == nil) return;
+	if (NSClassFromString(@"SBIconView") != nil) return;   // SpringBoard — сплэш играет лаунчер
+	MPAppSplashShown = YES;
+	if (![MPMetroStyle isEnabled]) return;
+
+	UIColor *bg = [MPMetroStyle tileColor];
+	NSDictionary *mpInfo = [[NSBundle mainBundle] infoDictionary];
+	NSString *name = [mpInfo objectForKey:@"CFBundleDisplayName"];
+	if (name.length == 0) name = [mpInfo objectForKey:@"CFBundleName"];   // Контакты и др. держат имя в локализованных ключах
+	// applicationIconImage в SDK 10.3 не объявлен, firstObject есть только с iOS 7 —
+	// иконка берётся из CFBundleIconFiles вручную
+	NSArray *iconFiles = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIconFiles"];
+	UIImage *icon = nil;
+	if (iconFiles.count > 0 && [iconFiles[0] isKindOfClass:[NSString class]]) {
+		int scale = (int)[UIScreen mainScreen].scale;
+		icon = [UIImage imageNamed:[NSString stringWithFormat:@"%@@%dx", iconFiles[0], scale]];
+		if (icon == nil) icon = [UIImage imageNamed:iconFiles[0]];
+	}
+
+	CGRect wb = w.bounds;
+	UIView *panel = [[UIView alloc] initWithFrame:wb];
+	panel.backgroundColor = bg;
+	panel.userInteractionEnabled = NO;
+	panel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	CGFloat side = MPAnimSplashIconSize;
+	CGFloat iconY = wb.size.height / 2.0f - side - MPAnimSplashNameGap / 2.0f;
+	if (icon != nil) {
+		UIImageView *iv = [[UIImageView alloc] initWithImage:icon];
+		iv.contentMode = UIViewContentModeScaleAspectFit;
+		iv.frame = CGRectMake((wb.size.width - side) / 2.0f, iconY, side, side);
+		iv.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+		[panel addSubview:iv];
+	}
+	if (name.length > 0) {
+		UILabel *lb = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, iconY + side + MPAnimSplashNameGap,
+		                                                        wb.size.width, MPAnimSplashNameSize + 8.0f)];
+		lb.text = name;
+		lb.font = [MPMetroStyle lightFont:MPAnimSplashNameSize];
+		lb.textColor = [UIColor whiteColor];
+		lb.textAlignment = NSTextAlignmentCenter;
+		lb.backgroundColor = [UIColor clearColor];
+		lb.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin
+		                    | UIViewAutoresizingFlexibleBottomMargin;
+		[panel addSubview:lb];
+	}
+	[w addSubview:panel];
+	MPLog(@"сплэш приложения: панель поставлена (%@) t=%.3f", name.length > 0 ? name : @"без имени", CACurrentMediaTime());
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(MPAnimSplashAppHold * NSEC_PER_SEC)),
+	               dispatch_get_main_queue(), ^{
+		[UIView animateWithDuration:MPAnimSplashFadeOut
+		                 animations:^{ panel.alpha = 0.0f; }
+		                 completion:^(BOOL finished) { [panel removeFromSuperview]; }];
+		MPLog(@"сплэш приложения: снят t=%.3f", CACurrentMediaTime());
+	});
 }
-%end
+
+// (Хук UIWindow makeKeyAndVisible переехал в %group MPWindowHooks — он должен
+// стоять во ВСЕХ процессах: поворот окна приложения делается из его же процесса,
+// а из SpringBoard окно чужого процесса не достать.)
+
+#pragma mark - Turnstile окна приложения (петля у левого края)
+
+// Петля окна приложения: anchorPoint (0,0.5) с компенсацией position, чтобы
+// фрейм не прыгнул (та же схема, что у корня лаунчера при установке)
+static void MPAppWindowHinge(UIWindow *w) {
+	if (w == nil || w.layer.anchorPoint.x == 0.0f) return;
+	CGFloat width = w.frame.size.width;
+	if (width < 1.0f) return;
+	CGPoint p = w.layer.position;
+	[CATransaction begin];
+	[CATransaction setDisableActions:YES];
+	w.layer.anchorPoint = CGPointMake(0.0f, 0.5f);
+	w.layer.position = CGPointMake(p.x - width / 2.0f, p.y);
+	[CATransaction commit];
+}
+
+static NSTimeInterval MPAppLastUnfoldT = -10.0;   // против двойного unfold (холодный + Darwin)
+
+// Раскрытие окна из −80° при ХОЛОДНОМ запуске: поза ставится ДО показа окна
+// (первый кадр уже ребром — белый Default.png не виден), раскрытие после makeKeyAndVisible
+static void MPAppUnfoldWindowOnShow(UIWindow *w) {
+	if (![MPMetroStyle isEnabled]) return;
+	MPAppWindowHinge(w);
+	w.layer.transform = MPAnimTurnstileTransform(MPAnimAppInAngle);
+	MPAppLastUnfoldT = CACurrentMediaTime();
+	[UIView animateWithDuration:MPAnimAppInDur
+	                      delay:0.05
+	                    options:UIViewAnimationOptionCurveEaseOut
+	                 animations:^{ w.layer.transform = CATransform3DIdentity; }
+	                 completion:nil];
+	MPLog(@"turnstile приложения: окно раскрылось из −80° t=%.3f", CACurrentMediaTime());
+}
+
+// Darwin-обработчики (все процессы; SpringBoard игнорирует по классу):
+// appopen — тёплый запуск (makeKeyAndVisible не приходит), appclose — закрытие.
+static void MPAppDarwinOpen(CFNotificationCenterRef center, void *observer,
+                            CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	dispatch_async(dispatch_get_main_queue(), ^{
+		if (objc_getClass("SBIconView") != nil) return;
+		if (CACurrentMediaTime() - MPAppLastUnfoldT < 1.5) return;   // холодный уже раскрыл
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		if (w == nil) return;
+		MPAppWindowHinge(w);
+		w.layer.transform = MPAnimTurnstileTransform(MPAnimAppInAngle);
+		MPAppLastUnfoldT = CACurrentMediaTime();
+		[UIView animateWithDuration:MPAnimAppInDur
+		                      delay:0.0
+		                    options:UIViewAnimationOptionCurveEaseOut
+		                 animations:^{ w.layer.transform = CATransform3DIdentity; }
+		                 completion:nil];
+		MPLog(@"turnstile приложения: тёплое окно раскрылось из −80° t=%.3f", MPAppLastUnfoldT);
+	});
+}
+
+static void MPAppDarwinClose(CFNotificationCenterRef center, void *observer,
+                             CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	dispatch_async(dispatch_get_main_queue(), ^{
+		if (objc_getClass("SBIconView") != nil) return;
+		UIWindow *w = [UIApplication sharedApplication].keyWindow;
+		if (w == nil) return;
+		MPAppWindowHinge(w);
+		[UIView animateWithDuration:MPAnimAppCloseDur
+		                      delay:0.0
+		                    options:UIViewAnimationOptionCurveEaseIn
+		                 animations:^{ w.layer.transform = MPAnimTurnstileTransform(MPAnimAppInAngle); }
+		                 completion:nil];
+		MPLog(@"turnstile приложения: окно складывается в −80° t=%.3f", CACurrentMediaTime());
+		// Страховка: если окно так и не закрылось (Home не сработал) — распрямить
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.9 * NSEC_PER_SEC)),
+		               dispatch_get_main_queue(), ^{
+			[UIView animateWithDuration:0.2
+			                 animations:^{ w.layer.transform = CATransform3DIdentity; }];
+		});
+	});
+}
 
 %hook UIToolbar
 - (void)drawRect:(CGRect)rect {
@@ -892,18 +1025,23 @@ static void MPConfigureAppearanceIfNeeded(void) {
 - (void)didAddSubview:(UIView *)subview {
 	%orig;
 	MPLockScreenRaise();
+	// Сплэш запуска: поднять копию над новым сабвью окна приложения (и приклеить,
+	// если запуск в ходу, а сплэша там ещё нет)
+	[[MPHomeController sharedController] noteAppWindowLayout:self];
 }
 
 - (void)layoutSubviews {
 	%orig;
 	MPLockScreenRaise();
+	[[MPHomeController sharedController] noteAppWindowLayout:self];
 }
 
 // Окно приложения: сигнал Turnstile-возврата (если setHidden: вообще приходит —
-// на iOS 6 при закрытии приложения может молчать, см. noteAppWindowHidden:)
+// на iOS 6 при закрытии приложения может молчать) и момент показа окна (клей
+// сплэша запуска). self — само окно, контроллер различает своё хост-окно.
 - (void)setHidden:(BOOL)hidden {
 	%orig;
-	[[MPHomeController sharedController] noteAppWindowHidden:hidden];
+	[[MPHomeController sharedController] noteAppWindowHidden:hidden forWindow:self];
 }
 %end
 
@@ -1078,6 +1216,56 @@ static UIImage *MPLiveAppSnapshot(NSString *bid) {
     return result;
 }
 
+// Приложение на переднем плане — его карточка открывается по центру свитчера.
+// Селекторы приватные и могли отличаться между прошивками: каскад кандидатов
+// с проверкой respondsToSelector, в журнал пишем, кто сработал. Если никто —
+// свитчер центрирует первую страницу (она и так самая недавняя).
+static NSString *MPFrontmostAppID(void) {
+    @try {
+        Class uiCls = objc_getClass("SBUIController");
+        id ui = (uiCls != nil && [uiCls respondsToSelector:@selector(sharedInstance)]) ? [uiCls sharedInstance] : nil;
+        if (ui != nil && [ui respondsToSelector:@selector(application)]) {
+            id app = [ui application];
+            NSString *bid = ([app respondsToSelector:@selector(displayIdentifier)]) ? [app displayIdentifier] : nil;
+            if ([bid isKindOfClass:[NSString class]] && bid.length > 0) {
+                MPLog(@"многозадачность: frontmost %@ (SBUIController.application)", bid);
+                return bid;
+            }
+        }
+
+        // SBUserAgent.foregroundApplicationDisplayID — известен на iOS 5/6;
+        // селектор проверяем в рантайме (имя может отличаться между прошивками)
+        Class uaCls = objc_getClass("SBUserAgent");
+        id ua = nil;
+        if (uaCls != nil) {
+            if ([uaCls respondsToSelector:@selector(sharedUserAgent)]) ua = [uaCls performSelector:@selector(sharedUserAgent)];
+            else if ([uaCls respondsToSelector:@selector(sharedInstance)]) ua = [uaCls performSelector:@selector(sharedInstance)];
+        }
+        if (ua != nil && [ua respondsToSelector:@selector(foregroundApplicationDisplayID)]) {
+            NSString *bid = [ua performSelector:@selector(foregroundApplicationDisplayID)];
+            if ([bid isKindOfClass:[NSString class]] && bid.length > 0) {
+                MPLog(@"многозадачность: frontmost %@ (SBUserAgent.foregroundApplicationDisplayID)", bid);
+                return bid;
+            }
+        }
+
+        Class sbCls = objc_getClass("SpringBoard");
+        id sb = (sbCls != nil && [sbCls respondsToSelector:@selector(sharedApplication)]) ? [sbCls sharedApplication] : nil;
+        if (sb != nil && [sb respondsToSelector:@selector(_frontMostAppApplication)]) {
+            id app = [(id)sb performSelector:@selector(_frontMostAppApplication)];
+            NSString *bid = ([app respondsToSelector:@selector(displayIdentifier)]) ? [app displayIdentifier] : nil;
+            if ([bid isKindOfClass:[NSString class]] && bid.length > 0) {
+                MPLog(@"многозадачность: frontmost %@ (SpringBoard._frontMostAppApplication)", bid);
+                return bid;
+            }
+        }
+        MPLogOnce(@"mt-no-frontmost", @"многозадачность: frontmost недоступен — центрирую первую страницу");
+    } @catch (NSException *e) {
+        MPLog(@"!! frontmost: %@ (%@)", e.name, e.reason);
+    }
+    return nil;
+}
+
 // Показ свитчера: ленивое создание. Главное окно к этому моменту уже захвачено
 // хуком SBWallpaperView (см. MPSetHostWindow) — телефон давно разблокировался.
 static void MPShowMultitask(void) {
@@ -1085,7 +1273,16 @@ static void MPShowMultitask(void) {
         if (MPMultitask == nil) {
             MPMultitask = [[MPMultitaskView alloc] initWithFrame:[UIScreen mainScreen].bounds];
             MPMultitask.onActivateBlock = ^(NSString *bid) {
-                [[MPAppDataSource sharedDataSource] launchAppWithBundleID:bid];
+                // Переход в приложение — оверлей лаунчера (те же «двери», что при
+                // запуске с плитки). Если лаунчер не виден (свитчер поверх чужого
+                // приложения, ReduceMotion и т.п.) — метод вернёт NO, запускаем напрямую.
+                BOOL played = [[MPHomeController sharedController]
+                    playAppOpenAnimationForBundleID:bid
+                                        pressedTile:nil
+                                             launch:^{
+                                                 [[MPAppDataSource sharedDataSource] launchAppWithBundleID:bid];
+                                             }];
+                if (!played) [[MPAppDataSource sharedDataSource] launchAppWithBundleID:bid];
             };
             MPMultitask.onCloseBlock = ^(NSString *bid) {
                 MPKillAppWithBundleID(bid);
@@ -1104,7 +1301,8 @@ static void MPShowMultitask(void) {
             [host addSubview:MPMultitask];
             MPLog(@"свитчер установлен в %@", NSStringFromClass([host class]));
         }
-        [MPMultitask openAnimated:YES withAppIDs:MPRunningAppIDs()];
+        [MPMultitask openAnimated:YES withAppIDs:MPRunningAppIDs()
+                               frontmostBundleID:MPFrontmostAppID()];
     } @catch (NSException *e) {
         MPLog(@"!! показ свитчера: %@ (%@)", e.name, e.reason);
     }
@@ -1131,6 +1329,17 @@ static void MPLockStateChanged(CFNotificationCenterRef center, void *observer,
               CACurrentMediaTime(), locked, locked ? @"hideMetro" : @"showMetroAfterLockscreen");
         if (locked) [MPLauncher hideMetroAnimated:YES];
         else [MPLauncher showMetroAfterLockscreen];
+    });
+}
+
+// Приложение сообщило о готовности (0.22.33): процесс приложения шлёт Darwin
+// ru.ash.metrophone.appready через MPAnimAppReadyDelay после UIApplicationDidBecomeActive.
+// Оверлей запуска держит сплэш до этого сигнала.
+static void MPAppReadySB(CFNotificationCenterRef center, void *observer,
+                         CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+    if (objc_getClass("SBIconView") == nil) return;    // только SpringBoard
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[MPHomeController sharedController] noteAppReady];
     });
 }
 
@@ -1188,6 +1397,8 @@ static void MPEnsureLauncher(void) {
 	MPLauncher = [[MPHomeController alloc] init];
 	[MPLauncher installLauncherView];
 	[MPHomeController setSharedController:MPLauncher];   // для тапов плиток (MPTilesPageView)
+	// Живой снимок приложения для карточки закрытия (оверлей 0.22.33)
+	MPLauncher.liveSnapshotBlock = ^UIImage *(NSString *bid) { return MPLiveAppSnapshot(bid); };
 
 	id away = [objc_getClass("SBAwayController") sharedAwayController];
 	BOOL locked = (away != nil && [away respondsToSelector:@selector(isLocked)]) ? [away isLocked] : YES;
@@ -1228,6 +1439,11 @@ static void MPWarmCacheAfterEnter(void) {
         MPConsumeNextMenuUp = YES;
         MPLog(@"Home: закрытие свитчера");
         [MPMultitask closeAnimated:YES];
+        // %orig обязателен: в родной обработке down живёт системный скриншот
+        // (Home+Питание) — без него скрин не снимается, пока открыт свитчер.
+        // Родная панель многозадачности при одиночном нажатии не открывается,
+        // а up всё равно поглощаем выше.
+        %orig;
         return;
     }
 
@@ -1239,12 +1455,18 @@ static void MPWarmCacheAfterEnter(void) {
             MPLastMenuDownAt = 0;
             MPConsumeNextMenuUp = YES; // второй up поглощается вместе с down
             MPLog(@"Home: двойное нажатие → свитчер WP");
+            [MPLauncher abortTransitionOverlay];   // первое нажатие уже могло поднять оверлей возврата
             MPShowMultitask();
             return;
         }
     }
 
     MPLastMenuDownAt = now;
+
+    // 3а) Выход из приложения (0.22.33): снимок приложения и оверлей нужны ДО родной
+    // реакции SpringBoard на Home — она сразу начинает убирать приложение с экрана
+    BOOL mpReturn = (MPLauncher != nil && [MPLauncher wantsReturnFromApp]);
+    if (mpReturn) [MPLauncher beginReturnOverlay];
 
     // 3) Обычное нажатие: выход из режима правки плиток
     %orig;
@@ -1253,14 +1475,13 @@ static void MPWarmCacheAfterEnter(void) {
         MPLog(@"Home: выход из режима правки");
     }
 
-    // 3б) Выход из приложения: лаунчер спрятан под окном приложения. Основной сигнал
-    // возврата: SBAppWindow setHidden: на iOS 6 при закрытии молчит (проверено
-    // журналом 0.22.6). Въезд играем по факту ухода окна приложения (frontmost-опрос
-    // в scheduleReturnFromApp), а не по фиксированной задержке — иначе двойная
-    // экспозиция: Start проступает поверх ещё гаснущего приложения.
-    if (MPLauncher != nil && [MPLauncher wantsReturnFromApp]) {
+    // 3б) Выход из приложения: лаунчер спрятан под окном приложения. 0.22.32:
+    // feather-въезд стартует СРАЗУ, пока окно ещё на экране — лаунчер остаётся
+    // под окном (двойная экспозиция невозможна), а опрос frontmost внутри
+    // scheduleReturnFromApp только фиксирует факт ухода окна.
+    if (mpReturn) {
         MPWarmAfterReturn = YES;       // прогрев кэша поедет из completion въезда
-        MPLog(@"диаг Home: возврат ЗАПУЩЕН (следим за окном), t=%.3f", CACurrentMediaTime());
+        MPLog(@"Home: ранний возврат (въезд под окном), t=%.3f", CACurrentMediaTime());
         [MPLauncher scheduleReturnFromApp];
     }
 
@@ -1322,6 +1543,32 @@ static void MPWarmCacheAfterEnter(void) {
 %end
 
 %end // MPLockScreenHooks
+
+// Окно приложения во ВСЕХ процессах (см. MPAppUnfoldWindowOnShow и сплэш выше):
+// поворот Turnstile делается изнутри процесса самого приложения — из SpringBoard
+// окно чужого процесса не достать. В SpringBoard хук неактивен (гейт по классу).
+%group MPWindowHooks
+%hook UIWindow
+- (void)makeKeyAndVisible {
+	BOOL mpApp = (objc_getClass("SBIconView") == nil);
+	// 0.22.33 (MPAnimOverlayMode): окно ЧУЖОГО приложения больше не трогаем — переход
+	// играется в оверлее SpringBoard, а трансформ окна по видео не был виден
+	if (mpApp && !MPAnimOverlayMode) MPAppUnfoldWindowOnShow(self);   // старт-поза −80° ДО показа окна
+	%orig;
+	if (!mpApp) return;                         // SpringBoard: свои переходы играет лаунчер
+	if (!MPAnimOverlayMode) MPAppShowLaunchSplashIfNeeded(self);      // WP-сплэш поверх белого Default.png
+	if (MPProcessIsPreferences()) {
+		// Раннее окрашивание окна «Настроек»: белый прямоугольник между launch()
+		// и первой стилизацией (критерий этапа C — раньше любого viewDidLoad)
+		static BOOL MPSettingsWindowPainted = NO;
+		if (MPSettingsWindowPainted) return;
+		MPSettingsWindowPainted = YES;
+		MPLog(@"диаг Settings: окно makeKeyAndVisible t=%.3f → ранняя покраска окна", CACurrentMediaTime());
+		[MPSettingsTheme styleWindows];
+	}
+}
+%end
+%end // MPWindowHooks
 
 #pragma mark - Отладочный снимок экрана
 
@@ -1735,7 +1982,6 @@ static void MPDebugRunCommand(NSString *cmd) {
 	}
 	// sshot — снимок ЭКРАНА целиком (все окна, как Power+Home)
 	if ([cmd caseInsensitiveCompare:@"sshot"] == NSOrderedSame) {
-		if (objc_getClass("SBIconView") != nil) return;
 		extern CGImageRef UICreateScreenImage(void);
 		CGImageRef cg = NULL;
 		// символ приватный и не в стабах SDK — берём через dlsym
@@ -1748,6 +1994,14 @@ static void MPDebugRunCommand(NSString *cmd) {
 		NSString *path = [MP_SHOT_DIR stringByAppendingPathComponent:@"screen.png"];
 		BOOL ok = [UIImagePNGRepresentation(img) writeToFile:path atomically:YES];
 		MPLog(@"отладка: sshot %@ → %@", NSStringFromCGSize(img.size), ok ? @"ок" : @"НЕ записан");
+		return;
+	}
+	// mt — открыть свитчер многозадачности удалённо (диагностика карточек).
+	// Дальше по каналу сработает авто-снимок: свитчер к тому моменту открыт.
+	if ([cmd caseInsensitiveCompare:@"mt"] == NSOrderedSame) {
+		if (objc_getClass("SBIconView") == nil) return;   // только в SpringBoard
+		MPLog(@"отладка: mt — открываю свитчер удалённо");
+		MPShowMultitask();
 		return;
 	}
 	// wins — список окон с уровнями (диагностика перекрытий)
@@ -2276,6 +2530,12 @@ extern "C" void MPCalendarDebugBurst(void);                     // перехо�
 extern "C" void MPCalendarDebugFinger(void);                    // программный палец
 extern "C" void MPCalendarDebugDate(NSString *dateStr);         // ленты на дату YYYY-MM-DD
 
+// WP-дизайн «Калькулятора» — инициализация только в com.apple.calculator
+extern void MPCalcInitIfNeeded(void);
+
+// WP-pivot «Контактов» — инициализация только в com.apple.MobileAddressBook
+extern void MPContactsInitIfNeeded(void);
+
 // Metro-стиль живёт ТОЛЬКО в SpringBoard (лаунчер и тема стола) и в «Настройках».
 // Все остальные приложения не получают ни одного хука — оригинальный дизайн iOS.
 static BOOL MPProcessIsPreferences(void) {
@@ -2293,6 +2553,18 @@ static BOOL MPProcessIsClock(void) {
 static BOOL MPProcessIsCalendar(void) {
 	CFStringRef bid = CFBundleGetIdentifier(CFBundleGetMainBundle());
 	return (bid != nil && CFStringCompare(bid, CFSTR("com.apple.mobilecal"), 0) == kCFCompareEqualTo);
+}
+
+// Приложение «Калькулятор»: четвёртый дизайн (AppDesigns/Calculator/)
+static BOOL MPProcessIsCalculator(void) {
+	CFStringRef bid = CFBundleGetIdentifier(CFBundleGetMainBundle());
+	return (bid != nil && CFStringCompare(bid, CFSTR("com.apple.calculator"), 0) == kCFCompareEqualTo);
+}
+
+// Приложение «Контакты» (Contacts~iphone, бинарь-заглушка): пятый дизайн (AppDesigns/Contacts/)
+static BOOL MPProcessIsContacts(void) {
+	CFStringRef bid = CFBundleGetIdentifier(CFBundleGetMainBundle());
+	return (bid != nil && CFStringCompare(bid, CFSTR("com.apple.MobileAddressBook"), 0) == kCFCompareEqualTo);
 }
 
 static void MPCleanupOldLog(void) {
@@ -2353,11 +2625,61 @@ static void MPUncaughtExceptionHandler(NSException *exception) {
 		// через Darwin-уведомление + префы (MPCalendarInitIfNeeded).
 		MPLog(@"ctor: Календарь — установка pivot-дизайна");
 		MPCalendarInitIfNeeded();
+	} else if (MPProcessIsCalculator()) {
+		// Дизайн «Калькулятора» (AppDesigns/Calculator/): своя WP-вьюха
+		// (дисплей + клавиатура + логика) поверх спрятанного нативного UI.
+		MPLog(@"ctor: Калькулятор — установка WP-дизайна");
+		MPCalcInitIfNeeded();
+	} else if (MPProcessIsContacts()) {
+		// Дизайн «Контактов» (AppDesigns/Contacts/): свой WP-pivot поверх
+		// нативного UI AddressBookUI; данные — напрямую через AddressBook.
+		// Отладочный канал — Darwin + префы (как «Календарь», файловый не
+		// включаем: единый безопасный вариант).
+		MPLog(@"ctor: Контакты — установка pivot-дизайна");
+		MPContactsInitIfNeeded();
 	} else {
 		MPLog(@"ctor: стороннее приложение — хуки не устанавливаются, оригинальный дизайн");
 		// ТОЧКА ВХОДА будущих сторонних дизайнов приложений: здесь будет скан
 		// MP_APPDESIGNS_DIR и установка дизайна, совпадающего с bundleID этого
 		// процесса (образец дизайна — AppDesigns/Settings/, см. MPSettingsInitIfNeeded).
+	}
+
+	// Окно приложения во всех процессах: Turnstile-раскрытие/складывание и
+	// WP-сплэш ставятся изнутри процесса самого приложения (см. MPWindowHooks)
+	@try {
+		%init(MPWindowHooks);
+		MPLog(@"ctor: хуки окна приложения установлены");
+	} @catch (NSException *e) {
+		MPLog(@"!! ctor окна: %@ (%@)", e.name, e.reason);
+	}
+
+	// Darwin-команды от SpringBoard окну приложения: раскрыть (тёплый запуск) /
+	// сложить (закрытие). Обработчики сами игнорируют SpringBoard.
+	// 0.22.33: в оверлей-режиме окна приложений не поворачиваем — обработчики не ставим
+	if (!MPAnimOverlayMode) {
+		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
+			&MPAppDarwinOpen, CFSTR("ru.ash.metrophone.appopen"), NULL,
+			CFNotificationSuspensionBehaviorDeliverImmediately);
+		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
+			&MPAppDarwinClose, CFSTR("ru.ash.metrophone.appclose"), NULL,
+			CFNotificationSuspensionBehaviorDeliverImmediately);
+	}
+
+	// Сигнал готовности приложения (0.22.33): через MPAnimAppReadyDelay после
+	// UIApplicationDidBecomeActive процесс шлёт Darwin ru.ash.metrophone.appready;
+	// оверлей запуска в SpringBoard держит сплэш до него. Имя нотификации — строкой:
+	// из конструктора символы UIKit не трогаем. Работает и при тёплом запуске
+	// (приложение возвращается из фона — DidBecomeActive приходит снова).
+	if (!mpIsSB && MPAnimOverlayMode) {
+		[[NSNotificationCenter defaultCenter] addObserverForName:@"UIApplicationDidBecomeActiveNotification"
+			object:nil queue:nil
+			usingBlock:^(NSNotification *note) {
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(MPAnimAppReadyDelay * NSEC_PER_SEC)),
+					dispatch_get_main_queue(), ^{
+					CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+						CFSTR("ru.ash.metrophone.appready"), NULL, NULL, YES);
+				});
+			}];
 	}
 
 	// SpringBoard-классы существуют только в SpringBoard
@@ -2416,6 +2738,11 @@ static void MPUncaughtExceptionHandler(NSException *exception) {
 			// и после отмены ввода кода (lockstate в этих случаях не приходит)
 			CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
 				&MPDisplayStatusChanged, CFSTR("com.apple.iokit.hid.displayStatus"), NULL,
+				CFNotificationSuspensionBehaviorDeliverImmediately);
+
+			// готовность приложения после запуска с плитки (оверлей 0.22.33)
+			CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
+				&MPAppReadySB, CFSTR("ru.ash.metrophone.appready"), NULL,
 				CFNotificationSuspensionBehaviorDeliverImmediately);
 
 			// смена акцента в Настройках: при выходе из приложения лаунчер НЕ проходит

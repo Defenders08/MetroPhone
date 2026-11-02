@@ -9,6 +9,7 @@
 
 #import "MPLockScreenView.h"
 #import "../MetroLauncher/MPMetroStyle.h"
+#import <QuartzCore/QuartzCore.h> // CATransactionFlush (коммит анимаций до тяжёлых вызовов)
 
 #import <objc/runtime.h>
 #import <dlfcn.h>
@@ -236,6 +237,9 @@ static NSArray *MPLSBadgeRows(void) {
 @property (nonatomic, strong) UIView *statusStack;   // батарея + строки уведомлений
 @property (nonatomic, strong) UIView *cameraIcon;    // камера WP внизу справа
 @property (nonatomic, strong) dispatch_source_t clockSource;
+@property (nonatomic, strong) CADisplayLink *slideFpsLink;  // замер кадров слайда
+@property (nonatomic, assign) NSTimeInterval fpsT, fpsSum, fpsMax;
+@property (nonatomic, assign) NSInteger fpsN, fpsOver, fpsOver33;
 @property (nonatomic, assign) CGFloat homeY;         // «домашний» center.y до жеста
 @property (nonatomic, assign) CGFloat homeX;         // «домашний» center.x до жеста
 @property (nonatomic, assign) MPLSPanAxis panAxis;   // выбранная ось текущего жеста
@@ -557,14 +561,18 @@ static NSArray *MPLSBadgeRows(void) {
 			    fabs(translation.y) < MPLSAxisLockDelta) return;
 			self.panAxis = (fabs(translation.x) > fabs(translation.y))
 			    ? MPLSPanAxisHorizontal : MPLSPanAxisVertical;
+			// Вертикальный драг начался (до порога): лаунчер греется заранее,
+			// чтобы слайд и Turnstile перекрывались — ноль «ямы»
+			if (self.panAxis == MPLSPanAxisVertical && self.onDragBeginBlock != nil) {
+				self.onDragBeginBlock();
+			}
 			[gr setTranslation:CGPointZero inView:self];
 			return;
 		}
 
 		if (self.panAxis == MPLSPanAxisVertical) {
-			CGFloat dy = translation.y;
-			if (dy > 0) dy *= 0.08; // вниз экран не тянется — только лёгкая резинка
-			self.center = CGPointMake(self.superview.bounds.size.width / 2.0, self.homeY + dy);
+			// Драг 1:1 — локскрин просто идёт за пальцем, без резинки и эффектов
+			self.center = CGPointMake(self.superview.bounds.size.width / 2.0, self.homeY + translation.y);
 		} else {
 			// Влево вьюха следует за пальцем с сопротивлением, вправо — резинка
 			CGFloat dx = translation.x;
@@ -592,9 +600,11 @@ static NSArray *MPLSBadgeRows(void) {
 			CGPoint velocity = [gr velocityInView:self];
 			CGFloat dy = self.center.y - self.homeY;
 			if (-dy > MPLSUnlockDistance || velocity.y < -MPLSUnlockVelocity) {
-				[self slideAwayAndUnlock];
+				[self slideAwayAndUnlockWithVelocity:velocity.y];
 			} else {
-				[self springBack];
+				// Свайп не дотянут: прогретый лаунчер под вьюхой уже не нужен
+				if (self.onDragAbortBlock != nil) self.onDragAbortBlock();
+				[self springBackWithVelocity:velocity.y];
 			}
 		}
 	}
@@ -628,23 +638,111 @@ static NSArray *MPLSBadgeRows(void) {
 	}];
 }
 
-- (void)slideAwayAndUnlock {
+// ---- Замер кадров слайда ----
+
+- (void)mpSlideFpsTick {
+	NSTimeInterval now = CACurrentMediaTime();
+	double d = (now - _fpsT) * 1000.0;
+	_fpsT = now;
+	if (_fpsN == 0) {
+		// Первый кадр после отпускания: наша занятость потока + кадр рендера
+		MPLog(@"анлок-хроника: первый кадр слайда через %.0f мс от старта", d);
+	} else {
+		_fpsSum += d;
+		if (d > _fpsMax) _fpsMax = d;
+		if (d > 20.0) _fpsOver++;
+		if (d > 33.0) _fpsOver33++;
+	}
+	_fpsN++;
+}
+
+- (void)mpSlideFpsStart {
+	[_slideFpsLink invalidate];
+	_fpsN = 0; _fpsOver = 0; _fpsOver33 = 0; _fpsSum = 0; _fpsMax = 0;
+	_fpsT = CACurrentMediaTime();
+	CADisplayLink *link = [CADisplayLink displayLinkWithTarget:self selector:@selector(mpSlideFpsTick)];
+	[link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+	_slideFpsLink = link;
+}
+
+- (void)mpSlideFpsStop {
+	if (_slideFpsLink == nil) {
+		MPLog(@"анлок-хроника: fps слайда: замер не вёлся (link nil)");
+		return;
+	}
+	[_slideFpsLink invalidate];
+	_slideFpsLink = nil;
+	// Без порога: даже 0–1 тик — диагностика, почему link не тикал
+	MPLog(@"анлок-хроника: fps слайда: %ld кадров, >20 мс: %ld, >33 мс: %ld, худший %.1f мс, средний %.1f мс",
+	      (long)_fpsN, (long)_fpsOver, (long)_fpsOver33, _fpsMax, _fpsN > 1 ? _fpsSum / (_fpsN - 1) : 0.0);
+}
+
+// ---- Слайд-разблокировка: обычный уезд вверх, ease-out 0.3 с ----
+
+- (void)slideAwayAndUnlockWithVelocity:(CGFloat)velocityY {
 	UIView *parent = self.superview;
-	CGFloat offscreenY = -self.bounds.size.height;
-	if (parent != nil) offscreenY = -parent.bounds.size.height;
-	[UIView animateWithDuration:0.25
+	CGFloat h = (parent != nil) ? parent.bounds.size.height : self.bounds.size.height;
+	NSTimeInterval t0 = CACurrentMediaTime();
+	[self mpSlideFpsStart];
+	// Слайд от ТЕКУЩЕЙ позиции пальца: центр уже = точке драга; фиксируем от
+	// presentation-слоя на случай незаконченных анимаций — скачка назад не будет
+	CALayer *pres = self.layer.presentationLayer;
+	if (pres != nil) self.center = pres.position;
+	// EaseOut: анимация стартует со скоростью пальца и тормозит — без «паузы»
+	// EaseInOut на старте. Длительность из остатка пути и скорости отпускания:
+	// флик долетает коротко, медленно дотащенный драг — долго (как до 0.38 с)
+	CGFloat remaining = self.center.y + h / 2.0 + 20.0;
+	CGFloat speed = MAX(-velocityY, 0.0);
+	CGFloat dur = 1.6 * remaining / MAX(speed, 500.0);
+	dur = MIN(MAX(dur, 0.18), 0.45);
+	// До ПОЛНОГО выхода за экран (нижний край на −20 pt)
+	[UIView animateWithDuration:dur
 	                      delay:0.0
-	                    options:UIViewAnimationOptionCurveEaseIn
+	                    options:UIViewAnimationOptionCurveEaseOut
 	                 animations:^{
-		self.center = CGPointMake(self.superview.bounds.size.width / 2.0, offscreenY);
+		self.center = CGPointMake(self.superview.bounds.size.width / 2.0, -h / 2.0 - 20.0);
 	}
 	                 completion:^(BOOL finished) {
-		if (self.onUnlockBlock != nil) self.onUnlockBlock();
+		[self mpSlideFpsStop];
+		if (self.onSlideDoneBlock != nil) self.onSlideDoneBlock();
 	}];
+	if (self.onUnlockBlock != nil) self.onUnlockBlock();
+	// Принудительный коммит: анимации уходят в рендер-процесс до тяжёлых вызовов
+	[CATransaction flush];
+	MPLog(@"анлок-хроника: слайд %.0f мс (скорость %.0f pt/с, остаток %.0f pt), main занят до коммита %.0f мс (цель ≤16)",
+	      dur * 1000.0, speed, remaining, (CACurrentMediaTime() - t0) * 1000.0);
 }
 
 - (void)springBack {
-	[UIView animateWithDuration:0.25
+	// Публичная обёртка (провал анлока из опроса): скорости пальца уже нет
+	[self springBackWithVelocity:0.0];
+}
+
+- (void)springBackWithVelocity:(CGFloat)velocityY {
+	// Недотянутый флик продолжает движение вверх по инерции (до 40 pt), потом
+	// откатывает; медленный дотащенный драг возвращается сразу
+	CGFloat drift = MIN(MAX(-velocityY * 0.06, 0.0), 40.0);
+	if (drift < 4.0) {
+		[self mpSpringHome];
+		return;
+	}
+	[UIView animateWithDuration:0.12
+	                      delay:0.0
+	                    options:UIViewAnimationOptionCurveEaseOut
+	                 animations:^{
+		self.center = CGPointMake(self.homeX, self.center.y - drift);
+	}
+	                 completion:^(BOOL finished) {
+		[self mpSpringHome];
+	}];
+}
+
+- (void)mpSpringHome {
+	// Длительность от расстояния: длинный недолёт возвращается быстро,
+	// короткий щёлкает на место; EaseOut — старт в такт пальцу
+	CGFloat dy = self.center.y - self.homeY;
+	CGFloat dur = MIN(MAX(0.10 + fabs(dy) / 900.0, 0.14), 0.30);
+	[UIView animateWithDuration:dur
 	                      delay:0.0
 	                    options:UIViewAnimationOptionCurveEaseOut
 	                 animations:^{
